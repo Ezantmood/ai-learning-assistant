@@ -8,15 +8,19 @@ Expo SDK 57, TypeScript strict, expo-router, Supabase Auth/Postgres/Storage, sup
 
 ## Trạng thái
 
-Hiện chỉ có tài liệu và nền Git; chưa có code ứng dụng, package hay cấu hình Supabase. Triển khai theo `docs/TASKS.md` sau khi các quyết định trong `docs/SPEC.md` được chốt.
+G1 đã hoàn thành trên branch `feat/g1-setup`: app Expo Go mở được, stack/providers/env/Supabase client và auth guard đã có. Chưa có form nghiệp vụ, database hay RLS; các phần đó bắt đầu từ G2/G3.
 
-## Lệnh dự kiến sau G1
+## Chạy sau G1
 
 ```bash
+npm ci
+cp .env.example .env
 npx expo start
 npx tsc --noEmit
 npm run lint
 ```
+
+Điền ba biến trong `.env` theo `docs/SETUP.md`; trên điện thoại mở Expo Go và quét QR từ `npx expo start`.
 
 ## Tài liệu
 

@@ -16,6 +16,7 @@ Kiến trúc theo feature, ít tầng và đủ rõ để sinh viên giải thí
 │   │   ├── sign-in.tsx
 │   │   ├── sign-up.tsx
 │   │   ├── forgot-password.tsx
+│   │   ├── verify-reset-otp.tsx
 │   │   └── reset-password.tsx
 │   └── (app)/
 │       ├── _layout.tsx

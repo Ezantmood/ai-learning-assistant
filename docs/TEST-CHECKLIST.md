@@ -6,7 +6,7 @@ Mỗi case đổi `[ ]` thành `[x]` khi đạt và thêm `YYYY-MM-DD | nền t�
 
 ## FR-01 — Đăng ký
 
-- [ ] Đăng ký email, mã sinh viên mới + mật khẩu hợp lệ → user được tạo; đúng một `profiles` row; UI yêu cầu xác nhận email.
+- [ ] Đăng ký email, mã sinh viên mới + mật khẩu hợp lệ → user và profile được tạo; dev vào app ngay, demo yêu cầu xác nhận email.
 - [ ] Email sai định dạng → lỗi tại field; không gọi API.
 - [ ] Mật khẩu không đạt chính sách / confirm khác → lỗi; không tạo user.
 - [ ] **Email trùng** → không tạo user/profile thứ hai; UI không làm lộ thông tin quá mức.
