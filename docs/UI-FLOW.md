@@ -6,8 +6,8 @@
 Khởi động `/`
 ├─ đang khôi phục session → splash/loading
 ├─ chưa login → `/sign-in`
-│  ├─ `/sign-up` → thông báo xác nhận → `/sign-in`
-│  └─ `/forgot-password` → email → deep link `/reset-password`
+│  ├─ `/sign-up` → vào app khi dev / xác nhận email khi demo
+│  └─ `/forgot-password` → email → `/verify-reset-otp` → `/reset-password`
 └─ đã login → `/notes`
    ├─ `/notes/new` → tạo → `/notes`
    ├─ `/notes/[id]` → sửa/xóa → `/notes`
@@ -22,9 +22,10 @@ Route group `(auth)` và `(app)` không xuất hiện trong URL. Layout mỗi gr
 |---|---|---|---|
 | `/` | Chọn nhánh theo session | `FullScreenStatus` | Loading khi khôi phục session; lỗi cấu hình hiển thị rõ; thành công redirect |
 | `/sign-in` | FR-02 đăng nhập | `FormTextField`, `Button`, link đăng ký/quên mật khẩu | Button spinner; không có empty; lỗi field/API; thành công về `/notes` |
-| `/sign-up` | FR-01 đăng ký | Full name/student code/email/password/confirm form | Spinner; lỗi Zod/email hoặc student code trùng; thành công yêu cầu kiểm tra email |
+| `/sign-up` | FR-01 đăng ký | Full name/student code/email/password/confirm form | Spinner; lỗi Zod/email hoặc student code trùng; dev vào app ngay, demo yêu cầu kiểm tra email theo env |
 | `/forgot-password` | FR-03 gửi email reset | Email form | Spinner; luôn dùng thông báo success trung tính; offline cho retry |
-| `/reset-password` | FR-03 đặt mật khẩu mới | Password/confirm form | Loading xác minh recovery session; link thiếu/hết hạn báo lỗi + về forgot; thành công về sign-in |
+| `/verify-reset-otp` | FR-03 xác minh mã | Email + OTP 6 số form | Spinner; OTP sai/hết hạn báo lỗi; success tạo recovery session rồi sang reset |
+| `/reset-password` | FR-03 đặt mật khẩu mới | Password/confirm form | Thiếu recovery session thì về verify OTP; thành công về sign-in |
 | `/notes` | FR-05 danh sách riêng | `Appbar`, `FAB`, list/card | Skeleton/spinner; empty có CTA “Tạo ghi chú”; lỗi có Retry; success danh sách theo `updated_at desc` |
 | `/notes/new` | FR-05 tạo note | Title/content form | Spinner khi lưu; lỗi validation/API; success invalidate `notes` rồi back |
 | `/notes/[id]` | FR-05 sửa/xóa note | Form, nút Delete, confirm dialog | Loading fetch; không tìm thấy/không có quyền dùng cùng thông báo; lỗi retry; success back |
@@ -33,8 +34,8 @@ Route group `(auth)` và `(app)` không xuất hiện trong URL. Layout mỗi gr
 ## Hành vi theo trạng thái xác thực
 
 - Chưa login truy cập route `(app)`: `replace('/sign-in')`, không để Back quay vào dữ liệu cũ.
-- Đã login truy cập route `(auth)` trừ `/reset-password`: `replace('/notes')`.
-- Recovery deep link được xử lý trước redirect thông thường để `/reset-password` nhận recovery session.
+- Đã login truy cập route `(auth)` trừ luồng recovery hợp lệ: `replace('/notes')`.
+- Recovery session chỉ được tạo sau `verifyOtp` thành công; không phụ thuộc deep link. Deep link chỉ bổ sung nếu G1–G5 đã hoàn tất và còn thời gian.
 - Khi logout hoặc token refresh thất bại: xóa cache React Query chứa dữ liệu user, đóng route riêng tư và về `/sign-in`.
 - Khi app quay lại foreground: Supabase tiếp tục auto-refresh token; UI giữ loading ngắn trong lúc xác định session.
 

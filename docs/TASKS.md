@@ -7,7 +7,7 @@ Mỗi checkbox là một commit độc lập và phải để app chạy đượ
 - Branch: `feat/g1-setup`
 - Tag sau khi PR được merge: `g1-done`
 
-- [ ] Khởi tạo Expo SDK 57 TypeScript strict + expo-router; kiểm tra package không deprecated/không xung đột trước khi cài bằng `npx expo install`. File: `package.json`, `app.json`, `tsconfig.json`, `eslint.config.js`, Expo template files. FR: nền cho FR-01..FR-05.
+- [ ] Khởi tạo Expo SDK 57 TypeScript strict + expo-router chạy bằng Expo Go; kiểm tra package không deprecated/không xung đột trước khi cài bằng `npx expo install`. File: `package.json`, `app.json`, `tsconfig.json`, `eslint.config.js`, Expo template files. FR: nền cho FR-01..FR-05.
 - [ ] Cài đúng stack đã duyệt và tạo providers Paper/Query. File: `package.json`, lockfile, `app/_layout.tsx`, `src/providers/AppProviders.tsx`, `src/lib/queryClient.ts`. FR: nền cho FR-01..FR-05.
 - [ ] Cấu hình env và Supabase client với AsyncStorage/session refresh. File: `.env.example`, `src/lib/env.ts`, `src/lib/supabase.ts`. FR: FR-01..FR-05.
 - [ ] Tạo route skeleton + auth guard chạy được, chưa có nghiệp vụ. File: `app/index.tsx`, `app/(auth)/_layout.tsx`, `app/(app)/_layout.tsx`, `src/features/auth/useSession.ts`. FR: FR-02.
@@ -36,9 +36,9 @@ Mỗi checkbox là một commit độc lập và phải để app chạy đượ
 - Branch: `feat/g4-password-reset`
 - Tag sau khi PR được merge: `g4-done`
 
-- [ ] Cấu hình scheme/deep link và API gửi reset email. File: `app.json`, `src/features/auth/api.ts`, `app/(auth)/forgot-password.tsx`. FR: FR-03.
-- [ ] Xử lý recovery session, link hết hạn và form đổi mật khẩu. File: `app/(auth)/reset-password.tsx`, auth feature files, route guard. FR: FR-03.
-- [ ] Test reset thành công/hết hạn/offline/token hết hạn và sửa lỗi. File: `docs/TEST-CHECKLIST.md`, file lỗi thực tế nếu có. FR: FR-03.
+- [ ] Làm API `resetPasswordForEmail` và form gửi mã OTP 6 số. File: `src/features/auth/api.ts`, `app/(auth)/forgot-password.tsx`. FR: FR-03.
+- [ ] Xác minh email + OTP bằng `verifyOtp` type `recovery`, rồi đổi mật khẩu. File: `app/(auth)/verify-reset-otp.tsx`, `app/(auth)/reset-password.tsx`, auth feature files, route guard. FR: FR-03.
+- [ ] Test reset thành công, OTP sai/hết hạn, offline/token hết hạn và sửa lỗi. File: `docs/TEST-CHECKLIST.md`, file lỗi thực tế nếu có. FR: FR-03. Deep link chỉ làm bonus nếu còn thời gian.
 
 ## G5 — Hồ sơ, hoàn thiện và tài liệu
 
