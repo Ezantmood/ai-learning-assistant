@@ -7,7 +7,7 @@
 | G1 | `feat/g1-setup` | `g1-done` | Expo, dependency, env, providers, route guard |
 | G2 | `feat/g2-database` | `g2-done` | Schema, trigger, RLS, Storage, database types |
 | G3 | `feat/g3-auth-core` | `g3-done` | Đăng ký, login/logout, CRUD notes |
-| G4 | `feat/g4-password-reset` | `g4-done` | Forgot/reset password và deep link |
+| G4 | `feat/g4-password-reset` | `g4-done` | Forgot/reset password bằng OTP email |
 | G5 | `feat/g5-profile-docs` | `g5-done` | Profile/avatar, test tổng, tài liệu cuối |
 
 Commit tài liệu bootstrap hiện tại trên `main` là ngoại lệ do chủ dự án yêu cầu để tạo nền repo. Từ G1 trở đi không commit trực tiếp lên `main`.

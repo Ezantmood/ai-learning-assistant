@@ -13,6 +13,7 @@
 - Supabase Auth + Postgres + Storage, `@supabase/supabase-js` v2.
 - `@react-native-async-storage/async-storage` để lưu session.
 - `react-hook-form`, `zod`, `@tanstack/react-query`, `react-native-paper`.
+- Chạy bằng Expo Go; không dùng development build. FR-03 dùng OTP 6 số qua email, không phụ thuộc deep link.
 - Cài dependency bằng `npx expo install`; không tự thay package/version. Nếu deprecated hoặc không tương thích SDK 57 thì dừng và báo chủ dự án.
 
 ## Lệnh chuẩn

@@ -10,7 +10,7 @@ Chỉ điền bằng bằng chứng từ code/test thực tế. Không tuyên b�
 4. **Kiến trúc:** sơ đồ screen → feature API → Supabase; route guard; server state và auth state.
 5. **Mô hình dữ liệu:** `profiles`, `study_notes`, trigger tạo profile/cập nhật timestamp; Storage private.
 6. **Bảo mật:** JWT cung cấp `auth.uid()`; RLS cho từng lệnh; publishable key không thay thế policy; không có service-role key trong app.
-7. **Luồng chính:** đăng ký, login/logout, reset password/deep link, sửa profile/avatar, CRUD note.
+7. **Luồng chính:** đăng ký, login/logout, reset password bằng OTP email, sửa profile/avatar, CRUD note.
 8. **Kiểm thử:** bảng kết quả tốt/xấu; bằng chứng A/B cho RLS; lỗi offline/token/link hết hạn.
 9. **Git:** một branch/giai đoạn, commit theo task, PR review, tag mốc.
 10. **Giới hạn và bài học:** chỉ ghi điều thực tế sau G5.

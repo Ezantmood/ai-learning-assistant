@@ -4,7 +4,7 @@
 
 ## 1. Điều kiện máy
 
-- Node.js tối thiểu `22.13.x` theo Expo SDK 57; Git; Expo Go tương thích SDK 57 hoặc simulator.
+- Node.js tối thiểu `22.13.x` theo Expo SDK 57; Git; Expo Go tương thích SDK 57. Không tạo development build.
 - Một tài khoản GitHub và một tài khoản Supabase.
 - Kiểm tra: `node --version`, `npm --version`, `git --version`.
 
@@ -30,9 +30,8 @@ Nếu hướng dẫn Supabase React Native cho SDK 57 yêu cầu polyfill bổ s
 1. New project → chọn organization → đặt tên `student-account-manager` → tạo database password mạnh và cất ngoài repo.
 2. Chọn region gần người dùng; chờ project sẵn sàng.
 3. Project Settings/Connect/API → lấy Project URL và **Publishable key** (hoặc anon key nếu Dashboard dự án chỉ cung cấp tên cũ). Không lấy `service_role`.
-4. Authentication → Providers → Email: bật email/password và bật **Confirm email**.
-5. Authentication → URL Configuration: thêm redirect URL `studentaccountmanager://reset-password`.
-6. Authentication → Email Templates → Reset Password: đảm bảo link dùng redirect do app gửi; không chèn secret.
+4. Authentication → Providers → Email: bật email/password; **tắt Confirm email khi dev**, bật lại khi demo.
+5. Authentication → Email Templates → Reset Password: thay nội dung đường link bằng mã `{{ .Token }}` để email hiển thị OTP 6 số; không chèn secret.
 7. SQL Editor: đọc toàn bộ `supabase/migrations/0001_account_manager.sql`, chạy trên project; không chạy từng đoạn thiếu policy.
 8. Table Editor: xác nhận `profiles`, `study_notes` có RLS enabled.
 9. Storage: xác nhận bucket private `avatars`, MIME/size limit và bốn policy đúng `DATA-MODEL.md` (migration nên tạo các mục này).
@@ -41,7 +40,7 @@ Nếu hướng dẫn Supabase React Native cho SDK 57 yêu cầu polyfill bổ s
 ## 5. Cấu hình local
 
 1. Copy `.env.example` thành `.env`.
-2. Điền `EXPO_PUBLIC_SUPABASE_URL` và `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+2. Điền `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` và `EXPO_PUBLIC_REQUIRE_EMAIL_CONFIRMATION=false` khi dev.
 3. Không dùng database password/service-role key trong app.
 4. Chạy `npx tsc --noEmit`, `npm run lint`, rồi `npx expo start`.
 

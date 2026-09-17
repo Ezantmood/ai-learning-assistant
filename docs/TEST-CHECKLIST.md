@@ -6,7 +6,7 @@ Mỗi case đổi `[ ]` thành `[x]` khi đạt và thêm `YYYY-MM-DD | nền t�
 
 ## FR-01 — Đăng ký
 
-- [ ] Đăng ký email, mã sinh viên mới + mật khẩu hợp lệ → user được tạo; đúng một `profiles` row; UI yêu cầu xác nhận email.
+- [ ] Đăng ký email, mã sinh viên mới + mật khẩu hợp lệ → user và profile được tạo; dev vào app ngay, demo yêu cầu xác nhận email.
 - [ ] Email sai định dạng → lỗi tại field; không gọi API.
 - [ ] Mật khẩu không đạt chính sách / confirm khác → lỗi; không tạo user.
 - [ ] **Email trùng** → không tạo user/profile thứ hai; UI không làm lộ thông tin quá mức.
@@ -24,11 +24,11 @@ Mỗi case đổi `[ ]` thành `[x]` khi đạt và thêm `YYYY-MM-DD | nền t�
 
 ## FR-03 — Quên/đặt lại mật khẩu
 
-- [ ] Email tồn tại → nhận email, deep link mở `/reset-password`.
+- [ ] Email tồn tại → nhận email có OTP 6 số và mở màn hình nhập mã trong app.
 - [ ] Email không tồn tại → UI dùng cùng thông báo trung tính.
 - [ ] Mật khẩu mới sai schema/confirm khác → không gọi update.
-- [ ] Link hợp lệ + mật khẩu mới hợp lệ → đổi thành công; mật khẩu cũ thất bại, mật khẩu mới đăng nhập được.
-- [ ] **Link reset hết hạn** hoặc đã dùng → không đổi mật khẩu; có CTA yêu cầu link mới.
+- [ ] OTP hợp lệ + mật khẩu mới hợp lệ → đổi thành công; mật khẩu cũ thất bại, mật khẩu mới đăng nhập được.
+- [ ] **OTP sai, hết hạn hoặc đã dùng** → không đổi mật khẩu; có CTA yêu cầu mã mới.
 - [ ] Offline khi gửi email hoặc cập nhật → báo lỗi/retry; không báo thành công giả.
 
 ## FR-04 — Hồ sơ và avatar
