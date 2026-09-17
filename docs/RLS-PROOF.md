@@ -134,3 +134,44 @@ Ghi kết quả vào `docs/TEST-CHECKLIST.md` mục FR-05 theo mẫu:
 `YYYY-MM-DD | Expo Go Android/iOS | A=<8 ký tự>/B=<8 ký tự> | đạt`.
 Với FR-05 chỉ chuyển `FR-TRACEABILITY.md` sang `đạt` khi cả 4 lệnh
 SELECT/INSERT/UPDATE/DELETE đều có bằng chứng A/B hai chiều.
+
+## 7. Kết quả chạy thật bằng `scripts/rls-proof.ts`
+
+Ngày chạy: 2026-09-17. Script tự tạo 2 user test qua admin API (mỗi user
+1 `study_notes`), đăng nhập session A bằng anon key rồi thử đòn chéo,
+cuối cùng xóa cả 2 user. ID dưới đây đã rút gọn 8 ký tự; không ghi email,
+mật khẩu hay token.
+
+Tái hiện (từ gốc repo, đã có `.env` + `.env.local`):
+
+```bash
+npx tsc --ignoreConfig --types node scripts/rls-proof.ts \
+  --outDir /tmp/rlsproof-out --module nodenext --moduleResolution nodenext \
+  --target es2021 --esModuleInterop --skipLibCheck --strict
+set -a && source .env && source .env.local && set +a
+NODE_PATH="$PWD/node_modules" node /tmp/rlsproof-out/rls-proof.js
+```
+
+Log nguyên văn (exit code 0):
+
+```text
+SETUP 2 user test: A=3d821506 B=84cae6ef
+PASS trigger tạo profile cho A — profiles của A: 1 dòng (mong đợi 1)
+SETUP 2 note: noteA=20c3ec95 noteB=7097ef53
+PASS A đọc note của chính mình — list A: 1 dòng (mong đợi 1)
+PASS A SELECT note của B — trả về 0 dòng, error null (mong đợi 0 dòng)
+PASS A UPDATE note của B — 0 dòng bị sửa (mong đợi 0)
+PASS A DELETE note của B — 0 dòng bị xóa (mong đợi 0)
+PASS A INSERT note với user_id = B — bị chặn: new row violates row-level security policy for table "study_notes"
+PASS note của B còn nguyên sau các đòn chéo — noteB: 1 dòng, tiêu đề nguyên vẹn
+CLEANUP user 3d821506: đã xóa
+CLEANUP user 84cae6ef: đã xóa
+RLS_PROOF: 7/7 check pass
+```
+
+Hai lần chạy trước đó FAIL cũng được giữ làm bằng chứng chẩn đoán (user
+test đều đã dọn): lần 1 thiếu GRANT bảng (`permission denied for table
+study_notes`, đã fix trong migration); lần 2 thiếu trigger do schema chưa
+apply (`profiles của A: 0 dòng`); lần 3 thiếu toggle Email provider
+(`Đăng nhập A thất bại: Email logins are disabled`, đã bật theo
+`docs/MANUAL-STEPS.md`).
