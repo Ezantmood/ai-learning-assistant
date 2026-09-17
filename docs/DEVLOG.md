@@ -109,3 +109,5 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog. Sau m
 - Branch: `feat/g2-database`
 - Tag: chưa tạo; chỉ tạo `g2-done` sau khi chủ dự án merge.
 - PR: tạo sau commit tài liệu kết thúc G2.
+
+- [G2] Retarget PR #2 base: main → feat/g1-setup (vì PR #1 chưa merged, base main sẽ show lẫn code G1).
