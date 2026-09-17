@@ -70,3 +70,42 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog. Sau m
 - Branch: `feat/g1-setup`
 - Tag: chưa tạo; chỉ tạo `g1-done` sau khi chủ dự án merge.
 - PR: tạo sau commit tài liệu kết thúc G1.
+
+---
+
+### G2 — Database, RLS và Storage — 2026-09-17
+
+**Đã làm gì**
+
+- Viết `supabase/migrations/0001_account_manager.sql`: bảng `profiles`/`study_notes` kèm constraints/index, trigger `handle_new_user`/`set_updated_at`, RLS đủ 4 lệnh mỗi bảng và bucket private `avatars` với 4 Storage policy.
+- Viết `docs/RLS-PROOF.md`: kịch bản A/B chứng minh FR-05 (SELECT chéo 0 dòng, INSERT/UPDATE/DELETE chéo bị chặn) kèm từng câu lệnh và kết quả mong đợi.
+- Bổ sung `docs/DATA-MODEL.md`: giải thích vì sao chỉ lọc `.eq('user_id', uid)` ở client không an toàn và RLS mới là ranh giới bảo mật.
+- Viết `src/types/database.ts` mirror từ migration (regen bằng CLI sau khi apply remote).
+- Đánh dấu 3 checkbox G2 trong `docs/TASKS.md`; chuyển FR-04/FR-05 sang `đang làm` trong `docs/FR-TRACEABILITY.md`.
+
+**Quyết định và lý do**
+
+- Quyết định: tách `feat/g2-database` từ HEAD chứa code G1 thay vì `main` cũ, vì PR G1 (#1) vẫn OPEN và `main` chưa có code G1.
+- Lý do: tạo từ `main` cũ sẽ mất toàn bộ code G1; branch G2 sẽ rebase/merge sau khi PR G1 được merge.
+- Quyết định: `database.ts` viết tay mirror migration thay vì regen bằng CLI.
+- Lý do: chưa có project ref/access token trong session này; file ghi rõ lệnh regen sau khi apply migration remote.
+
+**Đã kiểm thử**
+
+- Lệnh: `npx tsc --noEmit` → đạt (trước mỗi commit).
+- Lệnh: `npm run lint` → đạt (trước mỗi commit).
+- Migration chạy 2 lần liên tiếp trên Postgres 16 local (mock schema `auth`/`storage`) → không lỗi lần nào.
+- Trigger: insert user hợp lệ tạo đúng 1 profile; thiếu `student_code` báo lỗi; trùng `student_code` đúng hoa/thường báo unique violation; `SV001` và `sv001` cùng tồn tại (case-sensitive); UPDATE bump `updated_at`.
+- Chưa chạy migration trên Supabase remote và chưa test A/B thực tế — chủ dự án chạy SQL Editor và `docs/RLS-PROOF.md` rồi ghi kết quả vào `docs/TEST-CHECKLIST.md`.
+
+**Còn nợ / giới hạn đã biết**
+
+- Cần apply migration lên Supabase project thật và regen `database.ts` bằng CLI.
+- Kịch bản A/B trong `docs/RLS-PROOF.md` chưa có kết quả chạy thật.
+
+**Mốc Git**
+
+- Commit triển khai cuối: `5994f71cefbb094e818a149d7fc9f89c68b8adb6`
+- Branch: `feat/g2-database`
+- Tag: chưa tạo; chỉ tạo `g2-done` sau khi chủ dự án merge.
+- PR: tạo sau commit tài liệu kết thúc G2.
