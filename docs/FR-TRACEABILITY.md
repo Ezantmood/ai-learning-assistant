@@ -7,8 +7,8 @@ Chỉ chuyển trạng thái sau khi file/hàm tồn tại và case test tương
 | FR-01 | `app/(auth)/sign-up.tsx`; `src/features/auth/api.ts`; `schemas.ts`; migration profile | `signUp`; `signUpSchema`; `handle_new_user` | Đăng ký hợp lệ, email trùng, input sai; xác nhận đúng một profile | chưa làm |
 | FR-02 | `app/(auth)/sign-in.tsx`; `app/(app)/profile.tsx`; `src/features/auth/api.ts`; `useSession.ts` | `signIn`; `signOut`; `useSession` | G1 đã có session restore + route guard; G3 test login đúng/sai, logout, token hết hạn | đang làm |
 | FR-03 | `forgot-password.tsx`; `verify-reset-otp.tsx`; `reset-password.tsx`; auth API/schema | `requestPasswordReset`; `verifyRecoveryOtp`; `updatePassword` | Email reset, OTP đúng/sai/hết hạn/dùng lại, offline | chưa làm |
-| FR-04 | `profile.tsx`; `src/features/profile/*`; migration profile/Storage policy | `getProfile`; `updateProfile`; `uploadAvatar` | Sửa field/avatar; dữ liệu sai/offline; user A không đọc/sửa profile/avatar B | chưa làm |
-| FR-05 | `notes/*.tsx`; `src/features/notes/*`; migration `study_notes` | `listNotes`; `createNote`; `updateNote`; `deleteNote`; 4 RLS policies | CRUD bình thường và gọi Data API chéo A/B cho từng lệnh | chưa làm |
+| FR-04 | `profile.tsx`; `src/features/profile/*`; migration profile/Storage policy | `getProfile`; `updateProfile`; `uploadAvatar` | G2 xong migration/RLS/types; G5 test sửa field/avatar và A/B chéo | đang làm |
+| FR-05 | `notes/*.tsx`; `src/features/notes/*`; migration `study_notes` | `listNotes`; `createNote`; `updateNote`; `deleteNote`; 4 RLS policies | G2: trigger/grants/4 policies + `scripts/rls-proof.ts` 7/7 PASS trên remote 2026-09-17 (log ở `RLS-PROOF.md` mục 7); chờ API/UI G3 | đang làm |
 
 ## Bằng chứng cần lưu khi chuyển sang “đạt”
 

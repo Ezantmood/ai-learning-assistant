@@ -17,9 +17,9 @@ Mỗi checkbox là một commit độc lập và phải để app chạy đượ
 - Branch: `feat/g2-database`
 - Tag sau khi PR được merge: `g2-done`
 
-- [ ] Viết migration `profiles`, `study_notes`, constraints/index và trigger. File: `supabase/migrations/0001_account_manager.sql`. FR: FR-04, FR-05.
-- [ ] Thêm RLS policy SELECT/INSERT/UPDATE/DELETE và Storage `avatars`; kiểm thử bằng user A/B. File: cùng migration, `docs/TEST-CHECKLIST.md`. FR: FR-04, FR-05.
-- [ ] Sinh database types sau khi apply migration. File: `src/types/database.ts`. FR: FR-04, FR-05.
+- [x] Viết migration `profiles`, `study_notes`, constraints/index và trigger. File: `supabase/migrations/0001_account_manager.sql`. FR: FR-04, FR-05.
+- [x] Thêm RLS policy SELECT/INSERT/UPDATE/DELETE và Storage `avatars`; kiểm thử bằng user A/B. File: cùng migration, `docs/RLS-PROOF.md`, `docs/TEST-CHECKLIST.md`. FR: FR-04, FR-05.
+- [x] Sinh database types sau khi apply migration. File: `src/types/database.ts`. FR: FR-04, FR-05.
 
 ## G3 — Auth lõi và ghi chú
 

@@ -32,10 +32,10 @@ Nếu hướng dẫn Supabase React Native cho SDK 57 yêu cầu polyfill bổ s
 3. Project Settings/Connect/API → lấy Project URL và **Publishable key** (hoặc anon key nếu Dashboard dự án chỉ cung cấp tên cũ). Không lấy `service_role`.
 4. Authentication → Providers → Email: bật email/password; **tắt Confirm email khi dev**, bật lại khi demo.
 5. Authentication → Email Templates → Reset Password: thay nội dung đường link bằng mã `{{ .Token }}` để email hiển thị OTP 6 số; không chèn secret.
-7. SQL Editor: đọc toàn bộ `supabase/migrations/0001_account_manager.sql`, chạy trên project; không chạy từng đoạn thiếu policy.
-8. Table Editor: xác nhận `profiles`, `study_notes` có RLS enabled.
-9. Storage: xác nhận bucket private `avatars`, MIME/size limit và bốn policy đúng `DATA-MODEL.md` (migration nên tạo các mục này).
-10. Tạo hai tài khoản test A/B không dùng dữ liệu thật để test cách ly.
+6. SQL Editor: đọc toàn bộ `supabase/migrations/0001_account_manager.sql`, chạy trên project; không chạy từng đoạn thiếu policy.
+7. Table Editor: xác nhận `profiles`, `study_notes` có RLS enabled.
+8. Storage: xác nhận bucket private `avatars`, MIME/size limit và bốn policy đúng `DATA-MODEL.md` (migration nên tạo các mục này).
+9. Tạo hai tài khoản test A/B không dùng dữ liệu thật để test cách ly.
 
 ## 5. Cấu hình local
 
