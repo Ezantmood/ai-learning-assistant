@@ -5,8 +5,9 @@ import { createClient } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
 
 import { env } from './env';
+import type { Database } from '../types/database';
 
-export const supabase = createClient(
+export const supabase = createClient<Database>(
   env.supabaseUrl,
   env.supabasePublishableKey,
   {
