@@ -162,3 +162,88 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog. Sau m
 - PR: https://github.com/Ezantmood/student-account-management/pull/2
   (base chuyển về `main` sau khi PR #1 merge)
 - Tag: `g2-done` (tạo ngay sau merge trong cùng pipeline, đã push)
+
+---
+
+### G3 — Auth lõi và ghi chú — 2026-09-17
+
+**Đã làm gì**
+
+- Regen `src/types/database.ts` bằng CLI từ schema remote, xoá nợ G2:
+  `supabase gen types typescript --db-url "$SUPABASE_DB_URL"` (session
+  pooler từ `.env.local`). Lần đầu fail vì CLI cần Docker daemon đang tắt
+  (`LegacyDockerRunError`, dial `docker.sock`); khởi động Docker.app rồi
+  chạy lại → exit 0. Body tables khớp bản mirror tay, CLI thêm helper
+  generics (`Tables`, `TablesInsert`, …) và `Constants`; giữ alias
+  `ProfileRow`/`StudyNoteRow` ở cuối file.
+- `AuthProvider` là nguồn sự thật session duy nhất (`getSession` +
+  một `onAuthStateChange`, cleanup khi unmount); `useSession` đọc context.
+  Cổng khởi động: `preventAutoHideAsync` ở root layout, giữ splash tới khi
+  `getSession()` xong nên user đã login vào thẳng `/notes`, không nháy
+  sign-in. Supabase client gắn generic `<Database>`.
+- FR-01: `signUpSchema` (email, mật khẩu ≥8 có chữ+số, confirm khớp,
+  `student_code` 1–30 ký tự), `signUp` gửi metadata cho trigger
+  `handle_new_user`, phát hiện email trùng qua `identities == []`, màn hình
+  sign-up có độ mạnh mật khẩu, chống double-submit, loading nút, cờ
+  `EXPO_PUBLIC_REQUIRE_EMAIL_CONFIRMATION`.
+- FR-02: sign-in có hiện/ẩn mật khẩu, `router.replace('/notes')` chặn Back;
+  mọi lỗi qua một hàm duy nhất `toAuthErrorMessage` (không lộ raw error);
+  `signOut()` + `queryClient.clear()` + về sign-in; profile tối thiểu G3
+  (email + nút đăng xuất, form đầy đủ để dành G5).
+- FR-05: `listNotes`/`getNote`/`createNote`/`updateNote`/`deleteNote` qua
+  typed client + react-query key theo user; list có loading/empty (CTA)/
+  error (retry); tạo/sửa validate zod, giữ form khi lỗi mạng; xóa có dialog
+  xác nhận, chỉ đóng màn hình khi server xong.
+- Chất lượng chung: `AppScreen` (KeyboardAvoidingView), theme sáng/tối một
+  bộ token (`useAppTheme`), phát hiện offline qua mapping lỗi (không thêm
+  NetInfo ngoài stack), `accessibilityLabel` cho input,
+  `accessibilityRole="button"` cho nút.
+- Cài `jest-expo` + `jest` + `@types/jest` bằng `npx expo install`
+  (tương thích SDK 57), thêm script `test`, `babel.config.js`,
+  `jest.config.js`; 26 unit test cho zod schemas, độ mạnh mật khẩu và hai
+  hàm map lỗi (assert không lộ raw). Test import từ `@jest/globals` vì
+  global jest không được tsc nhận trong setup này.
+- Đánh dấu 4 checkbox G3 trong `docs/TASKS.md`; FR-01/FR-02/FR-05 → `đạt`
+  (chờ test tay trên thiết bị cho các case trong TEST-CHECKLIST).
+
+**Quyết định và lý do**
+
+- Quyết định: validate zod thủ công (`safeParse` + `setError`) thay vì thêm
+  `@hookform/resolvers`.
+- Lý do: AGENTS.md cấm tự thêm package ngoài stack đã chốt; glue thủ công
+  vài dòng, đủ cho form G3.
+- Quyết định: không link sang `/forgot-password` từ sign-in trong G3.
+- Lý do: file thuộc G4; `typedRoutes` sẽ đỏ type nếu link tới route chưa tồn
+  tại. G4 thêm link cùng màn hình reset.
+- Quyết định: tự merge `feat/g3-auth-core` vào `main`, tag `g3-done` ngay
+  theo lệnh trực tiếp của chủ dự án trong lượt này.
+- Lý do: lệnh chủ dự án được ưu tiên (SPEC thắng khi mâu thuẫn); mâu thuẫn
+  với `AGENTS.md`/`GIT-WORKFLOW.md` (quy định mở PR, dừng chờ review, chỉ
+  tag sau khi chủ dự án merge) được báo ở cuối lượt.
+
+**Đã kiểm thử**
+
+- Lệnh: `npx tsc --noEmit` → đạt (trước mỗi commit).
+- Lệnh: `npm run lint` → exit 0, 0 errors (2 warning lành tính của React
+  Compiler về `watch()` của react-hook-form; compiler bỏ qua memo, không
+  ảnh hưởng hành vi).
+- Lệnh: `npm test` → 3 suites, 26/26 PASS.
+- `npx expo install --check` → dependencies đúng SDK 57 sau khi thêm jest.
+- Test tay trên thiết bị thật (kill app mở lại, login A/B, CRUD chéo, quên
+  mật khẩu): chưa làm — chủ dự án chạy theo kịch bản demo cuối lượt và ghi
+  vào `docs/TEST-CHECKLIST.md`.
+
+**Còn nợ / giới hạn đã biết**
+
+- Nợ regen CLI đã xoá trong lượt này.
+- Test A/B avatar/profile (FR-04) để dành G5; profile G3 chỉ xem email +
+  đăng xuất.
+
+**Mốc Git**
+
+- Commit code cuối: `136913a4a383792b53621aa9e2572b4ff69d848c`
+- Commit docs (TASKS/TRACEABILITY/DEVLOG): commit này
+- Branch: `feat/g3-auth-core`
+- Tag: `g3-done` (tạo ngay sau merge theo lệnh chủ dự án, đã push)
+- PR: không mở PR; tự merge vào `main` theo lệnh trực tiếp của chủ dự án
+  (ngoại lệ so với GIT-WORKFLOW, xem quyết định trên)
