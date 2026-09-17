@@ -108,6 +108,57 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog. Sau m
 - Commit triển khai cuối: `5994f71cefbb094e818a149d7fc9f89c68b8adb6`
 - Branch: `feat/g2-database`
 - Tag: chưa tạo; chỉ tạo `g2-done` sau khi chủ dự án merge.
-- PR: tạo sau commit tài liệu kết thúc G2.
+- PR: tạo sau commit tài liệu kết thúc G2 (PR #2).
 
-- [G2] Retarget PR #2 base: main → feat/g1-setup (vì PR #1 chưa merged, base main sẽ show lẫn code G1).
+---
+
+### G2 (hoàn tất) — apply remote, proof thật, merge — 2026-09-17
+
+**Đã làm gì**
+
+- Chủ dự án apply `supabase/migrations/0001_account_manager.sql` thủ công
+  qua SQL Editor (bỏ bước `supabase link`/`db push`: access token không đủ
+  quyền trên project nên link fail; xem quyết định bên dưới).
+- Chạy `scripts/rls-proof.ts` trên project thật: **7/7 check pass, exit 0**
+  (log nguyên văn trong `docs/RLS-PROOF.md` mục 7). Hai lần chạy trước FAIL
+  đều có giá trị chẩn đoán: thiếu GRANT bảng và thiếu toggle Email provider.
+- Fix 2 lỗi thật phát hiện trong quá trình: xóa option `AsyncStorage: true`
+  không hợp lệ do commit `ff0a584` thêm nhầm (làm đỏ `tsc`); bổ sung GRANT
+  `authenticated`/`service_role` vào migration (RLS policy chưa đủ, thiếu
+  grant thì service_role cũng bị `permission denied`).
+- Viết `docs/MANUAL-STEPS.md`: chỉ các bước click tay trên Dashboard.
+- `gen types` bằng CLI chưa chạy (thiếu `SUPABASE_DB_URL`, access token
+  không quyền) → `src/types/database.ts` giữ bản mirror tay, GRANTs không
+  đổi types nên vẫn đúng; nợ regen CLI.
+- Rebase `feat/g2-database` lên main (sau merge PR #1), chuyển base PR #2
+  về `main`, merge PR #2, tag `g2-done`, push tag.
+
+**Quyết định và lý do**
+
+- Quyết định: bỏ `link`/`db push` khỏi G2, apply schema bằng SQL Editor.
+- Lý do: `SUPABASE_ACCESS_TOKEN` (sbp_) bị API từ chối (`LegacyLinkAuthTokenError`,
+  thiếu quyền trên project) dù URL và ref trỏ cùng project; schema apply tay
+  đạt cùng kết quả vì migration idempotent.
+- Quyết định: service key legacy JWT (`eyJ...`) chỉ dùng trong
+  `scripts/rls-proof.ts` (đọc từ `.env.local` đã gitignore), không vào app.
+- Lý do: đúng yêu cầu chủ dự án và luật AGENTS (cấm service key trong app).
+
+**Đã kiểm thử**
+
+- Lệnh: `npx tsc --noEmit` → đạt (trước mỗi commit).
+- Lệnh: `npm run lint` → đạt, exit 0 (trước mỗi commit).
+- `scripts/rls-proof.ts` trên remote → 7/7 pass, exit 0; user test tự dọn.
+- Migration chạy 2 lần liên tiếp trên Postgres 16 local → 0 lỗi.
+
+**Còn nợ / giới hạn đã biết**
+
+- Cần token đủ quyền rồi chạy `supabase db push` (đồng bộ lịch sử
+  migration) và `supabase gen types` để regen `database.ts` bằng CLI.
+- Test A/B cho avatar/profile (FR-04) để dành G5.
+
+**Mốc Git**
+
+- Branch: `feat/g2-database`
+- PR: https://github.com/Ezantmood/student-account-management/pull/2
+  (base chuyển về `main` sau khi PR #1 merge)
+- Tag: `g2-done` (tạo ngay sau merge trong cùng pipeline, đã push)
