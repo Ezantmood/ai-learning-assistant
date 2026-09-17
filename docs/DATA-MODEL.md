@@ -49,7 +49,29 @@ RLS policies cho cả bốn lệnh:
 | UPDATE | `auth.uid() = user_id` | `auth.uid() = user_id` |
 | DELETE | `auth.uid() = user_id` | — |
 
-`WITH CHECK` ở UPDATE ngăn đổi `user_id` để chuyển row sang tài khoản khác. Test RLS phải gọi Data API bằng session A/B, không chỉ xem UI.
+`WITH CHECK` ở UPDATE ngăn đổi `user_id` để chuyển row sang tài khoản khác. Test RLS phải gọi Data API bằng session A/B, không chỉ xem UI. Kịch bản chi tiết xem `docs/RLS-PROOF.md`.
+
+## Vì sao chỉ lọc ở client là không an toàn
+
+`.eq('user_id', uid)` chỉ là câu lọc do app tự thêm vào request. Nó chạy
+trên máy người dùng: ai cũng có thể mở devtools, sửa JS, xóa dòng `.eq`,
+thay `uid` thành id người khác, hoặc gọi thẳng PostgREST bằng publishable
+key mà không qua app. Server lúc đó vẫn trả dữ liệu vì không có ai kiểm tra
+lại — filter client chỉ giúp UX gọn, không phải bảo mật.
+
+RLS chạy trong Postgres, áp dụng cho **mọi** request qua Data API. Postgres
+lấy `auth.uid()` từ JWT đã được Supabase ký và xác thực chữ ký, client không
+tự bịa được. Mỗi policy `USING (auth.uid() = user_id)` / `WITH CHECK (...)`
+được kiểm tra trước khi đọc/ghi row. Kể cả khi attacker bỏ `.eq` hay gửi
+`user_id` của nạn nhân, database vẫn loại hoặc từ chối row.
+
+Hệ quả thực tế: SELECT chéo trả về **0 dòng chứ không ném lỗi permission**,
+vì `USING` chỉ lọc row (xem `docs/RLS-PROOF.md` mục 2); còn INSERT sai chủ
+hoặc UPDATE đổi `user_id` sang người khác thì bị `WITH CHECK` từ chối.
+Trả lời trước giáo viên có thể nói gọn: “Client do người dùng kiểm soát nên
+filter bỏ được; RLS chạy ở database, đối chiếu JWT qua `auth.uid()` cho mọi
+request nên mới là ranh giới bảo mật. Publishable key nằm ở client được, an
+toàn dữ liệu phụ thuộc RLS.”
 
 ## Trigger
 
