@@ -129,6 +129,23 @@ create policy study_notes_delete_own
   on public.study_notes for delete
   using (auth.uid() = user_id);
 
+-- 4c. Table grants (RLS policy chưa đủ: role còn cần quyền bảng).
+-- authenticated: CRUD để RLS thu hẹp theo từng user.
+-- service_role: full cho vận hành/admin (vẫn cần grant dù bypass RLS).
+-- anon: không cấp (bắt buộc đăng nhập).
+grant select, insert, update, delete
+  on public.profiles to authenticated;
+grant select, insert, update, delete
+  on public.study_notes to authenticated;
+grant all
+  on public.profiles to service_role;
+grant all
+  on public.study_notes to service_role;
+revoke all
+  on public.profiles from anon;
+revoke all
+  on public.study_notes from anon;
+
 -- 5. Trigger ----------------------------------------------------------------
 -- 5a. Tự tạo profile khi có auth.users mới.
 -- student_code thiếu/rỗng/dài quá → raise exception → sign-up thất bại.
