@@ -24,12 +24,18 @@ Mỗi case đổi `[ ]` thành `[x]` khi đạt và thêm `YYYY-MM-DD | nền t�
 
 ## FR-03 — Quên/đặt lại mật khẩu
 
-- [ ] Email tồn tại → nhận email có OTP 6 số và mở màn hình nhập mã trong app.
-- [ ] Email không tồn tại → UI dùng cùng thông báo trung tính.
-- [ ] Mật khẩu mới sai schema/confirm khác → không gọi update.
-- [ ] OTP hợp lệ + mật khẩu mới hợp lệ → đổi thành công; mật khẩu cũ thất bại, mật khẩu mới đăng nhập được.
-- [ ] **OTP sai, hết hạn hoặc đã dùng** → không đổi mật khẩu; có CTA yêu cầu mã mới.
-- [ ] Offline khi gửi email hoặc cập nhật → báo lỗi/retry; không báo thành công giả.
+- [ ] `/sign-in` hiện link “Quên mật khẩu?” → sang `/forgot-password`.
+- [ ] Email tồn tại → nhận email có OTP 6 số (template in `{{ .Token }}`) và sang màn hình nhập mã trong app.
+- [ ] **Email không tồn tại** → UI dùng cùng thông báo trung tính, không tiết lộ email có đăng ký hay không.
+- [ ] Ô OTP là 1 ô numeric tự focus, nhập tay/paste/dán từ email đều được; mã khác 6 số bị chặn ngay tại field.
+- [ ] Nút gửi lại mã khóa 60 giây có đếm ngược (`Gửi lại mã sau Xs`), disable trong lúc chờ; hết 60s mới gọi lại API (chống spam).
+- [ ] **Vượt quota gửi email (100/giờ)** → thông báo rõ giới hạn, không crash, nút hết loading và bấm lại được.
+- [ ] **OTP sai** → thông báo riêng; **OTP hết hạn** → thông báo riêng + CTA gửi lại mã; **mã đã dùng** → thông báo riêng (lưu ý: Supabase gộp sai/hết hạn/đã dùng thành một mã `Token has expired or is invalid` nên case dùng lại thường rơi vào nhánh hết hạn, vẫn có CTA gửi mã mới).
+- [ ] **Thoát app giữa luồng rồi mở lại**: trước verify → email được điền sẵn ở cả hai màn hình + cooldown được giữ; sau verify (recovery session còn hạn) → vào thẳng `/reset-password` để đặt mật khẩu.
+- [ ] Mật khẩu mới sai schema/confirm khác → lỗi tại field, không gọi update.
+- [ ] OTP hợp lệ + mật khẩu mới hợp lệ → về `/sign-in` kèm banner thành công; mật khẩu cũ thất bại, mật khẩu mới đăng nhập được.
+- [ ] Offline khi gửi email/xác minh/cập nhật → báo lỗi mạng + retry; form giữ dữ liệu; không báo thành công giả, không treo loading.
+- [ ] `/profile/change-password` khi đã đăng nhập: sai mật khẩu hiện tại → lỗi riêng; mật khẩu mới trùng cũ → bị chặn; đúng → banner thành công.
 
 ## FR-04 — Hồ sơ và avatar
 

@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { Link, router } from 'expo-router';
+import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Banner, Button, Text, TextInput } from 'react-native-paper';
@@ -14,6 +14,7 @@ import {
 } from '../../src/features/auth/schemas';
 
 export default function SignInScreen() {
+  const params = useLocalSearchParams<{ passwordReset?: string }>();
   const [apiError, setApiError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -59,6 +60,12 @@ export default function SignInScreen() {
       <Text variant="bodyMedium">
         Dùng email và mật khẩu đã đăng ký để vào ghi chú học tập.
       </Text>
+
+      {params.passwordReset === 'done' ? (
+        <Banner icon="check-circle" visible>
+          Đặt lại mật khẩu thành công. Đăng nhập bằng mật khẩu mới.
+        </Banner>
+      ) : null}
 
       {apiError ? (
         <Banner icon="alert-circle" visible>
@@ -117,6 +124,16 @@ export default function SignInScreen() {
       >
         Đăng nhập
       </Button>
+
+      <Link asChild href="/forgot-password">
+        <Button
+          accessibilityLabel="Quên mật khẩu"
+          accessibilityRole="button"
+          mode="text"
+        >
+          Quên mật khẩu?
+        </Button>
+      </Link>
 
       <Link asChild href="/sign-up">
         <Button

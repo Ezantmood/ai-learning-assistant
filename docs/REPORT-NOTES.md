@@ -72,3 +72,19 @@ Phạm vi không có offline-first. UI giữ form, báo lỗi và cho retry; kh�
 **Vì sao không viết backend riêng?**
 
 Supabase cung cấp Auth, Data API, Postgres RLS và Storage đủ cho phạm vi; backend riêng làm tăng code và điểm lỗi mà không thêm giá trị cho năm FR.
+
+**Vì sao FR-03 dùng OTP 6 số thay vì deep link?**
+
+Deep link reset-password bắt user bấm link trong email để mở lại app: trên Expo Go phải cấu hình scheme/associated domain, dễ hỏng khi đổi máy, và luồng phụ thuộc app mail mở đúng app. OTP 6 số giữ toàn bộ luồng trong app (`resetPasswordForEmail` → `verifyOtp` type `recovery` → `updateUser`), không cần scheme/deep link nên chạy ngay trong Expo Go. Trade-off: user phải gõ/dán 6 số (khắc phục bằng ô numeric tự focus + `oneTimeCode`/`sms-otp` gợi ý dán), mã có hạn dùng ngắn và mỗi mã một lần (khắc phục bằng nút gửi lại + cooldown 60s). SPEC chốt OTP là luồng chính, deep link chỉ là bonus.
+
+**Vì sao phải dùng custom SMTP (Brevo) cho email reset?**
+
+Gói free của Supabase dùng email service mặc định không cho sửa nội dung Email Templates — template Reset password mặc định chỉ chứa đường link, không in được mã `{{ .Token }}`. Muốn email hiển thị OTP 6 số để nhập trong app thì phải cắm custom SMTP (ở đây là Brevo) mới được sửa template. Kèm theo đó rate limit email được nâng lên 100/giờ; app vẫn map lỗi `over_email_send_rate_limit` sang thông báo rõ ràng và khóa nút gửi lại 60 giây để chống spam.
+
+**Supabase có tiết lộ email tồn tại khi quên mật khẩu không?**
+
+Không. `resetPasswordForEmail` luôn trả thành công dù email chưa đăng ký, nên màn hình `/forgot-password` hiện cùng một thông báo trung tính cho mọi email — chống liệt kê tài khoản.
+
+**Thoát app giữa lúc reset mật khẩu thì sao?**
+
+Email đang verify + thời điểm gửi mã lưu trong AsyncStorage nên mở lại app vẫn điền sẵn email và giữ cooldown. Nếu đã verify xong (recovery session còn hạn), route `/` đưa thẳng về `/reset-password` để đặt mật khẩu. Màn hình reset yêu cầu cả session lẫn cờ pending nên user login thường không dùng ké được.

@@ -40,7 +40,7 @@
 - Không chỉ filter `user_id` ở client để bảo vệ dữ liệu; RLS là bắt buộc.
 - Không gọi Supabase trực tiếp từ screen; screen gọi API/query của feature.
 - Không tự thay stack, package hoặc kiến trúc đã chốt trong docs.
-- Không merge PR, force-push, rebase branch chia sẻ hay sửa lịch sử nếu chưa được chủ dự án yêu cầu.
+- Không force-push, rebase branch chia sẻ hay sửa lịch sử nếu chưa được chủ dự án yêu cầu. Không tự merge vào `main` ở G1–G3; từ G4 trở đi agent tự merge sau khi cổng chất lượng xanh theo quyết định của chủ dự án (xem Quy tắc Git).
 
 ## Quy trình G1 → G5
 
@@ -48,7 +48,7 @@
 2. Chỉ làm đúng một checkbox; cập nhật traceability/test nếu task làm thay đổi phạm vi kiểm thử.
 3. Chạy type check, lint và test tay tối thiểu cho phần vừa làm.
 4. Cập nhật `docs/DEVLOG.md`, commit và push ngay theo Quy tắc Git.
-5. Hết giai đoạn: push branch, mở PR rồi dừng chờ review; chỉ tag sau khi chủ dự án merge.
+5. Hết giai đoạn G1–G3: push branch, mở PR rồi dừng chờ review; chỉ tag sau khi chủ dự án merge. Từ G4 trở đi: agent tự merge branch vào `main` sau khi cổng chất lượng xanh (`npx tsc --noEmit`, `npm run lint`, `npm test`), tự tạo tag `gx-done` và push — theo quyết định của chủ dự án ngày 2026-09-18, không mở PR chờ review.
 
 ## Khi làm X thì đọc file Y
 
@@ -72,17 +72,20 @@
 - Mỗi commit phải để lại project ở trạng thái CHẠY ĐƯỢC (app mở không crash).
   Task quá lớn thì tách nhỏ trong TASKS.md rồi commit từng phần.
 - Push ngay sau mỗi commit. Không giữ commit ở local.
-- Trước khi commit: chạy `npx tsc --noEmit` và `npm run lint`. Có lỗi thì sửa
-  trước, không commit code lỗi type.
+- Trước khi commit: chạy `npx tsc --noEmit`, `npm run lint` và `npm test`.
+  Có lỗi thì sửa trước, không commit code lỗi type/test đỏ.
 
 ### Branch
 
-- `main` chỉ nhận code đã review. Không commit trực tiếp lên main.
+- `main` chỉ nhận code đã review (G1–G3) hoặc đã qua cổng chất lượng xanh do agent tự kiểm (G4 trở đi). Không commit trực tiếp lên main.
 - Mỗi giai đoạn một branch: feat/g1-setup, feat/g2-database, feat/g3-auth-core,
   feat/g4-password-reset, feat/g5-profile-docs.
-- Hết giai đoạn: push branch, tạo PR kèm mô tả (đã làm gì, test thế nào, FR nào
+- Hết giai đoạn G1–G3: push branch, tạo PR kèm mô tả (đã làm gì, test thế nào, FR nào
   được thoả), DỪNG chờ tôi review. KHÔNG tự merge.
-- Sau khi tôi merge: `git tag g2-done && git push --tags`.
+- Từ G4 trở đi (quyết định của chủ dự án ngày 2026-09-18): agent tự merge branch vào
+  `main` sau khi `npx tsc --noEmit`, `npm run lint`, `npm test` đều xanh, rồi tự tạo
+  tag `gx-done` và push (`git push origin main gx-done`). Không mở PR chờ review.
+- Sau khi merge (tự merge hoặc chủ dự án merge): ghi full commit hash, branch, tag vào `docs/DEVLOG.md`.
 
 ### Commit message (Conventional Commits, mô tả tiếng Việt)
 

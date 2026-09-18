@@ -41,8 +41,56 @@ export const signInSchema = z.object({
   password: z.string().min(1, 'Vui lòng nhập mật khẩu.'),
 });
 
+/**
+ * FR-03: mã OTP khôi phục mật khẩu — đúng 6 chữ số.
+ * Template email Reset password trên Dashboard in {{ .Token }}.
+ */
+export const otpSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{6}$/, 'Mã OTP gồm đúng 6 chữ số.');
+
+export const forgotPasswordSchema = z.object({
+  email: emailSchema,
+});
+
+/**
+ * FR-03: mật khẩu mới sau verify OTP — dùng lại passwordSchema của G3.
+ */
+export const resetPasswordSchema = z
+  .object({
+    confirmPassword: z.string().min(1, 'Vui lòng nhập lại mật khẩu mới.'),
+    newPassword: passwordSchema,
+  })
+  .refine((values) => values.newPassword === values.confirmPassword, {
+    message: 'Mật khẩu nhập lại chưa khớp.',
+    path: ['confirmPassword'],
+  });
+
+/**
+ * Đổi mật khẩu khi đã đăng nhập: xác thực lại bằng mật khẩu hiện tại,
+ * mật khẩu mới phải khác mật khẩu hiện tại.
+ */
+export const changePasswordSchema = z
+  .object({
+    confirmPassword: z.string().min(1, 'Vui lòng nhập lại mật khẩu mới.'),
+    currentPassword: z.string().min(1, 'Vui lòng nhập mật khẩu hiện tại.'),
+    newPassword: passwordSchema,
+  })
+  .refine((values) => values.newPassword === values.confirmPassword, {
+    message: 'Mật khẩu nhập lại chưa khớp.',
+    path: ['confirmPassword'],
+  })
+  .refine((values) => values.newPassword !== values.currentPassword, {
+    message: 'Mật khẩu mới phải khác mật khẩu hiện tại.',
+    path: ['newPassword'],
+  });
+
 export type SignUpFormValues = z.input<typeof signUpSchema>;
 export type SignInFormValues = z.input<typeof signInSchema>;
+export type ForgotPasswordFormValues = z.input<typeof forgotPasswordSchema>;
+export type ResetPasswordFormValues = z.input<typeof resetPasswordSchema>;
+export type ChangePasswordFormValues = z.input<typeof changePasswordSchema>;
 
 export type PasswordStrength = {
   label: 'Yếu' | 'Trung bình' | 'Mạnh';

@@ -30,6 +30,7 @@ Route group `(auth)` và `(app)` không xuất hiện trong URL. Layout mỗi gr
 | `/notes/new` | FR-05 tạo note | Title/content form | Spinner khi lưu; lỗi validation/API; success invalidate `notes` rồi back |
 | `/notes/[id]` | FR-05 sửa/xóa note | Form, nút Delete, confirm dialog | Loading fetch; không tìm thấy/không có quyền dùng cùng thông báo; lỗi retry; success back |
 | `/profile` | FR-04 xem/sửa hồ sơ, avatar, logout | Avatar picker, form, logout button | Loading profile/avatar; avatar trống dùng initials; lỗi retry; success cập nhật cache/snackbar |
+| `/profile/change-password` | FR-03 đổi pass khi đã login | Current/new/confirm form | Spinner; sai pass hiện tại/trùng pass cũ báo riêng; success banner + về hồ sơ |
 
 ## Hành vi theo trạng thái xác thực
 

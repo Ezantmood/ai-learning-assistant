@@ -20,7 +20,9 @@ Kiến trúc theo feature, ít tầng và đủ rõ để sinh viên giải thí
 │   │   └── reset-password.tsx
 │   └── (app)/
 │       ├── _layout.tsx
-│       ├── profile.tsx
+│       ├── profile/
+│       │   ├── index.tsx
+│       │   └── change-password.tsx
 │       └── notes/
 │           ├── index.tsx
 │           ├── new.tsx
@@ -31,7 +33,7 @@ Kiến trúc theo feature, ít tầng và đủ rõ để sinh viên giải thí
 │   │   ├── FormTextField.tsx
 │   │   └── FullScreenStatus.tsx
 │   ├── features/
-│   │   ├── auth/{api.ts,schemas.ts,useSession.ts}
+│   │   ├── auth/{api.ts,schemas.ts,errors.ts,recovery.ts,recoveryStorage.ts,useSession.ts}
 │   │   ├── profile/{api.ts,schemas.ts,queries.ts}
 │   │   └── notes/{api.ts,schemas.ts,queries.ts}
 │   ├── lib/{env.ts,supabase.ts,queryClient.ts}
