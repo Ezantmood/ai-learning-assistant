@@ -92,3 +92,15 @@ theo mẫu `YYYY-MM-DD | iOS/Android + Expo Go | A/B | đạt/lỗi + ghi chú n
 - [ ] Android và iOS/Expo Go mục tiêu: mở app, điều hướng toàn luồng không crash.
 - [ ] Không thấy warning nghiêm trọng, secret, token hoặc password trong console/UI.
 - [ ] `git diff --cached` không chứa key/token/password trước commit.
+
+## G6 — Kiểm tra thủ công UI (chủ dự án chạy trên máy thật)
+
+- [ ] Icon hiện đủ mọi màn hình (không còn ô trống): auth (email/lock/eye),
+  OTP (numeric/refresh/check), profile (camera/content-save/lock-reset/logout),
+  notes (note-text/plus). Icon rỗng = tên sai hoặc cầu nối settings.icon vỡ.
+- [ ] Dark mode: bật tối hệ điều hành → nền/tên nút/snackbar đổi theo;
+  `StatusBar` chữ sáng; tắt → về sáng. Không kẹt một theme.
+- [ ] Bàn phím không che input: focus từng ô (mật khẩu, OTP, nội dung note)
+  → ô vẫn nhìn thấy; bấm icon mắt không nhảy focus/crash.
+- [ ] Tap avatar ở `/profile` → mở thư viện ảnh (không phải đoán); overlay
+  camera luôn thấy được cả khi chưa có avatar (fallback chữ cái đầu).

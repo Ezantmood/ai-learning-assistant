@@ -24,8 +24,25 @@ Chỉ điền bằng bằng chứng từ code/test thực tế. Không tuyên b�
 - Dashboard cho thấy RLS enabled và bucket `avatars` private; che project ref/key/email.
 - Kết quả truy cập chéo A/B cho SELECT/INSERT/UPDATE/DELETE (notes) và
   download/signed URL + anon (avatar).
-- Output `npm test` (84/84), `npx tsc --noEmit`, `npm run lint` cuối; không chụp `.env`.
-- `git log --oneline --decorate --graph --all` cho các mốc G1..G5 + tag `v1.0.0`.
+- Output `npm test` (91/91), `npx tsc --noEmit`, `npm run lint` cuối; không chụp `.env`.
+- `git log --oneline --decorate --graph --all` cho các mốc G1..G6 + tag `v1.1.0`.
+
+## Ảnh before/after G6 (UI/UX polish + icon system)
+
+Chủ dự án tự chụp trên cùng một máy thật (Expo Go), mỗi màn hình một cặp:
+
+- `/sign-in`, `/sign-up`, `/forgot-password`, `/verify-reset-otp`,
+  `/reset-password`: before (G5: không icon hoặc icon rỗng) → after (G6:
+  icon dẫn đầu hiện đủ, nút submit có icon + spinner).
+- `/profile`: before (nút “Đổi avatar” chữ, Snackbar thô) → after (chạm
+  avatar với overlay camera, `FeedbackSnackbar` có leading icon theo variant).
+- `/notes`: before (Card list, empty chữ) → after (`List.Item` icon +
+  `Divider`, `EmptyState` icon lớn, `FAB`).
+- Dark mode: bật tối hệ điều hành, chụp `/sign-in` + `/notes` (theme theo
+  `useColorScheme`, `StatusBar` đổi theo).
+
+Điểm cần thấy rõ trong ảnh after: icon không còn ô trống; dark mode nền
+tối chữ sáng; bàn phím không che input (chụp lúc focus ô mật khẩu).
 
 ## Câu hỏi vấn đáp và trả lời gợi ý
 
@@ -112,3 +129,14 @@ Quyết định chủ dự án G5: mỗi lần đổi tạo object mới `avatar
 **Lỗi signInWithPassword làm sai kết quả proof script là sao?**
 
 Bài học G5: gọi `signInWithPassword` trên client dùng chung khiến client đó mang session user A, nên case "anon" chạy nhầm quyền A và cho kết quả sai (anon đọc được file). Sửa bằng cách tách client đăng nhập riêng, giữ client anon thật sự ẩn danh — sau đó script 5/5 PASS.
+
+**Vì sao icon Paper không hiện trên Expo Go và sửa thế nào?**
+
+`react-native-paper` resolve icon qua `react-native-vector-icons`, package
+này không có trong Expo Go nên mọi icon (mắt mật khẩu, FAB, Appbar, Banner)
+render rỗng im lặng mà không báo lỗi. Fix: `PaperProvider`
+`settings={{ icon: (props) => <MaterialCommunityIcons {...props} /> }}`
+với `MaterialCommunityIcons` từ `@expo/vector-icons` (cài đúng line SDK 57
+bằng `npx expo install`, chạy trong Expo Go không cần dev build). Tên icon
+sai cũng render rỗng nên toàn bộ tên đã đối chiếu glyphmap thật và liệt kê
+trong `docs/UI-FLOW.md` (bảng icon G6).

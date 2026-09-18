@@ -421,3 +421,90 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog. Sau m
 - Tag: `g5-done` + `v1.0.0` (tạo ngay sau tự merge theo quyết định chủ dự án,
   đã push)
 - PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### G6 — UI/UX polish + hệ thống icon — 2026-09-18
+
+**Đã làm gì**
+
+- Cài `@expo/vector-icons` đúng line SDK 57 bằng `npx expo install`
+  (được chủ dự án cho phép trước qua câu hỏi dừng; drift patch
+  expo/expo-constants/expo-router có sẵn từ G4/G5 nên không đụng vào).
+- Fix gốc icon: `PaperProvider` ở `src/providers/AppProviders.tsx` thêm
+  `settings={{ icon: (props) => <MaterialCommunityIcons {...props} /> }`;
+  `StatusBar` theo theme; 26 tên icon đối chiếu glyphmap thật, bảng icon
+  trong `docs/UI-FLOW.md`.
+- Design system `src/theme/`: `lightTheme`/`darkTheme` mở rộng MD3
+  (thêm màu `success*`; danger dùng thẳng `error*` của MD3),
+  `useAppTheme` theo `useColorScheme` fallback light, `spacing`
+  4/8/12/16/24/32 + `radius`; xóa `src/lib/theme.ts`, mọi màn hình import
+  từ `src/theme`. Không custom font, typography dùng variant Paper.
+- 6 component dùng chung `src/components/`: `ScreenContainer` (SafeArea +
+  KAV + ScrollView), `FormTextInput` (outlined + leftIcon + HelperText),
+  `PasswordInput` (toggle eye/eye-off, label động, focusTextInput false),
+  `FeedbackSnackbar` (leading icon theo variant + nút close),
+  `EmptyState`, `LoadingState`/`ListSkeleton` (Animated RN).
+  Xóa `AppScreen`/`FormTextField`/`FullScreenStatus`, migrate toàn bộ màn
+  hình; logic nghiệp vụ, zod schema, 23505, path avatar giữ nguyên.
+- Polish từng màn hình + testID ổn định (`login-submit`,
+  `password-toggle`, `avatar-picker`, `profile-save`, `notes-fab` và các
+  testID phụ); OTP căn giữa letterSpacing rộng; avatar `Pressable`
+  overlay camera; notes `List.Item` + `Divider` + pull-to-refresh qua
+  `refetch` của TanStack Query.
+- Test: cập nhật `ProfileView.test` sang testID; thêm 7 test
+  (`PasswordInput` toggle, `FeedbackSnackbar` 3 variant + nút đóng,
+  `EmptyState` render + action) → **91/91 PASS** (giữ nguyên 84 cũ).
+  Thêm `src/test-utils/vectorIconsMock.tsx` + `moduleNameMapper` vì font
+  thật resolve bất đồng bộ sau teardown làm crash worker Jest
+  (`window.dispatchEvent is not a function`); mock chỉ render tên icon,
+  không nới assertion.
+- Merge xuôi `main` vào branch (2 commit docs G5 sau `v1.0.0`) thay vì
+  rebase, giữ đúng cấm force-push; giải quyết conflict `UI-FLOW.md` theo
+  hướng giữ cả nội dung G5 (luồng avatar) lẫn bảng G6.
+
+**Quyết định và lý do**
+
+- Quyết định: cài `@expo/vector-icons` thay vì giữ “không thêm package”.
+- Lý do: package chưa hề có trong `node_modules`; không cài thì import
+  trong `settings.icon` đỏ `tsc` và bundle lỗi. Đã DỪNG hỏi và được chủ dự
+  án cho phép; cài bằng `npx expo install` đúng line SDK 57, chạy Expo Go,
+  không native module mới.
+- Quyết định: màu custom dùng intersection type `AppTheme` thay vì
+  `declare module ... interface MD3Theme`.
+- Lý do: `MD3Theme` là `type` alias nên interface augmentation không merge
+  được (trùng định danh khác loại khai báo); intersection vẫn type-safe,
+  không `any`, không `@ts-ignore` — giữ đúng bất biến, chỉ khác cơ chế.
+- Quyết định: danger không tạo màu mới, dùng `error`/`errorContainer` MD3.
+- Lý do: MD3 đã có semantic danger đầy đủ; thêm `danger` trùng `error`
+  chỉ tạo hai nguồn sự thật.
+- Quyết định: thang spacing mới `xs4/sm8/md12/lg16/xl24/xxl32` thay vì giữ
+  `md16/lg24/xl32` cũ.
+- Lý do: khớp scale 4/8/12/16/24/32 trong lệnh G6; mọi style viết lại bằng
+  token mới nên không còn phụ thuộc giá trị cũ.
+
+**Đã kiểm thử**
+
+- Lệnh: `npx tsc --noEmit` → đạt (trước mỗi commit).
+- Lệnh: `npm run lint` → 0 errors, 2 warning lành tính React Compiler về
+  `watch()` (kế thừa G3/G4/G5).
+- Lệnh: `npm test` → 11 suites, 91/91 PASS (84 cũ giữ nguyên + 7 mới).
+- Test tay trên thiết bị thật (icon đủ, dark mode, bàn phím, tap avatar):
+  chưa làm — chủ dự án chạy theo TEST-CHECKLIST mục G6.
+
+**Còn nợ / giới hạn đã biết**
+
+- Test tay G6 trên Expo Go thuộc chủ dự án (kịch bản đã có).
+- `TextInput.Icon` (nút mắt) nằm trong ô input cao 56 nên không gắn thêm
+  `hitSlop` — vùng bấm thực tế gồm cả chiều cao ô nhập, đủ 44px chiều dọc.
+- `npm audit` 14 moderate (drift dependency Expo SDK 57, không tự fix).
+
+**Mốc Git**
+
+- Commit code cuối: `7ba2db0`
+- Commit docs/UI-FLOW resolve + G6 (DEVLOG/REPORT/CHECKLIST): commit này
+- Branch: `feat/g6-ui-polish`
+- Tag: `v1.1.0` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
+- PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh
+
+---
