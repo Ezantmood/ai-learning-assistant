@@ -325,3 +325,10 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog. Sau m
   về 6 rồi gửi mã mới kiểm tra.
 - Cổng: `tsc` đạt, `lint` 0 errors, `test` 51/51; merge `fix/g4-otp-length`
   vào `main` và push (commit docs này).
+
+**Fix tiếp theo (2026-09-18): khóa chặt lại đúng 6 số**
+
+- Chủ dự án đã chỉnh Email OTP length về 6, server chỉ gửi 6 số.
+- Sửa: revert `otpSchema` về `^\d{6}$` (`05188b0`), UI/test/docs khớp lại
+  chữ “6 số” theo SPEC. Cổng: `tsc` đạt, `lint` 0 errors, `test` 51/51;
+  merge `fix/g4-otp-strict-6` vào `main` và push (commit docs này).
