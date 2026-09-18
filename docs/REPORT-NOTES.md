@@ -44,6 +44,22 @@ Chủ dự án tự chụp trên cùng một máy thật (Expo Go), mỗi màn h
 Điểm cần thấy rõ trong ảnh after: icon không còn ô trống; dark mode nền
 tối chữ sáng; bàn phím không che input (chụp lúc focus ô mật khẩu).
 
+## Ảnh light/dark G7 (theme switcher)
+
+Chủ dự án tự chụp trên cùng một máy thật (Expo Go), mỗi màn hình một cặp
+light → dark (cùng nội dung để thấy tương phản):
+
+- `/notes` (có data) + trạng thái empty + `/profile` (có avatar và Card
+  “Giao diện” đang chọn).
+- Nút theme trên Appbar ở cả 3 mode (icon `theme-light-dark` /
+  `weather-sunny` / `weather-night`).
+- Một màn form (`/sign-in`) ở light mode để chứng minh không có chữ trắng
+  trên nền sáng.
+
+Điểm cần thấy rõ: cùng một màn, light nền sáng chữ tối, dark nền tối chữ
+sáng; không có chỗ nào hardcode màu còn sót (đặc biệt overlay camera trên
+avatar và Snackbar).
+
 ## Câu hỏi vấn đáp và trả lời gợi ý
 
 **Vì sao cần RLS khi client đã filter `user_id`?**

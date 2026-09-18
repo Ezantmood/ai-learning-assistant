@@ -104,3 +104,18 @@ theo mẫu `YYYY-MM-DD | iOS/Android + Expo Go | A/B | đạt/lỗi + ghi chú n
   → ô vẫn nhìn thấy; bấm icon mắt không nhảy focus/crash.
 - [ ] Tap avatar ở `/profile` → mở thư viện ảnh (không phải đoán); overlay
   camera luôn thấy được cả khi chưa có avatar (fallback chữ cái đầu).
+
+## G7 — Kiểm tra thủ công theme switcher (chủ dự án chạy trên máy thật)
+
+- [ ] Nút theme trên Appbar Notes và Profile: bấm cycle Hệ thống → Sáng →
+  Tối → Hệ thống; icon đổi `theme-light-dark` → `weather-sunny` →
+  `weather-night`; hai màn phản ánh cùng trạng thái ngay.
+- [ ] `Card` “Giao diện” trong Profile: chọn Sáng/Tối/Hệ thống →
+  nút Appbar đổi icon theo ngay; kill app mở lại vẫn giữ lựa chọn.
+- [ ] Chọn “Hệ thống” rồi đổi dark/light trong Settings điện thoại → app
+  đổi theo mà không cần chạm lại app.
+- [ ] Đổi mode → kill app → mở lại: không nháy sáng→tối lúc khởi động.
+- [ ] Duyệt hết màn ở light mode, không có chữ trùng màu nền: Đăng nhập,
+  Đăng ký, Quên mật khẩu, Xác minh OTP, Đặt mật khẩu mới, Notes (có data +
+  empty + skeleton), Profile (có avatar + fallback chữ cái đầu), Snackbar
+  success/error, FAB, Appbar, Dialog xác nhận xóa, Banner, Đổi mật khẩu.

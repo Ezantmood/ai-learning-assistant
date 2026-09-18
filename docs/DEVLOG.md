@@ -559,3 +559,84 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog. Sau m
 - Branch: `fix/g6-1-navigation-header`
 - Tag: `v1.1.1` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
 - PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### G7 — Theme switcher Light / Dark / System — 2026-09-19
+
+**Đã làm gì**
+
+- Branch `feat/g7-theme-switcher` tách từ `main` tại `v1.1.1` (tag trỏ
+  đúng HEAD merge G6.1 nên tách tại HEAD là đủ).
+- `src/theme/themeMode.ts` (thuần, không import native module để test
+  không cần mock — bài học G4): union `ThemeMode`, key
+  `app.theme.mode`, type guard `isThemeMode`, `cycleThemeMode`
+  system→light→dark→system, `resolveEffectiveScheme`,
+  `themeModeIcon`, `themeModeAccessibilityLabel`, `load/persistThemeMode`
+  (rác → `system`, lỗi I/O không throw).
+- `src/theme/ThemeContext.tsx`: `ThemeModeProvider` ở root bọc NGOÀI
+  PaperProvider và ThemeProvider navigation; cả hai cùng ăn theme từ
+  context. `theme`/`navigationTheme` memo theo `effectiveScheme`;
+  `adaptNavigationTheme` vẫn gọi đúng một lần ở module scope
+  (`src/theme/navigation.ts` từ G6.1, context chỉ chọn giữa hai object
+  có sẵn). `StatusBar` giữ một chỗ duy nhất ở root provider.
+- Root `app/_layout.tsx` tách `RootStack` con để đọc context; hai layout
+  `(app)`/`(auth)` đổi `useAppTheme` sang `useThemeMode` cho nền
+  `contentStyle` (hàm `useAppTheme` cũ giữ nguyên cho tương thích).
+- UI: `ThemeToggleAction` (testID `theme-toggle`) trên Appbar Notes và
+  Profile (qua prop `actions` mới của `ScreenHeader`); `ThemeSettingsCard`
+  (testID `theme-segmented`, SegmentedButtons Sáng/Tối/Hệ thống) trong
+  Profile — cùng một state nên đổi chỗ này chỗ kia phản ánh ngay.
+- Rà light mode toàn màn hình bằng grep + đọc code: không còn hex
+  hardcode trong component/screen (mọi màu qua `theme.colors`), nên
+  KHÔNG phải sửa màu chỗ nào; giữ nguyên spacing token G6 và layout.
+- Test: giữ 93 cũ, thêm 17 (8 `themeMode.test.ts` + 9
+  `ThemeContext.test.tsx`) → **110/110 PASS**.
+
+**Quyết định và lý do**
+
+- Quyết định: 3 mode (`light`/`dark`/`system`) thay vì boolean.
+- Lý do: boolean chỉ nhớ bật/tắt tối, mất khả năng “bám theo hệ điều
+  hành”. Với `system`, user đổi dark/light trong Settings điện thoại thì
+  app đổi theo mà không cần chạm lại app — đúng hành vi người dùng
+  mobile mong đợi.
+- Quyết định: chống flash bằng `isThemeHydrated` + render `null` khi
+  chưa đọc xong storage, thay vì đoán theme tạm.
+- Lý do: đoán bừa (VD mặc định light) sẽ nháy sáng→tối một khung hình
+  trên máy đang dark. Vì provider bọc ngoài `AuthProvider` (nơi gọi
+  `SplashScreen.hideAsync`), splash hệ thống vẫn che trong lúc hydrate
+  nên user không thấy gì ngoài splash — không cần thêm package.
+- Quyết định: memo `theme`/`navigationTheme` theo `effectiveScheme`,
+  chỉ chọn giữa `navigationLight/DarkTheme` tính sẵn ở module scope.
+- Lý do: `adaptNavigationTheme` tạo object mới mỗi lần gọi; gọi trong
+  render sẽ đổi identity `value` của `ThemeProvider` mỗi frame → remount
+  navigator và render lại toàn cây. Memo giữ object ổn định.
+- Quyết định: tách logic thuần ra `themeMode.ts`, provider nhận prop
+  `storage`/`systemScheme` để test thay vì mock module react-native.
+- Lý do: `jest.mock('react-native', ...)` kèm `requireActual` load lại
+  RN index thật làm crash worker Jest (DevMenu native); prop override
+  đạt cùng độ phủ mà không chạm native.
+
+**Đã kiểm thử**
+
+- Lệnh: `npx tsc --noEmit` → đạt (trước mỗi commit).
+- Lệnh: `npm run lint` → 0 errors, 2 warning `watch()` cũ (kế thừa G3–G6).
+- Lệnh: `npm test` → 14 suites, 110/110 PASS (93 cũ + 17 mới).
+- Test tay trên thiết bị thật (cycle, persist kill app, system theo
+  Settings, rà light mode): chủ dự án chạy theo TEST-CHECKLIST mục G7.
+- Warning “worker process has failed to exit gracefully” có từ trước G7
+  (đã xuất hiện khi suite chỉ có 13 suites), không do test mới.
+
+**Còn nợ / giới hạn đã biết**
+
+- Test tay G7 trên Expo Go thuộc chủ dự án (kịch bản đã có).
+- `useAppTheme` cũ (đọc `useColorScheme` trực tiếp) vẫn còn export nhưng
+  không còn nơi nào dùng — giữ để không vỡ import ngoài, sẽ dọn ở
+  giai đoạn refactor sau nếu cần.
+
+**Mốc Git**
+
+- Commit code cuối: (ghi sau khi commit)
+- Branch: `feat/g7-theme-switcher`
+- Tag: `v1.2.0` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
+- PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh
