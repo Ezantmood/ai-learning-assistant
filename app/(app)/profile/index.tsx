@@ -1,13 +1,13 @@
 import { useMutation } from '@tanstack/react-query';
-import { router } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Avatar, Banner, Button, Card, Text } from 'react-native-paper';
 
-import { signOut } from '../../src/features/auth/api';
-import { toAuthErrorMessage } from '../../src/features/auth/errors';
-import { useSession } from '../../src/features/auth/useSession';
-import { spacing } from '../../src/lib/theme';
+import { signOut } from '../../../src/features/auth/api';
+import { toAuthErrorMessage } from '../../../src/features/auth/errors';
+import { useSession } from '../../../src/features/auth/useSession';
+import { spacing } from '../../../src/lib/theme';
 
 /**
  * Hồ sơ tối thiểu G3 (FR-02): xem email + đăng xuất.
@@ -50,6 +50,16 @@ export default function ProfileScreen() {
           </Text>
         </Card.Content>
       </Card>
+
+      <Link asChild href="/profile/change-password">
+        <Button
+          accessibilityLabel="Đổi mật khẩu"
+          accessibilityRole="button"
+          mode="outlined"
+        >
+          Đổi mật khẩu
+        </Button>
+      </Link>
 
       <Button
         accessibilityLabel="Đăng xuất"
