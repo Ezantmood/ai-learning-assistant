@@ -508,3 +508,54 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog. Sau m
 - PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh
 
 ---
+### G6.1 — Fix header navigator — 2026-09-18
+
+**Đã làm gì**
+
+- Branch `fix/g6-1-navigation-header` tách từ `main` tại `v1.1.0`.
+  Tắt `headerShown` ở Stack `(app)` (nguồn 2 header chồng ở
+  Notes) và thêm `contentStyle` nền theo theme cho cả 3 Stack
+  (root/(app)/(auth)); rà soát không còn `Stack.Screen` lẻ bật header.
+- `src/theme/navigation.ts`: navigation theme suy ra từ theme MD3 G6 qua
+  `adaptNavigationTheme`, bọc `ThemeProvider` quanh Stack ở root layout.
+- `ScreenContainer` thêm prop `header` (trong SafeArea, ngoài ScrollView);
+  component `ScreenHeader` (BackAction label “Quay lại” chỉ khi
+  `router.canGoBack()`); gắn Appbar cho profile (“Thông tin cá nhân”),
+  đổi mật khẩu, tạo/sửa note. Notes giữ Appbar sẵn có.
+- `StatusBar` giữ một chỗ duy nhất ở root provider (có từ G6), không thêm.
+- Test mới `ScreenHeader.test.tsx` (title + nút back); tổng 93/93 PASS.
+
+**Quyết định và lý do**
+
+- Quyết định: import `ThemeProvider`/`DefaultTheme`/`DarkTheme` từ
+  `expo-router` thay vì `@react-navigation/native`.
+- Lý do: Expo Router 57 vendor navigation core bên trong, package
+  `@react-navigation/native` không còn được cài; cài thêm là vi phạm
+  “không thêm dependency”. Import từ `expo-router` trúng cùng
+  implementation, đúng tinh thần “dep sẵn của expo-router”.
+- Quyết định: dựng literal navigation colors từ G6 theme thay vì truyền
+  thẳng expo theme vào `adaptNavigationTheme`.
+- Lý do: expo theme dùng `ColorValue` nên không thỏa ràng buộc
+  `NavigationTheme` (string) của Paper ở `tsc`; literal từ một nguồn G6
+  vừa type-safe vừa giữ “một nguồn theme duy nhất”. `fonts` giữ nguyên
+  của expo cho đúng shape runtime `ReactNavigation.Theme`.
+
+**Đã kiểm thử**
+
+- Lệnh: `npx tsc --noEmit` → đạt (trước mỗi commit).
+- Lệnh: `npm run lint` → 0 errors (2 warning `watch()` cũ).
+- Lệnh: `npm test` → 12 suites, 93/93 PASS (91 cũ + 2 mới).
+- Test tay (header đơn, dark mode hết dải trắng, back từng màn con):
+  chủ dự án chạy trên máy thật.
+
+**Còn nợ / giới hạn đã biết**
+
+- Không.
+
+**Mốc Git**
+
+- Commit code cuối: `8af385d`
+- Commit docs (UI-FLOW + DEVLOG): commit này
+- Branch: `fix/g6-1-navigation-header`
+- Tag: `v1.1.1` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
+- PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh

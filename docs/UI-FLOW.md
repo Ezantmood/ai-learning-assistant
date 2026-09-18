@@ -24,6 +24,23 @@ ScrollView theo token `src/theme`); tiêu đề `headlineSmall`, phụ đề
 `mode="contained"` có icon, `loading` + `disabled` khi đang gửi; link phụ
 `mode="text"`.
 
+## Quy ước header (G6.1)
+
+- Header duy nhất là Paper `Appbar`; **toàn bộ Stack để
+  `headerShown: false`** (root, `(app)`, `(auth)`) kèm `contentStyle` nền
+  theo theme để hết dải trắng/flash trắng khi chuyển màn.
+- Navigation theme (`ThemeProvider` từ `expo-router`) suy ra từ theme MD3
+  G6 qua `adaptNavigationTheme` (`src/theme/navigation.ts`) — một nguồn
+  theme duy nhất, chọn light/dark theo `useColorScheme`.
+- Màn con trong `(app)` (profile, đổi mật khẩu, tạo/sửa note) dùng
+  `ScreenHeader` qua prop `header` của `ScreenContainer` (trong SafeArea,
+  ngoài ScrollView): `Appbar.BackAction` (label “Quay lại”) chỉ render khi
+  `router.canGoBack()`, `Appbar.Content` title tiếng Việt (“Thông tin cá
+  nhân”, “Đổi mật khẩu”, “Ghi chú mới”, “Sửa ghi chú”). Màn Notes giữ
+  `Appbar` sẵn có làm header duy nhất.
+- `StatusBar` đặt một chỗ duy nhất ở root provider theo theme
+  (sáng chữ tối / tối chữ sáng).
+
 | Route | Mục đích | Component chính | Loading / empty / error / success |
 |---|---|---|---|
 | `/` | Chọn nhánh theo session | `LoadingState` | Loading khi khôi phục session; lỗi cấu hình hiển thị rõ; thành công redirect |

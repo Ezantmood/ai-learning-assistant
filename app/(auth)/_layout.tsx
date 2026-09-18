@@ -2,6 +2,7 @@ import { Redirect, Stack, usePathname } from 'expo-router';
 
 import { LoadingState } from '../../src/components/LoadingState';
 import { useSession } from '../../src/features/auth/useSession';
+import { useAppTheme } from '../../src/theme/theme';
 
 // verifyOtp type recovery tạo session ngay khi xác minh xong. Giữ session
 // đó ở lại hai màn hình recovery để kịp đặt mật khẩu mới (FR-03);
@@ -12,6 +13,8 @@ const RECOVERY_PATHS = ['/reset-password', '/verify-reset-otp'];
 export default function AuthLayout() {
   const { isLoading, session } = useSession();
   const pathname = usePathname();
+  // G6.1: contentStyle nền theo theme (hết flash trắng khi chuyển màn).
+  const theme = useAppTheme();
 
   if (isLoading) {
     return <LoadingState message="Đang kiểm tra phiên đăng nhập…" />;
@@ -21,5 +24,12 @@ export default function AuthLayout() {
     return <Redirect href="/notes" />;
   }
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <Stack
+      screenOptions={{
+        contentStyle: { backgroundColor: theme.colors.background },
+        headerShown: false,
+      }}
+    />
+  );
 }
