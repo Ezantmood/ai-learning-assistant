@@ -50,7 +50,7 @@ describe('toAuthErrorMessage', () => {
 
   it('map OTP sai sang tiếng Việt', () => {
     expect(toAuthErrorMessage(new Error('Invalid OTP code'))).toBe(
-      'Mã OTP chưa đúng. Kiểm tra lại 6 số trong email rồi thử lại.',
+      'Mã OTP chưa đúng. Kiểm tra lại mã trong email rồi thử lại.',
     );
   });
 

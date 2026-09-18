@@ -46,7 +46,7 @@ const RULES: MatchRule[] = [
     patterns: [/otp.*expir/i, /expir.*otp/i, /token.*expir/i, /expir.*token/i],
   },
   {
-    message: 'Mã OTP chưa đúng. Kiểm tra lại 6 số trong email rồi thử lại.',
+    message: 'Mã OTP chưa đúng. Kiểm tra lại mã trong email rồi thử lại.',
     patterns: [
       /invalid.*(otp|token|code)/i,
       /(otp|token|code).*invalid/i,
