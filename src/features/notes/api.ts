@@ -1,4 +1,3 @@
-import { isNetworkError } from '../../lib/network';
 import { supabase } from '../../lib/supabase';
 import type {
   StudyNoteInsert,
