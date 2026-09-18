@@ -25,7 +25,7 @@ git switch -c feat/g1-setup
 ## Commit từng task
 
 1. Xem `git status` và `git diff`; không stage file ngoài task.
-2. Chạy `npx tsc --noEmit`, `npm run lint`, test tay liên quan; app phải mở không crash.
+2. Chạy `npx tsc --noEmit`, `npm run lint`, `npm test` và test tay liên quan; app phải mở không crash.
 3. Stage file tường minh, ví dụ `git add app/_layout.tsx src/providers/AppProviders.tsx`.
 4. Xem `git diff --cached`; tìm key/token/password. Có dấu hiệu secret thì dừng, unstage và báo chủ dự án.
 5. Commit rồi push ngay:
@@ -47,7 +47,7 @@ Refs: FR-0X
 
 Type: `feat`, `fix`, `refactor`, `chore`, `docs`, `test`, `style`. Scope: `auth`, `profile`, `db`, `ui`, `config`, `docs`.
 
-## Mở và review PR
+## Mở và review PR (G1–G3)
 
 1. Push branch, mở PR từ branch giai đoạn vào `main`.
 2. PR phải ghi: checkbox đã làm; cách test và kết quả; FR liên quan; giới hạn/còn nợ; xác nhận không có secret.
@@ -55,16 +55,32 @@ Type: `feat`, `fix`, `refactor`, `chore`, `docs`, `test`, `style`. Scope: `auth`
 4. Người làm sửa trên cùng branch, commit/push từng task sửa; không force-push/rebase.
 5. Khi PR sẵn sàng thì **dừng chờ chủ dự án merge**, không tự merge.
 
-## Sau khi chủ dự án merge
+## Tự merge từ G4 trở đi (quyết định của chủ dự án ngày 2026-09-18)
+
+Từ G4 trở đi không mở PR chờ review. Khi mọi checkbox của giai đoạn đã xong:
+
+1. Chạy cổng chất lượng: `npx tsc --noEmit`, `npm run lint`, `npm test` — cả ba phải xanh.
+2. Tự merge branch giai đoạn vào `main` (không force-push, không rebase branch đã chia sẻ):
 
 ```bash
 git switch main
 git pull --ff-only origin main
-git tag g1-done
-git push origin g1-done
+git merge --no-ff feat/g4-password-reset -m "Merge branch 'feat/g4-password-reset' vào main (Gx: ...)"
+git push origin main
 ```
 
-Đổi tag theo bảng và ghi full commit hash, branch, tag, PR vào `docs/DEVLOG.md`. Trước khi tạo tag, `git show g1-done` không được tồn tại; không di chuyển tag đã push.
+3. Tự tạo tag mốc và push:
+
+```bash
+git tag g4-done
+git push origin g4-done
+```
+
+Đổi tên branch/tag theo bảng giai đoạn. Vẫn giữ nguyên mọi luật an toàn: commit theo từng task, push ngay sau commit, tuyệt đối không commit secret, không `push --force`, hoàn tác bằng `git revert`.
+
+## Sau khi merge (cả hai hình thức)
+
+Ghi full commit hash, branch, tag (và URL PR nếu có, G1–G3) vào `docs/DEVLOG.md`. Trước khi tạo tag, `git show gx-done` không được tồn tại; không di chuyển tag đã push.
 
 ## Xem và quay lại mốc an toàn
 
