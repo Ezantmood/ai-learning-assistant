@@ -7,10 +7,12 @@ import { StatusBar } from 'expo-status-bar';
 import { AuthProvider } from '../features/auth/AuthProvider';
 import { queryClient } from '../lib/queryClient';
 import { subscribeToSupabaseAutoRefresh } from '../lib/supabase';
-import { useAppTheme } from '../theme/theme';
+import { useThemeMode } from '../theme/ThemeContext';
 
 function ThemedPaperProvider({ children }: PropsWithChildren) {
-  const theme = useAppTheme();
+  // G7: theme từ ThemeModeProvider (lựa chọn light/dark/system của user),
+  // StatusBar giữ một chỗ duy nhất tại đây, đổi theo theme hiệu lực.
+  const { theme } = useThemeMode();
 
   return (
     // G6: Paper mặc định resolve icon qua react-native-vector-icons (không có
