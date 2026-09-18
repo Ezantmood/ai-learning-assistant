@@ -38,6 +38,69 @@ ScrollView theo token `src/theme`); tiêu đề `headlineSmall`, phụ đề
 | `/profile` | FR-04 xem/sửa hồ sơ, avatar, logout | `ProfileView` (thuần hiển thị) + container query/mutation; avatar bọc `Pressable` overlay icon `camera` (testID `avatar-picker`, label “Đổi ảnh đại diện”); nút Lưu icon `content-save` (testID `profile-save`); link đổi mật khẩu icon `lock-reset`; nút đăng xuất icon `logout` màu error; `FeedbackSnackbar` thay Alert | Profile loading → spinner “Đang tải hồ sơ…”; query lỗi → `EmptyState` “Không tải được hồ sơ.” + nút “Thử lại” (testID `profile-retry`, gọi refetch); ready → form + avatar; lưu/upload pending → disable + spinner trên nút; success/error báo bằng Snackbar (không Alert), xem chi tiết luồng avatar bên dưới |
 | `/profile/change-password` | FR-03 đổi pass khi đã login | 3 `PasswordInput`, nút icon `lock-reset` (testID `change-password-submit`) | Spinner; sai pass hiện tại/trùng pass cũ báo riêng; success banner + về hồ sơ |
 
+## Bảng icon (G6, MaterialCommunityIcons qua settings.icon)
+
+Mọi tên dưới đây đã đối chiếu glyphmap thật của `@expo/vector-icons`;
+tên sai Paper sẽ render rỗng im lặng nên không tự ý đổi tên.
+
+| Icon | Dùng ở đâu |
+|---|---|
+| `login` | Nút Đăng nhập |
+| `account-plus` | Nút Đăng ký |
+| `account` | Ô họ tên, nút “Về hồ sơ” |
+| `badge-account-horizontal-outline` | Ô mã sinh viên |
+| `email-outline` | Ô email mọi form auth |
+| `lock-outline` | Ô mật khẩu (`PasswordInput` left icon) |
+| `eye` / `eye-off` | Toggle hiện/ẩn mật khẩu |
+| `send` | Nút Gửi mã OTP |
+| `numeric` | Ô OTP + nút “Nhập mã OTP” |
+| `check` | Nút Xác minh OTP, nút Đặt lại mật khẩu |
+| `refresh` | Nút Gửi lại mã OTP |
+| `lock-reset` | Nút Đổi mật khẩu (form + link ở profile) |
+| `check-circle` | Banner thành công, Snackbar success |
+| `alert-circle` | Banner/Snackbar lỗi, empty lỗi |
+| `information` | Snackbar info |
+| `close` | Nút đóng Snackbar |
+| `email-check` | Banner đã gửi email |
+| `history` | Banner khôi phục email giữa luồng |
+| `camera` | Overlay đổi avatar |
+| `account-circle` | Appbar mở hồ sơ |
+| `content-save` | Nút Lưu (profile, tạo/sửa note) |
+| `logout` | Nút Đăng xuất (màu error) |
+| `plus` | FAB thêm ghi chú |
+| `note-text-outline` | Icon mỗi dòng ghi chú |
+| `notebook-outline` | Empty danh sách notes |
+| `format-title` / `text` | Ô tiêu đề / nội dung note |
+| `trash-can-outline` | Nút Xóa ghi chú (màu error) |
+
+Mọi control chỉ có icon đều có `accessibilityLabel` và vùng bấm tối thiểu
+44x44 (avatar `Pressable` dùng `hitSlop` + `minHeight/minWidth`).
+
+## Luồng đổi avatar (`/profile`, FR-04)
+
+```text
+Chạm avatar (Pressable overlay icon camera, label “Đổi ảnh đại diện”)
+→ xin quyền thư viện (từ chối → Snackbar + nút “Mở Cài đặt”)
+→ picker (images, crop 1:1) → hủy → im lặng, giữ avatar cũ
+→ kiểm tra MIME khai báo → resize cạnh dài ≤ 512px, JPEG ~0.7, lấy base64
+→ guard > 2MB → chặn bằng Snackbar, giữ file cũ
+→ upload ArrayBuffer lên <uid>/avatar_<timestamp>.jpg (image/jpeg)
+→ update profiles.avatar_path → invalidate ['profile', userId]
+→ xóa object cũ best-effort (lỗi xóa chỉ warn, không fail)
+→ Snackbar “Đã đổi avatar.”
+```
+
+- Xem: `full_name`, `student_code`, email (từ auth), avatar qua signed URL
+  TTL 3600s (cache 55 phút). Chưa có `avatar_path` hoặc signed URL lỗi →
+  fallback `Avatar.Text` chữ cái đầu (`full_name`, rồi email, rồi `?`).
+- Sửa: form RHF + `profileSchema` (giữ luật G3/DB), lỗi field nằm dưới ô nhập;
+  nút Lưu loading/disabled khi đang lưu, giữ form khi lỗi mạng để thử lại.
+- Vị trí Snackbar lỗi (đều trong màn `/profile`, không Alert thô):
+  - Lưu hồ sơ lỗi → Snackbar (mã trùng đúng hoa/thường → “Mã sinh viên này
+    đã được sử dụng.” nhờ map 23505; offline → câu báo mạng + thử lại).
+  - Upload/signed URL lỗi → Snackbar; từ chối quyền ảnh → Snackbar kèm action
+    “Mở Cài đặt”; đăng xuất lỗi → Snackbar.
+
 ## Hành vi theo trạng thái xác thực
 
 - Chưa login truy cập route `(app)`: `replace('/sign-in')`, không để Back quay vào dữ liệu cũ.

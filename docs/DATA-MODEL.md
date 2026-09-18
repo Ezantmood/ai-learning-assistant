@@ -27,6 +27,14 @@ RLS policies:
 | UPDATE | `auth.uid() = id` | `auth.uid() = id` |
 | DELETE | Không cấp policy | Không cho client xóa profile |
 
+Validate đang enforce (đúng SPEC/G3, quyết định G5): `full_name` chỉ giới hạn
+độ dài (tối đa 100 ký tự, cho phép rỗng); `student_code` bắt buộc, trim khác
+rỗng, tối đa 30 ký tự, **duy nhất và phân biệt hoa/thường** (unique constraint
+`profiles_student_code_unique`, `SV001` và `sv001` cùng tồn tại). **Không
+enforce regex** ở DB lẫn client (`profileSchema` = `signUpSchema` G3:
+không pattern); mã trùng đúng hoa/thường do Postgres báo 23505 và app map
+sang tiếng Việt, không lộ raw error.
+
 ## Bảng `public.study_notes`
 
 | Cột | Kiểu/ràng buộc | Ý nghĩa |
