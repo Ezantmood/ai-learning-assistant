@@ -1,7 +1,7 @@
 import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
 
-import { FullScreenStatus } from '../src/components/FullScreenStatus';
+import { LoadingState } from '../src/components/LoadingState';
 import { getPendingRecoveryEmail } from '../src/features/auth/recoveryStorage';
 import { useSession } from '../src/features/auth/useSession';
 
@@ -16,7 +16,7 @@ export default function IndexScreen() {
   }, []);
 
   if (isLoading || pendingEmail === undefined) {
-    return <FullScreenStatus message="Đang khôi phục phiên đăng nhập…" />;
+    return <LoadingState message="Đang khôi phục phiên đăng nhập…" />;
   }
 
   // Thoát app sau khi verify OTP rồi mở lại: recovery session còn hiệu

@@ -3,17 +3,11 @@ import { Redirect, router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
-import {
-  Banner,
-  Button,
-  ProgressBar,
-  Text,
-  TextInput,
-} from 'react-native-paper';
+import { Banner, Button, ProgressBar, Text } from 'react-native-paper';
 
-import { AppScreen } from '../../src/components/AppScreen';
-import { FormTextField } from '../../src/components/FormTextField';
-import { FullScreenStatus } from '../../src/components/FullScreenStatus';
+import { LoadingState } from '../../src/components/LoadingState';
+import { PasswordInput } from '../../src/components/PasswordInput';
+import { ScreenContainer } from '../../src/components/ScreenContainer';
 import { signOut, updatePassword } from '../../src/features/auth/api';
 import { toAuthErrorMessage } from '../../src/features/auth/errors';
 import {
@@ -26,7 +20,7 @@ import {
   type ResetPasswordFormValues,
 } from '../../src/features/auth/schemas';
 import { useSession } from '../../src/features/auth/useSession';
-import { spacing } from '../../src/lib/theme';
+import { spacing } from '../../src/theme/spacing';
 
 /**
  * FR-03 bước 3: đã có recovery session từ verifyOtp thì updateUser
@@ -41,7 +35,6 @@ export default function ResetPasswordScreen() {
     undefined,
   );
   const [apiError, setApiError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
 
   const { control, handleSubmit, setError, watch } =
     useForm<ResetPasswordFormValues>({
@@ -97,7 +90,7 @@ export default function ResetPasswordScreen() {
   const strength = getPasswordStrength(watch('newPassword') ?? '');
 
   if (isLoading || pendingEmail === undefined) {
-    return <FullScreenStatus message="Đang kiểm tra phiên đặt lại mật khẩu…" />;
+    return <LoadingState message="Đang kiểm tra phiên đặt lại mật khẩu…" />;
   }
 
   // Mất session (OTP hết hạn/kill app trước verify): quay lại nhập mã.
@@ -111,8 +104,8 @@ export default function ResetPasswordScreen() {
   }
 
   return (
-    <AppScreen>
-      <Text variant="headlineMedium">Đặt mật khẩu mới</Text>
+    <ScreenContainer>
+      <Text variant="headlineSmall">Đặt mật khẩu mới</Text>
       <Text variant="bodyMedium">
         Email {pendingEmail} đã xác minh. Nhập mật khẩu mới từ 8 ký tự, có cả
         chữ và số.
@@ -128,22 +121,13 @@ export default function ResetPasswordScreen() {
         control={control}
         name="newPassword"
         render={({ field, fieldState }) => (
-          <FormTextField
+          <PasswordInput
             autoCapitalize="none"
             fieldError={fieldState.error?.message}
             label="Mật khẩu mới"
             onBlur={field.onBlur}
             onChangeText={field.onChange}
-            right={
-              <TextInput.Icon
-                accessibilityLabel={
-                  showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'
-                }
-                icon={showPassword ? 'eye-off' : 'eye'}
-                onPress={() => setShowPassword((prev) => !prev)}
-              />
-            }
-            secureTextEntry={!showPassword}
+            toggleTestID="password-toggle"
             value={field.value}
           />
         )}
@@ -162,13 +146,13 @@ export default function ResetPasswordScreen() {
         control={control}
         name="confirmPassword"
         render={({ field, fieldState }) => (
-          <FormTextField
+          <PasswordInput
             autoCapitalize="none"
             fieldError={fieldState.error?.message}
             label="Nhập lại mật khẩu mới"
             onBlur={field.onBlur}
             onChangeText={field.onChange}
-            secureTextEntry={!showPassword}
+            toggleTestID="password-confirm-toggle"
             value={field.value}
           />
         )}
@@ -178,9 +162,11 @@ export default function ResetPasswordScreen() {
         accessibilityLabel="Đặt lại mật khẩu"
         accessibilityRole="button"
         disabled={mutation.isPending}
+        icon="check"
         loading={mutation.isPending}
         mode="contained"
         onPress={handleSubmit(onSubmit)}
+        testID="reset-submit"
       >
         Đặt lại mật khẩu
       </Button>
@@ -198,7 +184,7 @@ export default function ResetPasswordScreen() {
       >
         Để sau, về ghi chú
       </Button>
-    </AppScreen>
+    </ScreenContainer>
   );
 }
 

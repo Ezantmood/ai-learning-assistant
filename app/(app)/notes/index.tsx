@@ -1,19 +1,21 @@
 import { router } from 'expo-router';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet } from 'react-native';
 import {
-  ActivityIndicator,
   Appbar,
-  Button,
-  Card,
+  Divider,
   FAB,
-  Text,
+  List,
   useTheme,
 } from 'react-native-paper';
 
+import { EmptyState } from '../../../src/components/EmptyState';
+import { ListSkeleton } from '../../../src/components/LoadingState';
+import { ScreenContainer } from '../../../src/components/ScreenContainer';
 import { useSession } from '../../../src/features/auth/useSession';
 import { toNotesErrorMessage } from '../../../src/features/notes/errors';
 import { useNotes } from '../../../src/features/notes/queries';
-import { spacing } from '../../../src/lib/theme';
+import { spacing } from '../../../src/theme/spacing';
+import type { AppTheme } from '../../../src/theme/theme';
 import type { StudyNoteRow } from '../../../src/types/database';
 
 function formatUpdatedAt(value: string): string {
@@ -25,39 +27,30 @@ function formatUpdatedAt(value: string): string {
 }
 
 export default function NotesScreen() {
-  const theme = useTheme();
+  const theme = useTheme<AppTheme>();
   const { user } = useSession();
   const notesQuery = useNotes(user?.id);
 
   const renderItem = ({ item }: { item: StudyNoteRow }) => (
-    <Card
+    <List.Item
       accessibilityLabel={`Ghi chú: ${item.title}`}
       accessibilityRole="button"
+      description={item.content || formatUpdatedAt(item.updated_at)}
+      descriptionNumberOfLines={2}
+      left={(props) => (
+        <List.Icon {...props} color={theme.colors.primary} icon="note-text-outline" />
+      )}
       onPress={() =>
         router.push({ params: { id: item.id }, pathname: '/notes/[id]' })
       }
-      style={styles.card}
-    >
-      <Card.Title
-        subtitle={formatUpdatedAt(item.updated_at)}
-        subtitleVariant="bodySmall"
-        title={item.title}
-        titleVariant="titleMedium"
-      />
-      {item.content ? (
-        <Card.Content>
-          <Text numberOfLines={2} variant="bodyMedium">
-            {item.content}
-          </Text>
-        </Card.Content>
-      ) : null}
-    </Card>
+      title={item.title}
+    />
   );
 
+  const notes = notesQuery.data ?? [];
+
   return (
-    <View
-      style={[styles.root, { backgroundColor: theme.colors.background }]}
-    >
+    <ScreenContainer contentStyle={styles.plain} scrollable={false}>
       <Appbar.Header>
         <Appbar.Content title="Ghi chú học tập" />
         <Appbar.Action
@@ -68,46 +61,42 @@ export default function NotesScreen() {
       </Appbar.Header>
 
       {notesQuery.isPending ? (
-        <View style={styles.center}>
-          <ActivityIndicator accessibilityLabel="Đang tải ghi chú" />
-          <Text>Đang tải ghi chú…</Text>
-        </View>
+        <ListSkeleton rows={3} />
       ) : notesQuery.isError ? (
-        <View style={styles.center}>
-          <Text style={styles.centerText}>
-            {toNotesErrorMessage(notesQuery.error)}
-          </Text>
-          <Button
-            accessibilityLabel="Tải lại ghi chú"
-            accessibilityRole="button"
-            mode="contained"
-            onPress={() => notesQuery.refetch()}
-          >
-            Thử lại
-          </Button>
-        </View>
-      ) : (notesQuery.data ?? []).length === 0 ? (
-        <View style={styles.center}>
-          <Text style={styles.centerText} variant="titleMedium">
-            Chưa có ghi chú nào
-          </Text>
-          <Text style={styles.centerText} variant="bodyMedium">
-            Tạo ghi chú đầu tiên để kiểm tra dữ liệu riêng của tài khoản.
-          </Text>
-          <Button
-            accessibilityLabel="Tạo ghi chú đầu tiên"
-            accessibilityRole="button"
-            mode="contained"
-            onPress={() => router.push('/notes/new')}
-          >
-            Tạo ghi chú
-          </Button>
-        </View>
+        <EmptyState
+          actionLabel="Thử lại"
+          actionTestID="notes-retry"
+          description={toNotesErrorMessage(notesQuery.error)}
+          icon="alert-circle"
+          onAction={() => {
+            void notesQuery.refetch();
+          }}
+          title="Không tải được ghi chú"
+        />
+      ) : notes.length === 0 ? (
+        <EmptyState
+          actionLabel="Tạo ghi chú"
+          actionTestID="notes-empty-create"
+          description="Tạo ghi chú đầu tiên để kiểm tra dữ liệu riêng của tài khoản."
+          icon="notebook-outline"
+          onAction={() => router.push('/notes/new')}
+          title="Chưa có ghi chú nào"
+        />
       ) : (
         <FlatList
           contentContainerStyle={styles.list}
-          data={notesQuery.data}
+          data={notes}
+          ItemSeparatorComponent={Divider}
           keyExtractor={(item) => item.id}
+          refreshControl={
+            <RefreshControl
+              accessibilityLabel="Kéo để tải lại ghi chú"
+              onRefresh={() => {
+                void notesQuery.refetch();
+              }}
+              refreshing={notesQuery.isFetching}
+            />
+          }
           renderItem={renderItem}
         />
       )}
@@ -117,34 +106,22 @@ export default function NotesScreen() {
         icon="plus"
         onPress={() => router.push('/notes/new')}
         style={styles.fab}
+        testID="notes-fab"
       />
-    </View>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    marginBottom: spacing.sm,
-  },
-  center: {
-    alignItems: 'center',
-    flex: 1,
-    gap: spacing.sm,
-    justifyContent: 'center',
-    padding: spacing.lg,
-  },
-  centerText: {
-    textAlign: 'center',
-  },
   fab: {
-    bottom: spacing.lg,
+    bottom: spacing.xl,
     position: 'absolute',
     right: spacing.lg,
   },
   list: {
-    padding: spacing.md,
+    padding: spacing.sm,
   },
-  root: {
-    flex: 1,
+  plain: {
+    padding: 0,
   },
 });

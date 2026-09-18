@@ -8,11 +8,12 @@ import {
   Dialog,
   Portal,
   Text,
+  useTheme,
 } from 'react-native-paper';
 
-import { AppScreen } from '../../../src/components/AppScreen';
-import { FormTextField } from '../../../src/components/FormTextField';
-import { FullScreenStatus } from '../../../src/components/FullScreenStatus';
+import { FormTextInput } from '../../../src/components/FormTextInput';
+import { LoadingState } from '../../../src/components/LoadingState';
+import { ScreenContainer } from '../../../src/components/ScreenContainer';
 import { useSession } from '../../../src/features/auth/useSession';
 import { toNotesErrorMessage } from '../../../src/features/notes/errors';
 import {
@@ -24,7 +25,8 @@ import {
   noteSchema,
   type NoteFormValues,
 } from '../../../src/features/notes/schemas';
-import { spacing } from '../../../src/lib/theme';
+import { spacing } from '../../../src/theme/spacing';
+import type { AppTheme } from '../../../src/theme/theme';
 import type { StudyNoteRow } from '../../../src/types/database';
 
 export default function NoteDetailScreen() {
@@ -33,7 +35,7 @@ export default function NoteDetailScreen() {
   const noteQuery = useNote(user?.id, id);
 
   if (noteQuery.isPending) {
-    return <FullScreenStatus message="Đang tải ghi chú…" />;
+    return <LoadingState message="Đang tải ghi chú…" />;
   }
 
   if (noteQuery.isError || !noteQuery.data) {
@@ -58,6 +60,7 @@ export default function NoteDetailScreen() {
 }
 
 function NoteEditor({ note }: { note: StudyNoteRow }) {
+  const theme = useTheme<AppTheme>();
   const { user } = useSession();
   const userId = user?.id ?? '';
   const [apiError, setApiError] = useState<string | null>(null);
@@ -112,7 +115,7 @@ function NoteEditor({ note }: { note: StudyNoteRow }) {
   };
 
   return (
-    <AppScreen>
+    <ScreenContainer>
       <Text variant="headlineSmall">Sửa ghi chú</Text>
 
       {apiError ? (
@@ -125,9 +128,10 @@ function NoteEditor({ note }: { note: StudyNoteRow }) {
         control={control}
         name="title"
         render={({ field, fieldState }) => (
-          <FormTextField
+          <FormTextInput
             fieldError={fieldState.error?.message}
             label="Tiêu đề"
+            leftIcon="format-title"
             onBlur={field.onBlur}
             onChangeText={field.onChange}
             value={field.value}
@@ -139,9 +143,10 @@ function NoteEditor({ note }: { note: StudyNoteRow }) {
         control={control}
         name="content"
         render={({ field, fieldState }) => (
-          <FormTextField
+          <FormTextInput
             fieldError={fieldState.error?.message}
             label="Nội dung"
+            leftIcon="text"
             multiline
             numberOfLines={6}
             onBlur={field.onBlur}
@@ -155,9 +160,11 @@ function NoteEditor({ note }: { note: StudyNoteRow }) {
         accessibilityLabel="Lưu thay đổi"
         accessibilityRole="button"
         disabled={updateMutation.isPending}
+        icon="content-save"
         loading={updateMutation.isPending}
         mode="contained"
         onPress={handleSubmit(onSubmit)}
+        testID="note-update"
       >
         Lưu thay đổi
       </Button>
@@ -166,9 +173,10 @@ function NoteEditor({ note }: { note: StudyNoteRow }) {
         accessibilityLabel="Xóa ghi chú"
         accessibilityRole="button"
         disabled={deleteMutation.isPending}
+        icon="trash-can-outline"
         mode="outlined"
         onPress={() => setConfirmDelete(true)}
-        textColor="#B3261E"
+        textColor={theme.colors.error}
       >
         Xóa ghi chú
       </Button>
@@ -197,13 +205,14 @@ function NoteEditor({ note }: { note: StudyNoteRow }) {
               accessibilityRole="button"
               loading={deleteMutation.isPending}
               onPress={onConfirmDelete}
+              textColor={theme.colors.error}
             >
               Xóa
             </Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>
-    </AppScreen>
+    </ScreenContainer>
   );
 }
 
@@ -213,7 +222,7 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: spacing.md,
     justifyContent: 'center',
-    padding: spacing.lg,
+    padding: spacing.xl,
   },
   centerText: {
     textAlign: 'center',

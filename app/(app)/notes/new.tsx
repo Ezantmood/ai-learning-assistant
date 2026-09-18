@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Banner, Button, Text } from 'react-native-paper';
 
-import { AppScreen } from '../../../src/components/AppScreen';
-import { FormTextField } from '../../../src/components/FormTextField';
+import { FormTextInput } from '../../../src/components/FormTextInput';
+import { ScreenContainer } from '../../../src/components/ScreenContainer';
 import { useSession } from '../../../src/features/auth/useSession';
 import { toNotesErrorMessage } from '../../../src/features/notes/errors';
 import { useCreateNote } from '../../../src/features/notes/queries';
@@ -50,8 +50,11 @@ export default function NewNoteScreen() {
   };
 
   return (
-    <AppScreen>
+    <ScreenContainer>
       <Text variant="headlineSmall">Ghi chú mới</Text>
+      <Text variant="bodyMedium">
+        Tiêu đề ngắn gọn, nội dung ghi lại ý cần nhớ.
+      </Text>
 
       {apiError ? (
         <Banner icon="alert-circle" visible>
@@ -63,9 +66,10 @@ export default function NewNoteScreen() {
         control={control}
         name="title"
         render={({ field, fieldState }) => (
-          <FormTextField
+          <FormTextInput
             fieldError={fieldState.error?.message}
             label="Tiêu đề"
+            leftIcon="format-title"
             onBlur={field.onBlur}
             onChangeText={field.onChange}
             value={field.value}
@@ -77,9 +81,10 @@ export default function NewNoteScreen() {
         control={control}
         name="content"
         render={({ field, fieldState }) => (
-          <FormTextField
+          <FormTextInput
             fieldError={fieldState.error?.message}
             label="Nội dung"
+            leftIcon="text"
             multiline
             numberOfLines={6}
             onBlur={field.onBlur}
@@ -93,12 +98,14 @@ export default function NewNoteScreen() {
         accessibilityLabel="Lưu ghi chú"
         accessibilityRole="button"
         disabled={mutation.isPending}
+        icon="content-save"
         loading={mutation.isPending}
         mode="contained"
         onPress={handleSubmit(onSubmit)}
+        testID="note-save"
       >
         Lưu
       </Button>
-    </AppScreen>
+    </ScreenContainer>
   );
 }

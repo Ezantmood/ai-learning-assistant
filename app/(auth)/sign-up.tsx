@@ -3,10 +3,11 @@ import { Link, router } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
-import { Banner, Button, ProgressBar, Text, TextInput } from 'react-native-paper';
+import { Banner, Button, ProgressBar, Text } from 'react-native-paper';
 
-import { AppScreen } from '../../src/components/AppScreen';
-import { FormTextField } from '../../src/components/FormTextField';
+import { FormTextInput } from '../../src/components/FormTextInput';
+import { PasswordInput } from '../../src/components/PasswordInput';
+import { ScreenContainer } from '../../src/components/ScreenContainer';
 import { signUp } from '../../src/features/auth/api';
 import { toAuthErrorMessage } from '../../src/features/auth/errors';
 import {
@@ -15,12 +16,11 @@ import {
   type SignUpFormValues,
 } from '../../src/features/auth/schemas';
 import { env } from '../../src/lib/env';
-import { spacing } from '../../src/lib/theme';
+import { spacing } from '../../src/theme/spacing';
 
 export default function SignUpScreen() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [needsConfirm, setNeedsConfirm] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   const { control, handleSubmit, setError, watch } =
     useForm<SignUpFormValues>({
@@ -78,8 +78,8 @@ export default function SignUpScreen() {
   const strength = getPasswordStrength(watch('password') ?? '');
 
   return (
-    <AppScreen>
-      <Text variant="headlineMedium">Tạo tài khoản</Text>
+    <ScreenContainer>
+      <Text variant="headlineSmall">Tạo tài khoản</Text>
       <Text variant="bodyMedium">
         Email, mã sinh viên và mật khẩu từ 8 ký tự có cả chữ và số.
       </Text>
@@ -102,10 +102,11 @@ export default function SignUpScreen() {
         control={control}
         name="fullName"
         render={({ field, fieldState }) => (
-          <FormTextField
+          <FormTextInput
             autoCapitalize="words"
             fieldError={fieldState.error?.message}
             label="Họ tên"
+            leftIcon="account"
             onBlur={field.onBlur}
             onChangeText={field.onChange}
             value={field.value}
@@ -117,10 +118,11 @@ export default function SignUpScreen() {
         control={control}
         name="studentCode"
         render={({ field, fieldState }) => (
-          <FormTextField
+          <FormTextInput
             autoCapitalize="characters"
             fieldError={fieldState.error?.message}
             label="Mã sinh viên"
+            leftIcon="badge-account-horizontal-outline"
             onBlur={field.onBlur}
             onChangeText={field.onChange}
             value={field.value}
@@ -132,11 +134,12 @@ export default function SignUpScreen() {
         control={control}
         name="email"
         render={({ field, fieldState }) => (
-          <FormTextField
+          <FormTextInput
             autoCapitalize="none"
             fieldError={fieldState.error?.message}
             keyboardType="email-address"
             label="Email"
+            leftIcon="email-outline"
             onBlur={field.onBlur}
             onChangeText={field.onChange}
             value={field.value}
@@ -148,19 +151,13 @@ export default function SignUpScreen() {
         control={control}
         name="password"
         render={({ field, fieldState }) => (
-          <FormTextField
+          <PasswordInput
             autoCapitalize="none"
             fieldError={fieldState.error?.message}
             label="Mật khẩu"
             onBlur={field.onBlur}
             onChangeText={field.onChange}
-            right={
-              <PasswordVisibilityIcon
-                hidden={!showPassword}
-                onToggle={() => setShowPassword((prev) => !prev)}
-              />
-            }
-            secureTextEntry={!showPassword}
+            toggleTestID="password-toggle"
             value={field.value}
           />
         )}
@@ -179,13 +176,13 @@ export default function SignUpScreen() {
         control={control}
         name="confirmPassword"
         render={({ field, fieldState }) => (
-          <FormTextField
+          <PasswordInput
             autoCapitalize="none"
             fieldError={fieldState.error?.message}
             label="Nhập lại mật khẩu"
             onBlur={field.onBlur}
             onChangeText={field.onChange}
-            secureTextEntry={!showPassword}
+            toggleTestID="password-confirm-toggle"
             value={field.value}
           />
         )}
@@ -195,9 +192,11 @@ export default function SignUpScreen() {
         accessibilityLabel="Đăng ký tài khoản"
         accessibilityRole="button"
         disabled={mutation.isPending}
+        icon="account-plus"
         loading={mutation.isPending}
         mode="contained"
         onPress={handleSubmit(onSubmit)}
+        testID="register-submit"
       >
         Đăng ký
       </Button>
@@ -211,23 +210,7 @@ export default function SignUpScreen() {
           Đã có tài khoản? Đăng nhập
         </Button>
       </Link>
-    </AppScreen>
-  );
-}
-
-function PasswordVisibilityIcon({
-  hidden,
-  onToggle,
-}: {
-  hidden: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <TextInput.Icon
-      accessibilityLabel={hidden ? 'Hiện mật khẩu' : 'Ẩn mật khẩu'}
-      icon={hidden ? 'eye' : 'eye-off'}
-      onPress={onToggle}
-    />
+    </ScreenContainer>
   );
 }
 

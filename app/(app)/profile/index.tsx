@@ -2,9 +2,9 @@ import { useMutation } from '@tanstack/react-query';
 import { Link, router } from 'expo-router';
 import { useState } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
-import { Button } from 'react-native-paper';
+import { Button, useTheme } from 'react-native-paper';
 
-import { AppScreen } from '../../../src/components/AppScreen';
+import { ScreenContainer } from '../../../src/components/ScreenContainer';
 import { signOut } from '../../../src/features/auth/api';
 import { toAuthErrorMessage } from '../../../src/features/auth/errors';
 import { useSession } from '../../../src/features/auth/useSession';
@@ -25,13 +25,15 @@ import {
   useUploadAvatar,
 } from '../../../src/features/profile/queries';
 import type { ProfileFormValues } from '../../../src/features/profile/schemas';
-import { spacing } from '../../../src/lib/theme';
+import { spacing } from '../../../src/theme/spacing';
+import type { AppTheme } from '../../../src/theme/theme';
 
 /**
  * FR-04: xem/sửa hồ sơ + avatar, đăng xuất.
  * Screen chỉ điều phối query/mutation; khung hiển thị nằm ở ProfileView.
  */
 export default function ProfileScreen() {
+  const theme = useTheme<AppTheme>();
   const { user } = useSession();
   const userId = user?.id;
   const [notice, setNotice] = useState<ProfileNotice | null>(null);
@@ -47,7 +49,7 @@ export default function ProfileScreen() {
   const signOutMutation = useMutation({
     mutationFn: signOut,
     onError: (error: unknown) => {
-      setNotice({ message: toAuthErrorMessage(error) });
+      setNotice({ message: toAuthErrorMessage(error), variant: 'error' });
     },
     onSuccess: () => {
       router.replace('/sign-in');
@@ -66,10 +68,10 @@ export default function ProfileScreen() {
     }
     updateMutation.mutate(values, {
       onError: (error: unknown) => {
-        setNotice({ message: toProfileErrorMessage(error) });
+        setNotice({ message: toProfileErrorMessage(error), variant: 'error' });
       },
       onSuccess: () => {
-        setNotice({ message: 'Đã cập nhật hồ sơ.' });
+        setNotice({ message: 'Đã cập nhật hồ sơ.', variant: 'success' });
       },
     });
   };
@@ -94,12 +96,13 @@ export default function ProfileScreen() {
           onAction: () => {
             void Linking.openSettings();
           },
+          variant: 'info',
         });
         return;
       }
 
       if (outcome.status === 'rejected') {
-        setNotice({ message: outcome.message });
+        setNotice({ message: outcome.message, variant: 'error' });
         return;
       }
 
@@ -110,10 +113,10 @@ export default function ProfileScreen() {
         },
         {
           onError: (error: unknown) => {
-            setNotice({ message: toAvatarErrorMessage(error) });
+            setNotice({ message: toAvatarErrorMessage(error), variant: 'error' });
           },
           onSuccess: () => {
-            setNotice({ message: 'Đã đổi avatar.' });
+            setNotice({ message: 'Đã đổi avatar.', variant: 'success' });
           },
         },
       );
@@ -121,7 +124,7 @@ export default function ProfileScreen() {
   };
 
   return (
-    <AppScreen>
+    <ScreenContainer>
       <ProfileView
         avatarUrl={avatarQuery.data ?? null}
         email={user?.email ?? '—'}
@@ -146,6 +149,7 @@ export default function ProfileScreen() {
           <Button
             accessibilityLabel="Đổi mật khẩu"
             accessibilityRole="button"
+            icon="lock-reset"
             mode="outlined"
           >
             Đổi mật khẩu
@@ -156,6 +160,7 @@ export default function ProfileScreen() {
           accessibilityLabel="Đăng xuất"
           accessibilityRole="button"
           disabled={signOutMutation.isPending}
+          icon="logout"
           loading={signOutMutation.isPending}
           mode="outlined"
           onPress={() => {
@@ -163,11 +168,12 @@ export default function ProfileScreen() {
               signOutMutation.mutate();
             }
           }}
+          textColor={theme.colors.error}
         >
           Đăng xuất
         </Button>
       </View>
-    </AppScreen>
+    </ScreenContainer>
   );
 }
 

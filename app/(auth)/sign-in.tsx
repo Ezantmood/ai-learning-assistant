@@ -2,10 +2,11 @@ import { useMutation } from '@tanstack/react-query';
 import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Banner, Button, Text, TextInput } from 'react-native-paper';
+import { Banner, Button, Text } from 'react-native-paper';
 
-import { AppScreen } from '../../src/components/AppScreen';
-import { FormTextField } from '../../src/components/FormTextField';
+import { FormTextInput } from '../../src/components/FormTextInput';
+import { PasswordInput } from '../../src/components/PasswordInput';
+import { ScreenContainer } from '../../src/components/ScreenContainer';
 import { signIn } from '../../src/features/auth/api';
 import { toAuthErrorMessage } from '../../src/features/auth/errors';
 import {
@@ -16,7 +17,6 @@ import {
 export default function SignInScreen() {
   const params = useLocalSearchParams<{ passwordReset?: string }>();
   const [apiError, setApiError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
 
   const { control, handleSubmit, setError } = useForm<SignInFormValues>({
     defaultValues: { email: '', password: '' },
@@ -55,8 +55,8 @@ export default function SignInScreen() {
   };
 
   return (
-    <AppScreen>
-      <Text variant="headlineMedium">Đăng nhập</Text>
+    <ScreenContainer>
+      <Text variant="headlineSmall">Đăng nhập</Text>
       <Text variant="bodyMedium">
         Dùng email và mật khẩu đã đăng ký để vào ghi chú học tập.
       </Text>
@@ -77,11 +77,12 @@ export default function SignInScreen() {
         control={control}
         name="email"
         render={({ field, fieldState }) => (
-          <FormTextField
+          <FormTextInput
             autoCapitalize="none"
             fieldError={fieldState.error?.message}
             keyboardType="email-address"
             label="Email"
+            leftIcon="email-outline"
             onBlur={field.onBlur}
             onChangeText={field.onChange}
             value={field.value}
@@ -93,22 +94,13 @@ export default function SignInScreen() {
         control={control}
         name="password"
         render={({ field, fieldState }) => (
-          <FormTextField
+          <PasswordInput
             autoCapitalize="none"
             fieldError={fieldState.error?.message}
             label="Mật khẩu"
             onBlur={field.onBlur}
             onChangeText={field.onChange}
-            right={
-              <TextInput.Icon
-                accessibilityLabel={
-                  showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'
-                }
-                icon={showPassword ? 'eye-off' : 'eye'}
-                onPress={() => setShowPassword((prev) => !prev)}
-              />
-            }
-            secureTextEntry={!showPassword}
+            toggleTestID="password-toggle"
             value={field.value}
           />
         )}
@@ -118,9 +110,11 @@ export default function SignInScreen() {
         accessibilityLabel="Đăng nhập"
         accessibilityRole="button"
         disabled={mutation.isPending}
+        icon="login"
         loading={mutation.isPending}
         mode="contained"
         onPress={handleSubmit(onSubmit)}
+        testID="login-submit"
       >
         Đăng nhập
       </Button>
@@ -144,6 +138,6 @@ export default function SignInScreen() {
           Chưa có tài khoản? Đăng ký
         </Button>
       </Link>
-    </AppScreen>
+    </ScreenContainer>
   );
 }

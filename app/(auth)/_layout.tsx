@@ -1,6 +1,6 @@
 import { Redirect, Stack, usePathname } from 'expo-router';
 
-import { FullScreenStatus } from '../../src/components/FullScreenStatus';
+import { LoadingState } from '../../src/components/LoadingState';
 import { useSession } from '../../src/features/auth/useSession';
 
 // verifyOtp type recovery tạo session ngay khi xác minh xong. Giữ session
@@ -14,7 +14,7 @@ export default function AuthLayout() {
   const pathname = usePathname();
 
   if (isLoading) {
-    return <FullScreenStatus message="Đang kiểm tra phiên đăng nhập…" />;
+    return <LoadingState message="Đang kiểm tra phiên đăng nhập…" />;
   }
 
   if (session && !RECOVERY_PATHS.includes(pathname)) {

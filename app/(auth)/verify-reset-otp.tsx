@@ -2,11 +2,12 @@ import { useMutation } from '@tanstack/react-query';
 import { Link, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { StyleSheet } from 'react-native';
 import { Banner, Button, Text } from 'react-native-paper';
 
-import { AppScreen } from '../../src/components/AppScreen';
-import { FormTextField } from '../../src/components/FormTextField';
-import { FullScreenStatus } from '../../src/components/FullScreenStatus';
+import { FormTextInput } from '../../src/components/FormTextInput';
+import { LoadingState } from '../../src/components/LoadingState';
+import { ScreenContainer } from '../../src/components/ScreenContainer';
 import {
   requestPasswordReset,
   verifyRecoveryOtp,
@@ -148,13 +149,13 @@ export default function VerifyResetOtpScreen() {
   };
 
   if (!isLoaded) {
-    return <FullScreenStatus message="Đang tải thông tin xác minh…" />;
+    return <LoadingState message="Đang tải thông tin xác minh…" />;
   }
 
   if (!email) {
     return (
-      <AppScreen>
-        <Text variant="headlineMedium">Xác minh mã OTP</Text>
+      <ScreenContainer>
+        <Text variant="headlineSmall">Xác minh mã OTP</Text>
         <Banner icon="alert-circle" visible>
           Không tìm thấy email cần xác minh. Có thể bạn đã thoát app trước khi
           nhận mã — nhập lại email để nhận mã mới.
@@ -168,13 +169,13 @@ export default function VerifyResetOtpScreen() {
             Nhập lại email
           </Button>
         </Link>
-      </AppScreen>
+      </ScreenContainer>
     );
   }
 
   return (
-    <AppScreen>
-      <Text variant="headlineMedium">Xác minh mã OTP</Text>
+    <ScreenContainer>
+      <Text variant="headlineSmall">Xác minh mã OTP</Text>
       <Text variant="bodyMedium">
         Nhập mã 6 số đã gửi tới {email}. Mỗi mã chỉ dùng một lần.
       </Text>
@@ -201,16 +202,19 @@ export default function VerifyResetOtpScreen() {
         control={control}
         name="code"
         render={({ field, fieldState }) => (
-          <FormTextField
+          <FormTextInput
             autoCapitalize="none"
             autoComplete="sms-otp"
             autoFocus
+            contentStyle={styles.otpInput}
             fieldError={fieldState.error?.message}
             keyboardType="number-pad"
             label="Mã OTP 6 số"
+            leftIcon="numeric"
             maxLength={6}
             onBlur={field.onBlur}
             onChangeText={field.onChange}
+            testID="otp-input"
             textContentType="oneTimeCode"
             value={field.value}
           />
@@ -221,9 +225,11 @@ export default function VerifyResetOtpScreen() {
         accessibilityLabel="Xác minh mã OTP"
         accessibilityRole="button"
         disabled={isBusy}
+        icon="check"
         loading={verifyMutation.isPending}
         mode="contained"
         onPress={handleSubmit(onSubmit)}
+        testID="otp-submit"
       >
         Xác minh
       </Button>
@@ -236,6 +242,7 @@ export default function VerifyResetOtpScreen() {
         }
         accessibilityRole="button"
         disabled={isBusy || isCoolingDown}
+        icon="refresh"
         loading={resendMutation.isPending}
         mode="outlined"
         onPress={() => {
@@ -243,6 +250,7 @@ export default function VerifyResetOtpScreen() {
             resendMutation.mutate();
           }
         }}
+        testID="otp-resend"
       >
         {isCoolingDown ? `Gửi lại mã sau ${cooldown}s` : 'Gửi lại mã'}
       </Button>
@@ -256,6 +264,13 @@ export default function VerifyResetOtpScreen() {
           Dùng email khác
         </Button>
       </Link>
-    </AppScreen>
+    </ScreenContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  otpInput: {
+    letterSpacing: 8,
+    textAlign: 'center',
+  },
+});
