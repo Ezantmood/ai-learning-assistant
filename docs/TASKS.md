@@ -45,7 +45,9 @@ Mỗi checkbox là một commit độc lập và phải để app chạy đượ
 - Branch: `feat/g5-profile-docs`
 - Tự merge vào `main` sau khi cổng chất lượng xanh, tag: `g5-done` (quyết định chủ dự án 2026-09-18, không mở PR)
 
-- [ ] Làm API/query/form cập nhật profile. File: `src/features/profile/{api.ts,schemas.ts,queries.ts}`, `app/(app)/profile.tsx`. FR: FR-04.
-- [ ] Làm chọn/upload/thay avatar đúng Storage policy. File: profile feature và screen, `package.json` nếu cần dependency đã duyệt. FR: FR-04.
-- [ ] Chạy toàn bộ checklist hai tài khoản, rà type/lint và sửa lỗi trong phạm vi. File: file lỗi thực tế, `docs/TEST-CHECKLIST.md`. FR: FR-01..FR-05.
-- [ ] Cập nhật traceability, setup, devlog và nguyên liệu báo cáo theo code cuối. File: `README.md`, `docs/*.md`. FR: FR-01..FR-05.
+- [x] Làm API/query/form cập nhật profile. File: `src/features/profile/{api.ts,schemas.ts,queries.ts,errors.ts}`, `src/features/profile/ProfileView.tsx`, `app/(app)/profile/index.tsx`. FR: FR-04.
+- [x] Làm chọn/upload/thay avatar đúng Storage policy. File: `src/features/profile/{avatar.ts,pickAvatar.ts}`, profile feature và screen, `package.json` (expo-image-picker, expo-image-manipulator, base64-arraybuffer). FR: FR-04.
+- [x] Chạy toàn bộ checklist hai tài khoản, rà type/lint và sửa lỗi trong phạm vi. File: `scripts/storage-rls-proof.ts` 5/5 PASS, `docs/TEST-CHECKLIST.md`. FR: FR-01..FR-05.
+- [x] Cập nhật traceability, setup, devlog và nguyên liệu báo cáo theo code cuối. File: `README.md`, `docs/*.md`. FR: FR-01..FR-05.
+
+Bài 1 DONE (G5): FR-01 → FR-05 đạt, tag `g5-done` + `v1.0.0`.

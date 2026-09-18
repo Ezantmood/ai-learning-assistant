@@ -58,6 +58,35 @@ Mỗi case đổi `[ ]` thành `[x]` khi đạt và thêm `YYYY-MM-DD | nền t�
 - [ ] Với session A, gọi DELETE row B → không xóa được; B vẫn đọc được row.
 - [ ] Lặp lại kiểm tra chéo với B → kết quả đối xứng.
 
+## Demo thủ công trên 2 điện thoại thật (G5 — chủ dự án tự chạy)
+
+Quy ước: máy A đăng nhập tài khoản A, máy B đăng nhập tài khoản B. Ghi kết quả
+theo mẫu `YYYY-MM-DD | iOS/Android + Expo Go | A/B | đạt/lỗi + ghi chú ngắn`.
+
+### FR-05 — Cách ly study_notes A/B
+
+- [ ] A tạo note “Note của A” → list máy A có, kéo refresh list máy B không có.
+- [ ] B tạo note “Note của B” → list máy B có, list máy A không có.
+- [ ] A sửa tiêu đề note A → máy A cập nhật, máy B không đổi.
+- [ ] A xóa note A (xác nhận dialog) → máy A mất, máy B không đổi.
+- [ ] Kill app cả 2 máy rồi mở lại → mỗi máy vẫn chỉ thấy note của mình (session + RLS).
+
+### FR-03 — OTP 6 số qua email Brevo
+
+- [ ] Máy A: `/sign-in` → “Quên mật khẩu?” → nhập email A → nhận email Brevo in OTP 6 số (template `{{ .Token }}`), app sang màn hình nhập mã.
+- [ ] Nhập sai 1 số → báo “Mã OTP chưa đúng”, ở lại màn hình nhập.
+- [ ] Nhập đúng 6 số → sang đặt mật khẩu mới → về `/sign-in` kèm banner; mật khẩu cũ thất bại, mật khẩu mới đăng nhập được.
+- [ ] Nút “Gửi lại mã” khóa 60s có đếm ngược; hết 60s mới gửi được tiếp.
+
+### FR-04 — Đổi avatar + hồ sơ
+
+- [ ] Máy A mở `/profile` → thấy email A, họ tên, mã sinh viên, avatar hiện tại (hoặc chữ cái đầu nếu chưa có).
+- [ ] Sửa họ tên → Lưu → Snackbar “Đã cập nhật hồ sơ.”, kill app mở lại vẫn đúng.
+- [ ] Đổi mã sinh viên thành mã của B → Snackbar “Mã sinh viên này đã được sử dụng.”, dữ liệu cũ giữ nguyên.
+- [ ] “Đổi avatar” → cấp quyền ảnh → crop 1:1 → avatar mới hiển thị; máy B không thấy avatar A.
+- [ ] Từ chối quyền ảnh → Snackbar hướng dẫn mở Cài đặt kèm nút “Mở Cài đặt”.
+- [ ] A thử xem/sửa profile B (nếu biết cách gọi API) → RLS chặn; đã chứng minh tự động bằng `scripts/storage-rls-proof.ts` 5/5 PASS.
+
 ## Smoke test cuối
 
 - [ ] Android và iOS/Expo Go mục tiêu: mở app, điều hướng toàn luồng không crash.
