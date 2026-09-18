@@ -42,6 +42,61 @@ describe('toAuthErrorMessage', () => {
     expect(message).toBe('Đã có lỗi xảy ra. Vui lòng thử lại.');
   });
 
+  it('map OTP hết hạn sang tiếng Việt + gợi gửi lại mã', () => {
+    expect(
+      toAuthErrorMessage(new Error('Token has expired or is invalid')),
+    ).toBe('Mã OTP đã hết hạn. Nhấn Gửi lại mã để nhận mã mới.');
+  });
+
+  it('map OTP sai sang tiếng Việt', () => {
+    expect(toAuthErrorMessage(new Error('Invalid OTP code'))).toBe(
+      'Mã OTP chưa đúng. Kiểm tra lại 6 số trong email rồi thử lại.',
+    );
+  });
+
+  it('map mã đã dùng sang tiếng Việt', () => {
+    expect(
+      toAuthErrorMessage(new Error('This token has already been used')),
+    ).toContain('đã được sử dụng');
+  });
+
+  it('map vượt quota gửi email sang thông báo rõ ràng', () => {
+    expect(
+      toAuthErrorMessage(new Error('You have exceeded the limit for sending emails: over_email_send_rate_limit')),
+    ).toContain('100 email/giờ');
+  });
+
+  it('giữ thông báo rate limit chung cho lỗi không phải email', () => {
+    expect(toAuthErrorMessage(new Error('Rate limit exceeded'))).toContain(
+      'thao tác quá nhanh',
+    );
+  });
+
+  it('map mật khẩu mới trùng mật khẩu cũ sang tiếng Việt', () => {
+    expect(
+      toAuthErrorMessage(
+        new Error('New password should be different from the old password.'),
+      ),
+    ).toContain('phải khác mật khẩu hiện tại');
+  });
+
+  it('map sai mật khẩu hiện tại riêng cho luồng đổi mật khẩu', () => {
+    expect(
+      toAuthErrorMessage(new Error('Invalid login credentials'), {
+        flow: 'change-password',
+      }),
+    ).toContain('Mật khẩu hiện tại chưa đúng');
+  });
+
+  it('không nhầm session hết hạn thành OTP hết hạn', () => {
+    expect(toAuthErrorMessage(new Error('Auth session missing'))).toContain(
+      'hết hạn',
+    );
+    expect(toAuthErrorMessage(new Error('Auth session missing'))).not.toContain(
+      'OTP',
+    );
+  });
+
   it('xử lý input không phải Error an toàn', () => {
     expect(toAuthErrorMessage('chuỗi lạ')).toBe(
       'Đã có lỗi xảy ra. Vui lòng thử lại.',
