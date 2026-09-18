@@ -313,3 +313,15 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog. Sau m
 - Branch: `feat/g4-password-reset`
 - Tag: `g4-done` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
 - PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh
+
+**Fix sau tag (2026-09-18): OTP 8 số không nhập được**
+
+- Triệu chứng: email Brevo in mã 8 số (project để Email OTP length = 8),
+  app cứng `otpSchema` `^\d{6}$` nên chặn oan mã đúng ngay tại field.
+- Sửa: client chấp nhận 6–10 số (`0a75931`), đúng/sai do `verifyOtp`
+  quyết; cập nhật UI/test/checklist/vấn đáp. Tag `g4-done` giữ nguyên,
+  không di chuyển tag đã push. Muốn khớp hẳn “6 số” trong SPEC thì chỉnh
+  Dashboard Authentication → Sign In/Providers → Email → Email OTP length
+  về 6 rồi gửi mã mới kiểm tra.
+- Cổng: `tsc` đạt, `lint` 0 errors, `test` 51/51; merge `fix/g4-otp-length`
+  vào `main` và push (commit docs này).
