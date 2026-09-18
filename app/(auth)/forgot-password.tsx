@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Banner, Button, Text } from 'react-native-paper';
 
-import { AppScreen } from '../../src/components/AppScreen';
-import { FormTextField } from '../../src/components/FormTextField';
+import { FormTextInput } from '../../src/components/FormTextInput';
+import { ScreenContainer } from '../../src/components/ScreenContainer';
 import { requestPasswordReset } from '../../src/features/auth/api';
 import { toAuthErrorMessage } from '../../src/features/auth/errors';
 import {
@@ -78,8 +78,8 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <AppScreen>
-      <Text variant="headlineMedium">Quên mật khẩu</Text>
+    <ScreenContainer>
+      <Text variant="headlineSmall">Quên mật khẩu</Text>
       <Text variant="bodyMedium">
         Nhập email đã đăng ký, chúng tôi sẽ gửi mã OTP 6 số để đặt lại mật khẩu.
       </Text>
@@ -98,6 +98,7 @@ export default function ForgotPasswordScreen() {
           <Button
             accessibilityLabel="Nhập mã OTP"
             accessibilityRole="button"
+            icon="numeric"
             mode="contained"
             onPress={() =>
               router.replace({
@@ -123,11 +124,12 @@ export default function ForgotPasswordScreen() {
             control={control}
             name="email"
             render={({ field, fieldState }) => (
-              <FormTextField
+              <FormTextInput
                 autoCapitalize="none"
                 fieldError={fieldState.error?.message}
                 keyboardType="email-address"
                 label="Email"
+                leftIcon="email-outline"
                 onBlur={field.onBlur}
                 onChangeText={field.onChange}
                 value={field.value}
@@ -139,9 +141,11 @@ export default function ForgotPasswordScreen() {
             accessibilityLabel="Gửi mã OTP"
             accessibilityRole="button"
             disabled={mutation.isPending}
+            icon="send"
             loading={mutation.isPending}
             mode="contained"
             onPress={handleSubmit(onSubmit)}
+            testID="forgot-submit"
           >
             Gửi mã OTP
           </Button>
@@ -157,6 +161,6 @@ export default function ForgotPasswordScreen() {
           </Link>
         </>
       )}
-    </AppScreen>
+    </ScreenContainer>
   );
 }

@@ -4,28 +4,40 @@ import {
   type TextInputProps,
 } from 'react-native-paper';
 
-type FormTextFieldProps = Omit<TextInputProps, 'error' | 'value'> & {
+type FormTextInputProps = Omit<TextInputProps, 'error' | 'left' | 'value'> & {
   fieldError?: string;
   label: string;
+  /** Tên icon MaterialCommunityIcons hiển thị bên trái ô nhập. */
+  leftIcon?: string;
+  left?: TextInputProps['left'];
   onChangeText: (value: string) => void;
   value: string;
 };
 
 /**
- * Ô nhập liệu dùng chung cho form (G3): label accessibility = label,
- * lỗi validate nằm ngay dưới field.
+ * Ô nhập liệu dùng chung cho form (G6): mode outlined, label
+ * accessibility = label, lỗi validate nằm ngay dưới field.
  */
-export function FormTextField({
+export function FormTextInput({
   fieldError,
   label,
+  left,
+  leftIcon,
   ...rest
-}: FormTextFieldProps) {
+}: FormTextInputProps) {
+  const leftAffix = leftIcon ? (
+    <TextInput.Icon forceTextInputFocus={false} icon={leftIcon} />
+  ) : (
+    left
+  );
+
   return (
     <>
       <TextInput
         accessibilityLabel={rest.accessibilityLabel ?? label}
         error={Boolean(fieldError)}
         label={label}
+        left={leftAffix}
         mode="outlined"
         {...rest}
       />

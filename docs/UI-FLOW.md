@@ -16,26 +16,71 @@ Khởi động `/`
 
 Route group `(auth)` và `(app)` không xuất hiện trong URL. Layout mỗi group thực hiện guard; redirect chỉ sau khi `useSession` hoàn tất loading.
 
-## Màn hình và trạng thái
+## Màn hình và trạng thái (G6)
+
+Mọi màn hình dùng `ScreenContainer` (SafeArea + KeyboardAvoidingView +
+ScrollView theo token `src/theme`); tiêu đề `headlineSmall`, phụ đề
+`bodyMedium`; không dùng `<Text>` trần cho tiêu đề. Nút submit chính
+`mode="contained"` có icon, `loading` + `disabled` khi đang gửi; link phụ
+`mode="text"`.
 
 | Route | Mục đích | Component chính | Loading / empty / error / success |
 |---|---|---|---|
-| `/` | Chọn nhánh theo session | `FullScreenStatus` | Loading khi khôi phục session; lỗi cấu hình hiển thị rõ; thành công redirect |
-| `/sign-in` | FR-02 đăng nhập | `FormTextField`, `Button`, link đăng ký/quên mật khẩu | Button spinner; không có empty; lỗi field/API; thành công về `/notes` |
-| `/sign-up` | FR-01 đăng ký | Full name/student code/email/password/confirm form | Spinner; lỗi Zod/email hoặc student code trùng; dev vào app ngay, demo yêu cầu kiểm tra email theo env |
-| `/forgot-password` | FR-03 gửi email reset | Email form | Spinner; luôn dùng thông báo success trung tính; offline cho retry |
-| `/verify-reset-otp` | FR-03 xác minh mã | Email + OTP 6 số form | Spinner; OTP sai/hết hạn báo lỗi; success tạo recovery session rồi sang reset |
-| `/reset-password` | FR-03 đặt mật khẩu mới | Password/confirm form | Thiếu recovery session thì về verify OTP; thành công về sign-in |
-| `/notes` | FR-05 danh sách riêng | `Appbar`, `FAB`, list/card | Skeleton/spinner; empty có CTA “Tạo ghi chú”; lỗi có Retry; success danh sách theo `updated_at desc` |
-| `/notes/new` | FR-05 tạo note | Title/content form | Spinner khi lưu; lỗi validation/API; success invalidate `notes` rồi back |
-| `/notes/[id]` | FR-05 sửa/xóa note | Form, nút Delete, confirm dialog | Loading fetch; không tìm thấy/không có quyền dùng cùng thông báo; lỗi retry; success back |
-| `/profile` | FR-04 xem/sửa hồ sơ, avatar, logout | `ProfileView` (thuần hiển thị) + container query/mutation, nút đổi avatar/lưu, link đổi mật khẩu, nút đăng xuất | Profile loading → spinner “Đang tải hồ sơ…”; query lỗi → “Không tải được hồ sơ.” + nút “Thử lại” (refetch); ready → form + avatar; lưu/upload pending → disable + spinner trên nút; success/error báo bằng Snackbar (không Alert), xem chi tiết luồng avatar bên dưới |
-| `/profile/change-password` | FR-03 đổi pass khi đã login | Current/new/confirm form | Spinner; sai pass hiện tại/trùng pass cũ báo riêng; success banner + về hồ sơ |
+| `/` | Chọn nhánh theo session | `LoadingState` | Loading khi khôi phục session; lỗi cấu hình hiển thị rõ; thành công redirect |
+| `/sign-in` | FR-02 đăng nhập | `FormTextInput` (email `email-outline`), `PasswordInput`, `Button` icon `login` (testID `login-submit`), link đăng ký/quên mật khẩu | Button spinner; không có empty; lỗi field/API; thành công về `/notes` |
+| `/sign-up` | FR-01 đăng ký | Full name (`account`)/student code (`badge-account-horizontal-outline`)/email (`email-outline`) + 2 `PasswordInput` (testID `password-toggle`, `password-confirm-toggle`), nút icon `account-plus` (testID `register-submit`) | Spinner; lỗi Zod/email hoặc student code trùng; dev vào app ngay, demo yêu cầu kiểm tra email theo env |
+| `/forgot-password` | FR-03 gửi email reset | Email form icon `email-outline`, nút icon `send` (testID `forgot-submit`) | Spinner; luôn dùng thông báo success trung tính; offline cho retry |
+| `/verify-reset-otp` | FR-03 xác minh mã | Ô OTP icon `numeric`, căn giữa + letterSpacing rộng (testID `otp-input`), nút Xác minh icon `check` (testID `otp-submit`), nút gửi lại icon `refresh` (testID `otp-resend`) | Spinner; OTP sai/hết hạn báo lỗi; success tạo recovery session rồi sang reset |
+| `/reset-password` | FR-03 đặt mật khẩu mới | 2 `PasswordInput` + độ mạnh mật khẩu, nút icon `check` (testID `reset-submit`) | Thiếu recovery session thì về verify OTP; thành công về sign-in |
+| `/notes` | FR-05 danh sách riêng | `Appbar` (action `account-circle`), `List.Item` icon `note-text-outline` + `Divider`, `FAB` icon `plus` (testID `notes-fab`), `EmptyState` icon `notebook-outline` | `ListSkeleton` khi tải; empty có CTA “Tạo ghi chú”; lỗi có Retry; pull-to-refresh nối vào `refetch`; success danh sách theo `updated_at desc` |
+| `/notes/new` | FR-05 tạo note | Title (`format-title`)/content (`text`) form, nút icon `content-save` (testID `note-save`) | Spinner khi lưu; lỗi validation/API; success invalidate `notes` rồi back |
+| `/notes/[id]` | FR-05 sửa/xóa note | Form, nút Lưu icon `content-save` (testID `note-update`), nút Xóa icon `trash-can-outline` màu error, confirm dialog | Loading fetch; không tìm thấy/không có quyền dùng cùng thông báo; lỗi retry; success back |
+| `/profile` | FR-04 xem/sửa hồ sơ, avatar, logout | `ProfileView` (thuần hiển thị) + container query/mutation; avatar bọc `Pressable` overlay icon `camera` (testID `avatar-picker`, label “Đổi ảnh đại diện”); nút Lưu icon `content-save` (testID `profile-save`); link đổi mật khẩu icon `lock-reset`; nút đăng xuất icon `logout` màu error; `FeedbackSnackbar` thay Alert | Profile loading → spinner “Đang tải hồ sơ…”; query lỗi → `EmptyState` “Không tải được hồ sơ.” + nút “Thử lại” (testID `profile-retry`, gọi refetch); ready → form + avatar; lưu/upload pending → disable + spinner trên nút; success/error báo bằng Snackbar (không Alert), xem chi tiết luồng avatar bên dưới |
+| `/profile/change-password` | FR-03 đổi pass khi đã login | 3 `PasswordInput`, nút icon `lock-reset` (testID `change-password-submit`) | Spinner; sai pass hiện tại/trùng pass cũ báo riêng; success banner + về hồ sơ |
+
+## Bảng icon (G6, MaterialCommunityIcons qua settings.icon)
+
+Mọi tên dưới đây đã đối chiếu glyphmap thật của `@expo/vector-icons`;
+tên sai Paper sẽ render rỗng im lặng nên không tự ý đổi tên.
+
+| Icon | Dùng ở đâu |
+|---|---|
+| `login` | Nút Đăng nhập |
+| `account-plus` | Nút Đăng ký |
+| `account` | Ô họ tên, nút “Về hồ sơ” |
+| `badge-account-horizontal-outline` | Ô mã sinh viên |
+| `email-outline` | Ô email mọi form auth |
+| `lock-outline` | Ô mật khẩu (`PasswordInput` left icon) |
+| `eye` / `eye-off` | Toggle hiện/ẩn mật khẩu |
+| `send` | Nút Gửi mã OTP |
+| `numeric` | Ô OTP + nút “Nhập mã OTP” |
+| `check` | Nút Xác minh OTP, nút Đặt lại mật khẩu |
+| `refresh` | Nút Gửi lại mã OTP |
+| `lock-reset` | Nút Đổi mật khẩu (form + link ở profile) |
+| `check-circle` | Banner thành công, Snackbar success |
+| `alert-circle` | Banner/Snackbar lỗi, empty lỗi |
+| `information` | Snackbar info |
+| `close` | Nút đóng Snackbar |
+| `email-check` | Banner đã gửi email |
+| `history` | Banner khôi phục email giữa luồng |
+| `camera` | Overlay đổi avatar |
+| `account-circle` | Appbar mở hồ sơ |
+| `content-save` | Nút Lưu (profile, tạo/sửa note) |
+| `logout` | Nút Đăng xuất (màu error) |
+| `plus` | FAB thêm ghi chú |
+| `note-text-outline` | Icon mỗi dòng ghi chú |
+| `notebook-outline` | Empty danh sách notes |
+| `format-title` / `text` | Ô tiêu đề / nội dung note |
+| `trash-can-outline` | Nút Xóa ghi chú (màu error) |
+
+Mọi control chỉ có icon đều có `accessibilityLabel` và vùng bấm tối thiểu
+44x44 (avatar `Pressable` dùng `hitSlop` + `minHeight/minWidth`).
 
 ## Luồng đổi avatar (`/profile`, FR-04)
 
 ```text
-“Đổi avatar” → xin quyền thư viện (từ chối → Snackbar + nút “Mở Cài đặt”)
+Chạm avatar (Pressable overlay icon camera, label “Đổi ảnh đại diện”)
+→ xin quyền thư viện (từ chối → Snackbar + nút “Mở Cài đặt”)
 → picker (images, crop 1:1) → hủy → im lặng, giữ avatar cũ
 → kiểm tra MIME khai báo → resize cạnh dài ≤ 512px, JPEG ~0.7, lấy base64
 → guard > 2MB → chặn bằng Snackbar, giữ file cũ

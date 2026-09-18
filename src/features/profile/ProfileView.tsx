@@ -1,16 +1,21 @@
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import {
   ActivityIndicator,
   Avatar,
   Button,
   Card,
-  Snackbar,
+  Icon,
   Text,
+  useTheme,
 } from 'react-native-paper';
 
-import { FormTextField } from '../../components/FormTextField';
+import { EmptyState } from '../../components/EmptyState';
+import { FeedbackSnackbar } from '../../components/FeedbackSnackbar';
+import { FormTextInput } from '../../components/FormTextInput';
+import type { AppTheme } from '../../theme/theme';
+import { radius, spacing } from '../../theme/spacing';
 import { profileSchema, type ProfileFormValues } from './schemas';
 
 export type ProfileViewStatus = 'error' | 'loading' | 'ready';
@@ -19,6 +24,7 @@ export type ProfileNotice = {
   actionLabel?: string;
   message: string;
   onAction?: () => void;
+  variant?: 'error' | 'info' | 'success';
 };
 
 type ProfileViewProps = {
@@ -62,6 +68,7 @@ export function ProfileView({
   studentCode,
   uploading,
 }: ProfileViewProps) {
+  const theme = useTheme<AppTheme>();
   const { control, handleSubmit, reset, setError } =
     useForm<ProfileFormValues>({
       defaultValues: { fullName, studentCode },
@@ -83,15 +90,14 @@ export function ProfileView({
   if (status === 'error') {
     return (
       <View style={styles.center}>
-        <Text variant="bodyMedium">Không tải được hồ sơ.</Text>
-        <Button
-          accessibilityLabel="Tải lại hồ sơ"
-          accessibilityRole="button"
-          mode="contained"
-          onPress={onRetry}
-        >
-          Thử lại
-        </Button>
+        <EmptyState
+          actionLabel="Thử lại"
+          actionTestID="profile-retry"
+          description="Kiểm tra mạng rồi thử lại."
+          icon="alert-circle"
+          onAction={onRetry}
+          title="Không tải được hồ sơ."
+        />
       </View>
     );
   }
@@ -118,30 +124,52 @@ export function ProfileView({
     <View style={styles.container}>
       <Card>
         <Card.Content style={styles.cardContent}>
-          {avatarUrl ? (
-            <Avatar.Image
-              accessibilityLabel="Ảnh đại diện"
-              size={80}
-              source={{ uri: avatarUrl }}
-            />
-          ) : (
-            <Avatar.Text
-              accessibilityLabel="Ảnh đại diện mặc định"
-              label={initialOf(fullName, email)}
-              size={80}
-            />
-          )}
-          <Text variant="titleMedium">{email}</Text>
-          <Button
-            accessibilityLabel="Đổi avatar"
+          <Pressable
+            accessibilityHint="Mở thư viện ảnh để chọn ảnh mới"
+            accessibilityLabel="Đổi ảnh đại diện"
             accessibilityRole="button"
             disabled={uploading}
-            loading={uploading}
-            mode="outlined"
+            hitSlop={8}
             onPress={onPickAvatar}
+            style={styles.avatarWrap}
+            testID="avatar-picker"
           >
-            Đổi avatar
-          </Button>
+            {avatarUrl ? (
+              <Avatar.Image
+                accessibilityLabel="Ảnh đại diện"
+                size={80}
+                source={{ uri: avatarUrl }}
+              />
+            ) : (
+              <Avatar.Text
+                accessibilityLabel="Ảnh đại diện mặc định"
+                label={initialOf(fullName, email)}
+                size={80}
+              />
+            )}
+            <View
+              style={[
+                styles.cameraBadge,
+                { backgroundColor: theme.colors.primary },
+              ]}
+            >
+              {uploading ? (
+                <ActivityIndicator
+                  accessibilityLabel="Đang tải ảnh lên"
+                  color={theme.colors.onPrimary}
+                  size={16}
+                />
+              ) : (
+                <Icon
+                  color={theme.colors.onPrimary}
+                  size={16}
+                  source="camera"
+                />
+              )}
+            </View>
+          </Pressable>
+          <Text variant="titleMedium">{email}</Text>
+          <Text variant="bodySmall">Chạm vào ảnh để đổi avatar</Text>
         </Card.Content>
       </Card>
 
@@ -149,9 +177,10 @@ export function ProfileView({
         control={control}
         name="fullName"
         render={({ field, fieldState }) => (
-          <FormTextField
+          <FormTextInput
             fieldError={fieldState.error?.message}
             label="Họ tên"
+            leftIcon="account"
             onBlur={field.onBlur}
             onChangeText={field.onChange}
             value={field.value}
@@ -163,10 +192,11 @@ export function ProfileView({
         control={control}
         name="studentCode"
         render={({ field, fieldState }) => (
-          <FormTextField
+          <FormTextInput
             autoCapitalize="none"
             fieldError={fieldState.error?.message}
             label="Mã sinh viên"
+            leftIcon="badge-account-horizontal-outline"
             onBlur={field.onBlur}
             onChangeText={field.onChange}
             value={field.value}
@@ -178,43 +208,56 @@ export function ProfileView({
         accessibilityLabel="Lưu hồ sơ"
         accessibilityRole="button"
         disabled={saving}
+        icon="content-save"
         loading={saving}
         mode="contained"
         onPress={handleSubmit(submit)}
+        testID="profile-save"
       >
         Lưu
       </Button>
 
-      <Snackbar
-        action={
-          notice?.actionLabel && notice.onAction
-            ? { label: notice.actionLabel, onPress: notice.onAction }
-            : undefined
-        }
+      <FeedbackSnackbar
+        actionLabel={notice?.actionLabel}
+        message={notice?.message ?? ''}
+        onAction={notice?.onAction}
         onDismiss={onDismissNotice}
+        variant={notice?.variant ?? 'info'}
         visible={Boolean(notice)}
-      >
-        {notice?.message ?? ''}
-      </Snackbar>
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  avatarWrap: {
+    minHeight: 44,
+    minWidth: 44,
+  },
+  cameraBadge: {
+    alignItems: 'center',
+    borderRadius: radius.full,
+    bottom: 0,
+    height: 28,
+    justifyContent: 'center',
+    position: 'absolute',
+    right: 0,
+    width: 28,
+  },
   cardContent: {
     alignItems: 'center',
-    gap: 8,
+    gap: spacing.sm,
   },
   center: {
     alignItems: 'center',
     flex: 1,
-    gap: 12,
+    gap: spacing.md,
     justifyContent: 'center',
-    padding: 24,
+    padding: spacing.xl,
   },
   container: {
     flex: 1,
-    gap: 12,
-    padding: 16,
+    gap: spacing.md,
+    padding: spacing.lg,
   },
 });

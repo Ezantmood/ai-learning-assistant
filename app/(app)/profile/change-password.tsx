@@ -2,10 +2,10 @@ import { useMutation } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Banner, Button, Text, TextInput } from 'react-native-paper';
+import { Banner, Button, Text } from 'react-native-paper';
 
-import { AppScreen } from '../../../src/components/AppScreen';
-import { FormTextField } from '../../../src/components/FormTextField';
+import { PasswordInput } from '../../../src/components/PasswordInput';
+import { ScreenContainer } from '../../../src/components/ScreenContainer';
 import { changePassword } from '../../../src/features/auth/api';
 import { toAuthErrorMessage } from '../../../src/features/auth/errors';
 import {
@@ -20,7 +20,6 @@ import {
 export default function ChangePasswordScreen() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [isDone, setIsDone] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   const { control, handleSubmit, setError } =
     useForm<ChangePasswordFormValues>({
@@ -65,8 +64,8 @@ export default function ChangePasswordScreen() {
   };
 
   return (
-    <AppScreen>
-      <Text variant="headlineMedium">Đổi mật khẩu</Text>
+    <ScreenContainer>
+      <Text variant="headlineSmall">Đổi mật khẩu</Text>
       <Text variant="bodyMedium">
         Nhập mật khẩu hiện tại để xác nhận, rồi đặt mật khẩu mới.
       </Text>
@@ -85,6 +84,7 @@ export default function ChangePasswordScreen() {
           <Button
             accessibilityLabel="Về hồ sơ"
             accessibilityRole="button"
+            icon="account"
             mode="contained"
             onPress={() => router.replace('/profile')}
           >
@@ -97,13 +97,13 @@ export default function ChangePasswordScreen() {
             control={control}
             name="currentPassword"
             render={({ field, fieldState }) => (
-              <FormTextField
+              <PasswordInput
                 autoCapitalize="none"
                 fieldError={fieldState.error?.message}
                 label="Mật khẩu hiện tại"
                 onBlur={field.onBlur}
                 onChangeText={field.onChange}
-                secureTextEntry={!showPassword}
+                toggleTestID="password-current-toggle"
                 value={field.value}
               />
             )}
@@ -113,22 +113,13 @@ export default function ChangePasswordScreen() {
             control={control}
             name="newPassword"
             render={({ field, fieldState }) => (
-              <FormTextField
+              <PasswordInput
                 autoCapitalize="none"
                 fieldError={fieldState.error?.message}
                 label="Mật khẩu mới"
                 onBlur={field.onBlur}
                 onChangeText={field.onChange}
-                right={
-                  <TextInput.Icon
-                    accessibilityLabel={
-                      showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'
-                    }
-                    icon={showPassword ? 'eye-off' : 'eye'}
-                    onPress={() => setShowPassword((prev) => !prev)}
-                  />
-                }
-                secureTextEntry={!showPassword}
+                toggleTestID="password-toggle"
                 value={field.value}
               />
             )}
@@ -138,13 +129,13 @@ export default function ChangePasswordScreen() {
             control={control}
             name="confirmPassword"
             render={({ field, fieldState }) => (
-              <FormTextField
+              <PasswordInput
                 autoCapitalize="none"
                 fieldError={fieldState.error?.message}
                 label="Nhập lại mật khẩu mới"
                 onBlur={field.onBlur}
                 onChangeText={field.onChange}
-                secureTextEntry={!showPassword}
+                toggleTestID="password-confirm-toggle"
                 value={field.value}
               />
             )}
@@ -154,14 +145,16 @@ export default function ChangePasswordScreen() {
             accessibilityLabel="Xác nhận đổi mật khẩu"
             accessibilityRole="button"
             disabled={mutation.isPending}
+            icon="lock-reset"
             loading={mutation.isPending}
             mode="contained"
             onPress={handleSubmit(onSubmit)}
+            testID="change-password-submit"
           >
             Đổi mật khẩu
           </Button>
         </>
       )}
-    </AppScreen>
+    </ScreenContainer>
   );
 }

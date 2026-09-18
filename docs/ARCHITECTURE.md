@@ -29,9 +29,16 @@ Kiến trúc theo feature, ít tầng và đủ rõ để sinh viên giải thí
 │           └── [id].tsx
 ├── src/
 │   ├── components/
-│   │   ├── AppScreen.tsx
-│   │   ├── FormTextField.tsx
-│   │   └── FullScreenStatus.tsx
+│   │   ├── ScreenContainer.tsx
+│   │   ├── FormTextInput.tsx
+│   │   ├── PasswordInput.tsx
+│   │   ├── FeedbackSnackbar.tsx
+│   │   ├── EmptyState.tsx
+│   │   └── LoadingState.tsx
+│   ├── theme/
+│   │   ├── theme.ts
+│   │   ├── spacing.ts
+│   │   └── index.ts
 │   ├── features/
 │   │   ├── auth/{api.ts,schemas.ts,errors.ts,recovery.ts,recoveryStorage.ts,useSession.ts}
 │   │   ├── auth/__tests__/
@@ -39,7 +46,9 @@ Kiến trúc theo feature, ít tầng và đủ rõ để sinh viên giải thí
 │   │   ├── profile/__tests__/
 │   │   └── notes/{api.ts,schemas.ts,queries.ts,errors.ts}
 │   ├── lib/{env.ts,supabase.ts,queryClient.ts}
-│   ├── providers/AppProviders.tsx
+│   ├── providers/AppProviders.tsx (PaperProvider + settings.icon cầu nối
+│   │   sang MaterialCommunityIcons của @expo/vector-icons + StatusBar theo theme)
+│   ├── test-utils/vectorIconsMock.tsx (stub icon đồng bộ, chỉ dùng trong Jest)
 │   └── types/database.ts
 ├── supabase/migrations/
 │   └── 0001_account_manager.sql
@@ -81,7 +90,11 @@ Auth event → useSession → route guard trong layout → (auth) hoặc (app)
 - **supabase-js v2 + AsyncStorage:** SDK chính thức để gọi Auth/Data/Storage; AsyncStorage duy trì session trên React Native.
 - **React Hook Form + Zod:** giảm state form thủ công, schema dùng chung cho validate và thông báo lỗi.
 - **TanStack Query:** cache/invalidate dữ liệu server, biểu diễn loading/error rõ ràng; không dùng cho form/session.
-- **React Native Paper:** bộ component nhất quán, đủ cho UI bài tập mà không tạo design system riêng.
+- **React Native Paper + @expo/vector-icons:** bộ component nhất quán; icon
+  resolve qua `settings.icon` sang MaterialCommunityIcons để hiện đủ trên
+  Expo Go (Paper mặc định cần react-native-vector-icons vốn không có sẵn).
+  Token mở rộng ở `src/theme` (spacing/radius/màu success, sáng/tối theo hệ
+  điều hành), không custom font; typography dùng variant sẵn của Paper.
 
 ## Biến môi trường
 

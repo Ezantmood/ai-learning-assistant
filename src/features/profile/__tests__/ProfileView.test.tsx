@@ -1,7 +1,7 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Avatar, Button, Text } from 'react-native-paper';
+import { Avatar, Text } from 'react-native-paper';
 
 import { ProfileView } from '../ProfileView';
 
@@ -63,10 +63,7 @@ describe('ProfileView', () => {
 
     expect(textsOf(tree)).toContain('Không tải được hồ sơ.');
 
-    const retryButton = tree.root.findByProps({
-      accessibilityLabel: 'Tải lại hồ sơ',
-    });
-    expect(retryButton.type).toBe(Button);
+    const retryButton = tree.root.findByProps({ testID: 'profile-retry' });
     act(() => {
       retryButton.props.onPress();
     });
@@ -77,9 +74,8 @@ describe('ProfileView', () => {
     const tree = renderView({});
 
     expect(textsOf(tree)).toContain('a@example.com');
-    expect(
-      tree.root.findByProps({ accessibilityLabel: 'Lưu hồ sơ' }),
-    ).toBeTruthy();
+    expect(tree.root.findByProps({ testID: 'profile-save' })).toBeTruthy();
+    expect(tree.root.findByProps({ testID: 'avatar-picker' })).toBeTruthy();
 
     const fallback = tree.root.findByType(Avatar.Text);
     expect(fallback.props.label).toBe('N');
