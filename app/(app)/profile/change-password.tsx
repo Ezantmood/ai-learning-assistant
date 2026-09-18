@@ -6,6 +6,7 @@ import { Banner, Button, Text } from 'react-native-paper';
 
 import { PasswordInput } from '../../../src/components/PasswordInput';
 import { ScreenContainer } from '../../../src/components/ScreenContainer';
+import { ScreenHeader } from '../../../src/components/ScreenHeader';
 import { changePassword } from '../../../src/features/auth/api';
 import { toAuthErrorMessage } from '../../../src/features/auth/errors';
 import {
@@ -64,8 +65,15 @@ export default function ChangePasswordScreen() {
   };
 
   return (
-    <ScreenContainer>
-      <Text variant="headlineSmall">Đổi mật khẩu</Text>
+    <ScreenContainer
+      header={
+        <ScreenHeader
+          onBack={() => router.back()}
+          showBack={router.canGoBack()}
+          title="Đổi mật khẩu"
+        />
+      }
+    >
       <Text variant="bodyMedium">
         Nhập mật khẩu hiện tại để xác nhận, rồi đặt mật khẩu mới.
       </Text>

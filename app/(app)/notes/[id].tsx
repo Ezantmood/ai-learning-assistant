@@ -14,6 +14,7 @@ import {
 import { FormTextInput } from '../../../src/components/FormTextInput';
 import { LoadingState } from '../../../src/components/LoadingState';
 import { ScreenContainer } from '../../../src/components/ScreenContainer';
+import { ScreenHeader } from '../../../src/components/ScreenHeader';
 import { useSession } from '../../../src/features/auth/useSession';
 import { toNotesErrorMessage } from '../../../src/features/notes/errors';
 import {
@@ -115,8 +116,15 @@ function NoteEditor({ note }: { note: StudyNoteRow }) {
   };
 
   return (
-    <ScreenContainer>
-      <Text variant="headlineSmall">Sửa ghi chú</Text>
+    <ScreenContainer
+      header={
+        <ScreenHeader
+          onBack={() => router.back()}
+          showBack={router.canGoBack()}
+          title="Sửa ghi chú"
+        />
+      }
+    >
 
       {apiError ? (
         <Banner icon="alert-circle" visible>

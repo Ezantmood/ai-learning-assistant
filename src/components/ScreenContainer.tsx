@@ -1,4 +1,4 @@
-import type { PropsWithChildren } from 'react';
+import type { PropsWithChildren, ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -18,6 +18,11 @@ type ScreenContainerProps = PropsWithChildren & {
   contentStyle?: StyleProp<ViewStyle>;
   /** false cho màn hình tự quản scroll (VD danh sách FlatList). */
   scrollable?: boolean;
+  /**
+   * Header cố định (VD `ScreenHeader`): nằm trong SafeArea nhưng ngoài
+   * ScrollView nên không cuộn theo nội dung, không dính notch/status bar.
+   */
+  header?: ReactNode;
 };
 
 /**
@@ -27,6 +32,7 @@ type ScreenContainerProps = PropsWithChildren & {
 export function ScreenContainer({
   children,
   contentStyle,
+  header,
   scrollable = true,
 }: ScreenContainerProps) {
   const theme = useTheme<AppTheme>();
@@ -36,6 +42,7 @@ export function ScreenContainer({
       edges={['bottom', 'left', 'right', 'top']}
       style={[styles.root, { backgroundColor: theme.colors.background }]}
     >
+      {header}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.root}

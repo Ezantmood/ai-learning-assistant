@@ -5,6 +5,7 @@ import { Linking, StyleSheet, View } from 'react-native';
 import { Button, useTheme } from 'react-native-paper';
 
 import { ScreenContainer } from '../../../src/components/ScreenContainer';
+import { ScreenHeader } from '../../../src/components/ScreenHeader';
 import { signOut } from '../../../src/features/auth/api';
 import { toAuthErrorMessage } from '../../../src/features/auth/errors';
 import { useSession } from '../../../src/features/auth/useSession';
@@ -124,7 +125,15 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScreenContainer>
+    <ScreenContainer
+      header={
+        <ScreenHeader
+          onBack={() => router.back()}
+          showBack={router.canGoBack()}
+          title="Thông tin cá nhân"
+        />
+      }
+    >
       <ProfileView
         avatarUrl={avatarQuery.data ?? null}
         email={user?.email ?? '—'}
