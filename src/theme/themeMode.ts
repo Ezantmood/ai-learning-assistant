@@ -7,16 +7,18 @@
  * hành (người dùng đổi dark/light trong Settings điện thoại thì app đổi
  * theo mà không cần chạm lại app).
  */
-import type { ColorSchemeName } from 'react-native';
-
 /** Chế độ giao diện do người dùng chọn. Union hẹp, không string trần. */
 export type ThemeMode = 'dark' | 'light' | 'system';
 
 /** Scheme hiệu lực sau khi giải quyết mode + scheme hệ điều hành. */
 export type EffectiveScheme = 'dark' | 'light';
 
-/** Scheme hệ điều hành có thể null khi chưa đọc được (fallback light). */
-export type SystemScheme = ColorSchemeName;
+/**
+ * Scheme hệ điều hành: bao cả 'unspecified'/null/undefined vì
+ * `useColorScheme` có thể trả về các giá trị này tùy nền tảng —
+ * tất cả đều fallback light.
+ */
+export type SystemScheme = EffectiveScheme | 'unspecified' | null | undefined;
 
 /** Key AsyncStorage duy nhất lưu lựa chọn của người dùng. */
 export const THEME_MODE_STORAGE_KEY = 'app.theme.mode';

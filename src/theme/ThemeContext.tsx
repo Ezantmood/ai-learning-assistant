@@ -18,13 +18,14 @@ import {
   persistThemeMode,
   resolveEffectiveScheme,
   type EffectiveScheme,
+  type SystemScheme,
   type ThemeMode,
   type ThemeModeStorage,
 } from './themeMode';
 
 export type { EffectiveScheme, ThemeMode };
 
-type ThemeContextValue = {
+export type ThemeContextValue = {
   /** Lựa chọn thô của người dùng (có 'system'). */
   mode: ThemeMode;
   setMode: (mode: ThemeMode) => void;
@@ -45,6 +46,11 @@ type ThemeModeProviderProps = PropsWithChildren & {
   storage?: ThemeModeStorage;
   /** Mode khởi tạo cho test; runtime luôn là 'system' rồi hydrate. */
   initialMode?: ThemeMode;
+  /**
+   * Override scheme hệ điều hành cho test (thay cho `useColorScheme`,
+   * vì mock module react-native làm crash worker Jest).
+   */
+  systemScheme?: SystemScheme;
 };
 
 /**
@@ -60,10 +66,11 @@ export function ThemeModeProvider({
   children,
   initialMode = 'system',
   storage = AsyncStorage,
+  systemScheme,
 }: ThemeModeProviderProps) {
   const [mode, setModeState] = useState<ThemeMode>(initialMode);
   const [isThemeHydrated, setIsThemeHydrated] = useState(false);
-  const systemScheme = useColorScheme();
+  const osScheme = useColorScheme();
 
   useEffect(() => {
     let isMounted = true;
@@ -95,7 +102,10 @@ export function ThemeModeProvider({
     setMode(cycleThemeMode(mode));
   }, [mode, setMode]);
 
-  const effectiveScheme = resolveEffectiveScheme(mode, systemScheme);
+  const effectiveScheme = resolveEffectiveScheme(
+    mode,
+    systemScheme ?? osScheme,
+  );
 
   // Memo theo effectiveScheme để object theme ổn định giữa các render —
   // tránh remount navigator / render lại toàn cây không cần thiết.
