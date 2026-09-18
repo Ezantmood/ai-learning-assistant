@@ -23,7 +23,7 @@ import {
  * có tồn tại hay không (Supabase cũng không trả thông tin này).
  */
 const NEUTRAL_MESSAGE =
-  'Nếu email này đã đăng ký, mã OTP đã được gửi. Kiểm tra hộp thư (kể cả mục Spam) rồi nhập mã để tiếp tục.';
+  'Nếu email này đã đăng ký, mã OTP 6 số đã được gửi. Kiểm tra hộp thư (kể cả mục Spam) rồi nhập mã để tiếp tục.';
 
 export default function ForgotPasswordScreen() {
   const [apiError, setApiError] = useState<string | null>(null);
@@ -81,7 +81,7 @@ export default function ForgotPasswordScreen() {
     <AppScreen>
       <Text variant="headlineMedium">Quên mật khẩu</Text>
       <Text variant="bodyMedium">
-        Nhập email đã đăng ký, chúng tôi sẽ gửi mã OTP để đặt lại mật khẩu.
+        Nhập email đã đăng ký, chúng tôi sẽ gửi mã OTP 6 số để đặt lại mật khẩu.
       </Text>
 
       {apiError ? (

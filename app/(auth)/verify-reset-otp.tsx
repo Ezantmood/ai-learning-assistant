@@ -126,7 +126,7 @@ export default function VerifyResetOtpScreen() {
     onSuccess: () => {
       void savePendingRecovery(email ?? '', Date.now());
       setCooldown(RESEND_COOLDOWN_SECONDS);
-      setInfo('Đã gửi lại mã OTP. Kiểm tra hộp thư (kể cả mục Spam).');
+      setInfo('Đã gửi lại mã OTP 6 số. Kiểm tra hộp thư (kể cả mục Spam).');
     },
   });
 
@@ -176,7 +176,7 @@ export default function VerifyResetOtpScreen() {
     <AppScreen>
       <Text variant="headlineMedium">Xác minh mã OTP</Text>
       <Text variant="bodyMedium">
-        Nhập mã OTP đã gửi tới {email}. Mỗi mã chỉ dùng một lần.
+        Nhập mã 6 số đã gửi tới {email}. Mỗi mã chỉ dùng một lần.
       </Text>
 
       {wasRestored ? (
@@ -207,8 +207,8 @@ export default function VerifyResetOtpScreen() {
             autoFocus
             fieldError={fieldState.error?.message}
             keyboardType="number-pad"
-            label="Mã OTP"
-            maxLength={10}
+            label="Mã OTP 6 số"
+            maxLength={6}
             onBlur={field.onBlur}
             onChangeText={field.onChange}
             textContentType="oneTimeCode"
