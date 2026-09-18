@@ -89,9 +89,39 @@ tên sai Paper sẽ render rỗng im lặng nên không tự ý đổi tên.
 | `notebook-outline` | Empty danh sách notes |
 | `format-title` / `text` | Ô tiêu đề / nội dung note |
 | `trash-can-outline` | Nút Xóa ghi chú (màu error) |
+| `theme-light-dark` | Chủ đề “Hệ thống” (toggle + SegmentedButtons) |
+| `weather-sunny` | Chủ đề “Sáng” (toggle + SegmentedButtons) |
+| `weather-night` | Chủ đề “Tối” (toggle + SegmentedButtons) |
 
 Mọi control chỉ có icon đều có `accessibilityLabel` và vùng bấm tối thiểu
 44x44 (avatar `Pressable` dùng `hitSlop` + `minHeight/minWidth`).
+
+## Chủ đề giao diện (G7)
+
+Ba mode (`ThemeMode` trong `src/theme/themeMode.ts`): `light`, `dark`,
+`system`. `effectiveScheme = mode === 'system' ? (useColorScheme() ?? 'light') : mode`.
+Lựa chọn lưu ở AsyncStorage key `app.theme.mode`, đọc ra validate bằng
+type guard — giá trị rác → fallback `system`, không throw.
+
+Hai điểm truy cập đọc/ghi cùng một state (`ThemeModeProvider` ở root,
+bọc ngoài PaperProvider và ThemeProvider navigation):
+
+- Nút nhanh `Appbar.Action` (testID `theme-toggle`) trên Notes và Profile:
+  bấm cycle `system → light → dark → system`; icon và
+  `accessibilityLabel` tiếng Việt đổi động theo mode.
+- `Card` “Giao diện” trong Profile: Paper `SegmentedButtons` (testID
+  `theme-segmented`) 3 giá trị Sáng / Tối / Hệ thống.
+
+| Mode | Icon toggle + segmented | Nhãn accessibility toggle |
+|---|---|---|
+| `system` | `theme-light-dark` | “Chủ đề: Theo hệ thống. Chạm để đổi chủ đề” |
+| `light` | `weather-sunny` | “Chủ đề: Sáng. Chạm để đổi chủ đề” |
+| `dark` | `weather-night` | “Chủ đề: Tối. Chạm để đổi chủ đề” |
+
+Chống flash: khi chưa đọc xong storage (`isThemeHydrated === false`)
+app render `null` — splash hệ thống vẫn hiển thị (provider bọc ngoài
+`AuthProvider`, nơi gọi `hideAsync`) nên không nháy sáng→tối.
+`StatusBar` giữ một chỗ duy nhất ở root provider, đổi theo theme hiệu lực.
 
 ## Luồng đổi avatar (`/profile`, FR-04)
 

@@ -11,6 +11,7 @@ import {
 import { EmptyState } from '../../../src/components/EmptyState';
 import { ListSkeleton } from '../../../src/components/LoadingState';
 import { ScreenContainer } from '../../../src/components/ScreenContainer';
+import { ThemeToggleAction } from '../../../src/components/ThemeToggleAction';
 import { useSession } from '../../../src/features/auth/useSession';
 import { toNotesErrorMessage } from '../../../src/features/notes/errors';
 import { useNotes } from '../../../src/features/notes/queries';
@@ -53,6 +54,7 @@ export default function NotesScreen() {
     <ScreenContainer contentStyle={styles.plain} scrollable={false}>
       <Appbar.Header>
         <Appbar.Content title="Ghi chú học tập" />
+        <ThemeToggleAction />
         <Appbar.Action
           accessibilityLabel="Mở hồ sơ"
           icon="account-circle"

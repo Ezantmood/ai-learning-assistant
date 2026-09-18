@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Appbar } from 'react-native-paper';
 
 type ScreenHeaderProps = {
@@ -5,6 +6,8 @@ type ScreenHeaderProps = {
   /** Chỉ render nút back khi màn hình có nơi để về. */
   showBack?: boolean;
   onBack?: () => void;
+  /** Action phụ bên phải (VD nút đổi chủ đề) — G7. */
+  actions?: ReactNode;
 };
 
 /**
@@ -12,13 +15,19 @@ type ScreenHeaderProps = {
  * Màn hình truyền `showBack={router.canGoBack()}` để entry point không
  * hiện nút back thừa.
  */
-export function ScreenHeader({ onBack, showBack = false, title }: ScreenHeaderProps) {
+export function ScreenHeader({
+  actions,
+  onBack,
+  showBack = false,
+  title,
+}: ScreenHeaderProps) {
   return (
     <Appbar.Header>
       {showBack ? (
         <Appbar.BackAction accessibilityLabel="Quay lại" onPress={onBack} />
       ) : null}
       <Appbar.Content title={title} />
+      {actions}
     </Appbar.Header>
   );
 }

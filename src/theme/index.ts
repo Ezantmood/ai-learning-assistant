@@ -1,5 +1,23 @@
 export { radius, spacing } from './spacing';
 export {
+  ThemeModeProvider,
+  useThemeMode,
+  type EffectiveScheme,
+  type ThemeMode,
+} from './ThemeContext';
+export {
+  cycleThemeMode,
+  isThemeMode,
+  loadStoredThemeMode,
+  persistThemeMode,
+  resolveEffectiveScheme,
+  themeModeAccessibilityLabel,
+  themeModeIcon,
+  THEME_MODE_STORAGE_KEY,
+  type SystemScheme,
+  type ThemeModeStorage,
+} from './themeMode';
+export {
   navigationDarkTheme,
   navigationLightTheme,
   useNavigationTheme,

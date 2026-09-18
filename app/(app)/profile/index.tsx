@@ -6,6 +6,8 @@ import { Button, useTheme } from 'react-native-paper';
 
 import { ScreenContainer } from '../../../src/components/ScreenContainer';
 import { ScreenHeader } from '../../../src/components/ScreenHeader';
+import { ThemeSettingsCard } from '../../../src/components/ThemeSettingsCard';
+import { ThemeToggleAction } from '../../../src/components/ThemeToggleAction';
 import { signOut } from '../../../src/features/auth/api';
 import { toAuthErrorMessage } from '../../../src/features/auth/errors';
 import { useSession } from '../../../src/features/auth/useSession';
@@ -128,6 +130,7 @@ export default function ProfileScreen() {
     <ScreenContainer
       header={
         <ScreenHeader
+          actions={<ThemeToggleAction />}
           onBack={() => router.back()}
           showBack={router.canGoBack()}
           title="Thông tin cá nhân"
@@ -152,6 +155,8 @@ export default function ProfileScreen() {
         studentCode={profileQuery.data?.student_code ?? ''}
         uploading={uploadMutation.isPending}
       />
+
+      <ThemeSettingsCard />
 
       <View style={styles.actions}>
         <Link asChild href="/profile/change-password">
