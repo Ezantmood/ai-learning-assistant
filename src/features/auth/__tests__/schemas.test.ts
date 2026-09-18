@@ -102,22 +102,24 @@ describe('signInSchema', () => {
 });
 
 describe('otpSchema (FR-03)', () => {
-  it('chấp nhận đúng 6 chữ số', () => {
+  it('chấp nhận mã 6–10 chữ số (độ dài do server cấu hình)', () => {
     expect(otpSchema.safeParse('123456').success).toBe(true);
+    expect(otpSchema.safeParse('12345678').success).toBe(true);
+    expect(otpSchema.safeParse('1234567890').success).toBe(true);
   });
 
   it('từ chối mã có chữ cái', () => {
-    expect(otpSchema.safeParse('12a456').success).toBe(false);
+    expect(otpSchema.safeParse('12a45678').success).toBe(false);
   });
 
-  it('từ chối mã thiếu hoặc thừa số', () => {
+  it('từ chối mã ngắn hơn 6 hoặc dài hơn 10 số', () => {
     expect(otpSchema.safeParse('12345').success).toBe(false);
-    expect(otpSchema.safeParse('1234567').success).toBe(false);
+    expect(otpSchema.safeParse('12345678901').success).toBe(false);
     expect(otpSchema.safeParse('').success).toBe(false);
   });
 
   it('trim khoảng trắng quanh mã (hỗ trợ paste từ email)', () => {
-    expect(otpSchema.safeParse('  123456\n').success).toBe(true);
+    expect(otpSchema.safeParse('  12345678\n').success).toBe(true);
   });
 });
 

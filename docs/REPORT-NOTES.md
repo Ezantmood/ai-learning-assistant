@@ -81,6 +81,10 @@ Deep link reset-password bắt user bấm link trong email để mở lại app:
 
 Gói free của Supabase dùng email service mặc định không cho sửa nội dung Email Templates — template Reset password mặc định chỉ chứa đường link, không in được mã `{{ .Token }}`. Muốn email hiển thị OTP 6 số để nhập trong app thì phải cắm custom SMTP (ở đây là Brevo) mới được sửa template. Kèm theo đó rate limit email được nâng lên 100/giờ; app vẫn map lỗi `over_email_send_rate_limit` sang thông báo rõ ràng và khóa nút gửi lại 60 giây để chống spam.
 
+**Vì sao email gửi mã 8 số trong khi app ban đầu chỉ nhận 6 số?**
+
+Độ dài OTP là cấu hình phía server (`mailer_otp_length`, cho phép 6–10, mặc định 6) — xem ở Dashboard Authentication → Sign In/Providers → Email → “Email OTP length”. Project này đang để 8 nên email in 8 số, còn app cứng `^\d{6}$` nên mã đúng cũng bị chặn ngay tại field. Bài học: validate client chỉ là UX, phải lỏng hơn phía phát hành; `verifyOtp` mới là nơi quyết định mã đúng/sai. App đã sửa nhận 6–10 số. Muốn khớp hẳn chữ “6 số” trong SPEC thì chỉnh setting đó về 6 rồi gửi lại mã mới để kiểm tra.
+
 **Supabase có tiết lộ email tồn tại khi quên mật khẩu không?**
 
 Không. `resetPasswordForEmail` luôn trả thành công dù email chưa đăng ký, nên màn hình `/forgot-password` hiện cùng một thông báo trung tính cho mọi email — chống liệt kê tài khoản.
