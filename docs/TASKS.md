@@ -34,16 +34,16 @@ Mỗi checkbox là một commit độc lập và phải để app chạy đượ
 ## G4 — Quên và đặt lại mật khẩu
 
 - Branch: `feat/g4-password-reset`
-- Tag sau khi PR được merge: `g4-done`
+- Tự merge vào `main` sau khi cổng chất lượng xanh, tag: `g4-done` (quyết định chủ dự án 2026-09-18, không mở PR)
 
-- [ ] Làm API `resetPasswordForEmail` và form gửi mã OTP 6 số. File: `src/features/auth/api.ts`, `app/(auth)/forgot-password.tsx`. FR: FR-03.
-- [ ] Xác minh email + OTP bằng `verifyOtp` type `recovery`, rồi đổi mật khẩu. File: `app/(auth)/verify-reset-otp.tsx`, `app/(auth)/reset-password.tsx`, auth feature files, route guard. FR: FR-03.
-- [ ] Test reset thành công, OTP sai/hết hạn, offline/token hết hạn và sửa lỗi. File: `docs/TEST-CHECKLIST.md`, file lỗi thực tế nếu có. FR: FR-03. Deep link chỉ làm bonus nếu còn thời gian.
+- [x] Làm API `resetPasswordForEmail` và form gửi mã OTP 6 số. File: `src/features/auth/api.ts`, `app/(auth)/forgot-password.tsx`. FR: FR-03.
+- [x] Xác minh email + OTP bằng `verifyOtp` type `recovery`, rồi đổi mật khẩu. File: `app/(auth)/verify-reset-otp.tsx`, `app/(auth)/reset-password.tsx`, auth feature files, route guard. FR: FR-03.
+- [x] Resend cooldown 60s, đổi mật khẩu khi đã đăng nhập (`/profile/change-password`), unit test schema OTP/mật khẩu/map lỗi, tài liệu FR-03. File: `src/features/auth/{schemas.ts,errors.ts,recovery.ts,recoveryStorage.ts}`, `__tests__/`, `app/(app)/profile/{index.tsx,change-password.tsx}`, `docs/*.md`. FR: FR-03. Deep link không làm (OTP là luồng chính theo SPEC).
 
 ## G5 — Hồ sơ, hoàn thiện và tài liệu
 
 - Branch: `feat/g5-profile-docs`
-- Tag sau khi PR được merge: `g5-done`
+- Tự merge vào `main` sau khi cổng chất lượng xanh, tag: `g5-done` (quyết định chủ dự án 2026-09-18, không mở PR)
 
 - [ ] Làm API/query/form cập nhật profile. File: `src/features/profile/{api.ts,schemas.ts,queries.ts}`, `app/(app)/profile.tsx`. FR: FR-04.
 - [ ] Làm chọn/upload/thay avatar đúng Storage policy. File: profile feature và screen, `package.json` nếu cần dependency đã duyệt. FR: FR-04.

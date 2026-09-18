@@ -241,9 +241,75 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog. Sau m
 
 **Mốc Git**
 
-- Commit code cuối: `136913a4a383792b53621aa9e2572b4ff69d848c`
+- Commit triển khai cuối: `136913a4a383792b53621aa9e2572b4ff69d848c`
 - Commit docs (TASKS/TRACEABILITY/DEVLOG): commit này
 - Branch: `feat/g3-auth-core`
 - Tag: `g3-done` (tạo ngay sau merge theo lệnh chủ dự án, đã push)
 - PR: không mở PR; tự merge vào `main` theo lệnh trực tiếp của chủ dự án
   (ngoại lệ so với GIT-WORKFLOW, xem quyết định trên)
+
+---
+
+### G4 — Quên và đặt lại mật khẩu (FR-03) — 2026-09-18
+
+**Đã làm gì**
+
+- Sửa luật trước tiên: `AGENTS.md` + `docs/GIT-WORKFLOW.md` ghi rõ từ G4
+  agent tự merge vào `main` sau khi cổng xanh và tự tag, không mở PR
+  (quyết định của chủ dự án ngày 2026-09-18); cổng commit bổ sung `npm test`.
+- Auth core: `requestPasswordReset`, `verifyRecoveryOtp` (type `recovery`),
+  `updatePassword`, `changePassword` (reauth `signInWithPassword` bằng mật
+  khẩu hiện tại); `otpSchema` 6 số, `reset/changePasswordSchema` dùng lại
+  chính sách G3; `recovery.ts` (cooldown gửi lại 60s) + `recoveryStorage.ts`
+  (giữ email/thời điểm gửi khi thoát app).
+- UI: `/forgot-password` (thông báo trung tính), `/verify-reset-otp` (ô
+  numeric tự focus + paste + `oneTimeCode`, countdown resend),
+  `/reset-password` (xong về `/sign-in` kèm banner theo SPEC),
+  `/profile/change-password`; `profile.tsx` → `profile/index.tsx` (giữ
+  route `/profile`). Auth guard giữ recovery session ở lại luồng, route `/`
+  resume khi kill app giữa chừng, sign-in có link “Quên mật khẩu?”.
+- Docs: check 3 checkbox G4, FR-03 → `đạt`, mở rộng TEST-CHECKLIST FR-03,
+  REPORT-NOTES (OTP vs deep link, custom SMTP Brevo, neutral email, resume),
+  UI-FLOW/ARCHITECTURE theo route mới.
+
+**Quyết định và lý do**
+
+- Quyết định: reset xong về `/sign-in` (kèm banner) thay vì `/notes` như
+  lệnh lượt này.
+- Lý do: SPEC FR-03 (“chuyển về đăng nhập”) và UI-FLOW thắng khi mâu thuẫn,
+  theo đúng quy tắc chủ dự án đặt ra cho lượt này.
+- Quyết định: route giữ tên `verify-reset-otp` thay vì `/verify-otp`.
+- Lý do: ARCHITECTURE/UI-FLOW/FR-TRACEABILITY đã chốt tên này từ trước.
+- Quyết định: Supabase gộp sai/hết hạn/đã dùng thành một mã lỗi nên nhánh
+  “đã dùng” hiếm khi chạm được; UI ưu tiên nhánh hết hạn + CTA gửi lại mã.
+- Lý do: trung thực với hành vi server thật, vẫn đủ CTA cho mọi case.
+- Quyết định: tách `recovery.ts` (thuần, test được) khỏi
+  `recoveryStorage.ts` (AsyncStorage).
+- Lý do: import AsyncStorage làm Jest crash (`NativeModule null`); tách ra
+  thì unit test cooldown chạy được mà không thêm package/mock.
+
+**Đã kiểm thử**
+
+- Lệnh: `npx tsc --noEmit` → đạt (trước mỗi commit).
+- Lệnh: `npm run lint` → 0 errors (3 warning lành tính React Compiler về
+  `watch()` của react-hook-form, tương tự G3).
+- Lệnh: `npm test` → 4 suites, 51/51 PASS (OTP, mật khẩu mới, nhánh map
+  lỗi mới, cooldown).
+- Test tay trên thiết bị thật theo TEST-CHECKLIST FR-03 mở rộng: chưa làm —
+  chủ dự án chạy theo kịch bản demo cuối lượt G4.
+
+**Còn nợ / giới hạn đã biết**
+
+- Cần test tay FR-03 trên Expo Go (OTP thật qua Brevo, kill app giữa luồng,
+  rate limit, offline).
+- Test A/B avatar/profile (FR-04) vẫn để dành G5.
+
+**Mốc Git**
+
+- Commit code cuối: `573093a` (auth core `6fc22d1`, recovery UI `c1290e5`,
+  change-password `573093a`; luật git `1b40a11`)
+- Commit docs (TASKS/TRACEABILITY/TEST-CHECKLIST/REPORT-NOTES/DEVLOG…):
+  commit này
+- Branch: `feat/g4-password-reset`
+- Tag: `g4-done` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
+- PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh
