@@ -16,21 +16,27 @@ Khởi động `/`
 
 Route group `(auth)` và `(app)` không xuất hiện trong URL. Layout mỗi group thực hiện guard; redirect chỉ sau khi `useSession` hoàn tất loading.
 
-## Màn hình và trạng thái
+## Màn hình và trạng thái (G6)
+
+Mọi màn hình dùng `ScreenContainer` (SafeArea + KeyboardAvoidingView +
+ScrollView theo token `src/theme`); tiêu đề `headlineSmall`, phụ đề
+`bodyMedium`; không dùng `<Text>` trần cho tiêu đề. Nút submit chính
+`mode="contained"` có icon, `loading` + `disabled` khi đang gửi; link phụ
+`mode="text"`.
 
 | Route | Mục đích | Component chính | Loading / empty / error / success |
 |---|---|---|---|
-| `/` | Chọn nhánh theo session | `FullScreenStatus` | Loading khi khôi phục session; lỗi cấu hình hiển thị rõ; thành công redirect |
-| `/sign-in` | FR-02 đăng nhập | `FormTextField`, `Button`, link đăng ký/quên mật khẩu | Button spinner; không có empty; lỗi field/API; thành công về `/notes` |
-| `/sign-up` | FR-01 đăng ký | Full name/student code/email/password/confirm form | Spinner; lỗi Zod/email hoặc student code trùng; dev vào app ngay, demo yêu cầu kiểm tra email theo env |
-| `/forgot-password` | FR-03 gửi email reset | Email form | Spinner; luôn dùng thông báo success trung tính; offline cho retry |
-| `/verify-reset-otp` | FR-03 xác minh mã | Email + OTP 6 số form | Spinner; OTP sai/hết hạn báo lỗi; success tạo recovery session rồi sang reset |
-| `/reset-password` | FR-03 đặt mật khẩu mới | Password/confirm form | Thiếu recovery session thì về verify OTP; thành công về sign-in |
-| `/notes` | FR-05 danh sách riêng | `Appbar`, `FAB`, list/card | Skeleton/spinner; empty có CTA “Tạo ghi chú”; lỗi có Retry; success danh sách theo `updated_at desc` |
-| `/notes/new` | FR-05 tạo note | Title/content form | Spinner khi lưu; lỗi validation/API; success invalidate `notes` rồi back |
-| `/notes/[id]` | FR-05 sửa/xóa note | Form, nút Delete, confirm dialog | Loading fetch; không tìm thấy/không có quyền dùng cùng thông báo; lỗi retry; success back |
-| `/profile` | FR-04 xem/sửa hồ sơ, avatar, logout | Avatar picker, form, logout button | Loading profile/avatar; avatar trống dùng initials; lỗi retry; success cập nhật cache/snackbar |
-| `/profile/change-password` | FR-03 đổi pass khi đã login | Current/new/confirm form | Spinner; sai pass hiện tại/trùng pass cũ báo riêng; success banner + về hồ sơ |
+| `/` | Chọn nhánh theo session | `LoadingState` | Loading khi khôi phục session; lỗi cấu hình hiển thị rõ; thành công redirect |
+| `/sign-in` | FR-02 đăng nhập | `FormTextInput` (email `email-outline`), `PasswordInput`, `Button` icon `login` (testID `login-submit`), link đăng ký/quên mật khẩu | Button spinner; không có empty; lỗi field/API; thành công về `/notes` |
+| `/sign-up` | FR-01 đăng ký | Full name (`account`)/student code (`badge-account-horizontal-outline`)/email (`email-outline`) + 2 `PasswordInput` (testID `password-toggle`, `password-confirm-toggle`), nút icon `account-plus` (testID `register-submit`) | Spinner; lỗi Zod/email hoặc student code trùng; dev vào app ngay, demo yêu cầu kiểm tra email theo env |
+| `/forgot-password` | FR-03 gửi email reset | Email form icon `email-outline`, nút icon `send` (testID `forgot-submit`) | Spinner; luôn dùng thông báo success trung tính; offline cho retry |
+| `/verify-reset-otp` | FR-03 xác minh mã | Ô OTP icon `numeric`, căn giữa + letterSpacing rộng (testID `otp-input`), nút Xác minh icon `check` (testID `otp-submit`), nút gửi lại icon `refresh` (testID `otp-resend`) | Spinner; OTP sai/hết hạn báo lỗi; success tạo recovery session rồi sang reset |
+| `/reset-password` | FR-03 đặt mật khẩu mới | 2 `PasswordInput` + độ mạnh mật khẩu, nút icon `check` (testID `reset-submit`) | Thiếu recovery session thì về verify OTP; thành công về sign-in |
+| `/notes` | FR-05 danh sách riêng | `Appbar` (action `account-circle`), `List.Item` icon `note-text-outline` + `Divider`, `FAB` icon `plus` (testID `notes-fab`), `EmptyState` icon `notebook-outline` | `ListSkeleton` khi tải; empty có CTA “Tạo ghi chú”; lỗi có Retry; pull-to-refresh nối vào `refetch`; success danh sách theo `updated_at desc` |
+| `/notes/new` | FR-05 tạo note | Title (`format-title`)/content (`text`) form, nút icon `content-save` (testID `note-save`) | Spinner khi lưu; lỗi validation/API; success invalidate `notes` rồi back |
+| `/notes/[id]` | FR-05 sửa/xóa note | Form, nút Lưu icon `content-save` (testID `note-update`), nút Xóa icon `trash-can-outline` màu error, confirm dialog | Loading fetch; không tìm thấy/không có quyền dùng cùng thông báo; lỗi retry; success back |
+| `/profile` | FR-04 xem/sửa hồ sơ, avatar, logout | `ProfileView` (thuần hiển thị) + container query/mutation; avatar bọc `Pressable` overlay icon `camera` (testID `avatar-picker`, label “Đổi ảnh đại diện”); nút Lưu icon `content-save` (testID `profile-save`); link đổi mật khẩu icon `lock-reset`; nút đăng xuất icon `logout` màu error; `FeedbackSnackbar` thay Alert | Profile loading → spinner “Đang tải hồ sơ…”; query lỗi → `EmptyState` “Không tải được hồ sơ.” + nút “Thử lại” (testID `profile-retry`, gọi refetch); ready → form + avatar; lưu/upload pending → disable + spinner trên nút; success/error báo bằng Snackbar (không Alert), xem chi tiết luồng avatar bên dưới |
+| `/profile/change-password` | FR-03 đổi pass khi đã login | 3 `PasswordInput`, nút icon `lock-reset` (testID `change-password-submit`) | Spinner; sai pass hiện tại/trùng pass cũ báo riêng; success banner + về hồ sơ |
 
 ## Hành vi theo trạng thái xác thực
 
