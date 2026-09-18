@@ -42,16 +42,15 @@ export const signInSchema = z.object({
 });
 
 /**
- * FR-03: mã OTP khôi phục mật khẩu — 6–10 chữ số.
- * Độ dài do server quyết (Dashboard Authentication → Sign In/Providers →
- * Email → "Email OTP length", mặc định 6, project này đang để 8);
- * client chỉ kiểm tra định dạng, còn đúng/sai do verifyOtp quyết.
+ * FR-03: mã OTP khôi phục mật khẩu — đúng 6 chữ số, khớp SPEC và cấu hình
+ * server (Dashboard Authentication → Sign In/Providers → Email →
+ * "Email OTP length" đang để 6). Đúng/sai cuối cùng do verifyOtp quyết.
  * Template email Reset password trên Dashboard in {{ .Token }}.
  */
 export const otpSchema = z
   .string()
   .trim()
-  .regex(/^\d{6,10}$/, 'Mã OTP gồm 6–10 chữ số.');
+  .regex(/^\d{6}$/, 'Mã OTP gồm đúng 6 chữ số.');
 
 export const forgotPasswordSchema = z.object({
   email: emailSchema,

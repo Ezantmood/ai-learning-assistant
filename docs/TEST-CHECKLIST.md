@@ -25,9 +25,9 @@ Mỗi case đổi `[ ]` thành `[x]` khi đạt và thêm `YYYY-MM-DD | nền t�
 ## FR-03 — Quên/đặt lại mật khẩu
 
 - [ ] `/sign-in` hiện link “Quên mật khẩu?” → sang `/forgot-password`.
-- [ ] Email tồn tại → nhận email có mã OTP (template in `{{ .Token }}`; độ dài 6–10 số theo “Email OTP length” trên Dashboard) và sang màn hình nhập mã trong app.
+- [ ] Email tồn tại → nhận email có OTP 6 số (template in `{{ .Token }}`; server để “Email OTP length” = 6) và sang màn hình nhập mã trong app.
 - [ ] **Email không tồn tại** → UI dùng cùng thông báo trung tính, không tiết lộ email có đăng ký hay không.
-- [ ] Ô OTP là 1 ô numeric tự focus, nhập tay/paste/dán từ email đều được; mã ngoài 6–10 chữ số bị chặn ngay tại field, đúng/sai do server (`verifyOtp`) quyết.
+- [ ] Ô OTP là 1 ô numeric tự focus, nhập tay/paste/dán từ email đều được; mã khác 6 số bị chặn ngay tại field.
 - [ ] Nút gửi lại mã khóa 60 giây có đếm ngược (`Gửi lại mã sau Xs`), disable trong lúc chờ; hết 60s mới gọi lại API (chống spam).
 - [ ] **Vượt quota gửi email (100/giờ)** → thông báo rõ giới hạn, không crash, nút hết loading và bấm lại được.
 - [ ] **OTP sai** → thông báo riêng; **OTP hết hạn** → thông báo riêng + CTA gửi lại mã; **mã đã dùng** → thông báo riêng (lưu ý: Supabase gộp sai/hết hạn/đã dùng thành một mã `Token has expired or is invalid` nên case dùng lại thường rơi vào nhánh hết hạn, vẫn có CTA gửi mã mới).

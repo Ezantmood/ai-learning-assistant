@@ -83,7 +83,7 @@ Gói free của Supabase dùng email service mặc định không cho sửa nộ
 
 **Vì sao email gửi mã 8 số trong khi app ban đầu chỉ nhận 6 số?**
 
-Độ dài OTP là cấu hình phía server (`mailer_otp_length`, cho phép 6–10, mặc định 6) — xem ở Dashboard Authentication → Sign In/Providers → Email → “Email OTP length”. Project này đang để 8 nên email in 8 số, còn app cứng `^\d{6}$` nên mã đúng cũng bị chặn ngay tại field. Bài học: validate client chỉ là UX, phải lỏng hơn phía phát hành; `verifyOtp` mới là nơi quyết định mã đúng/sai. App đã sửa nhận 6–10 số. Muốn khớp hẳn chữ “6 số” trong SPEC thì chỉnh setting đó về 6 rồi gửi lại mã mới để kiểm tra.
+Độ dài OTP là cấu hình phía server (`mailer_otp_length`, cho phép 6–10, mặc định 6) — xem ở Dashboard Authentication → Sign In/Providers → Email → “Email OTP length”. Project từng để 8 nên email in 8 số trong khi app cứng `^\d{6}$`, mã đúng cũng bị chặn ngay tại field. Bài học: validate client chỉ là UX, còn `verifyOtp` mới quyết định mã đúng/sai. Chủ dự án đã chỉnh setting về 6 nên server chỉ gửi 6 số; app khóa chặt đúng 6 số cho khớp SPEC.
 
 **Supabase có tiết lộ email tồn tại khi quên mật khẩu không?**
 
