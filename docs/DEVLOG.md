@@ -332,3 +332,92 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog. Sau m
 - Sửa: revert `otpSchema` về `^\d{6}$` (`05188b0`), UI/test/docs khớp lại
   chữ “6 số” theo SPEC. Cổng: `tsc` đạt, `lint` 0 errors, `test` 51/51;
   merge `fix/g4-otp-strict-6` vào `main` và push (commit docs này).
+
+---
+
+### G5 — Hồ sơ, avatar và đóng gói v1.0.0 (FR-04) — 2026-09-18
+
+**Đã làm gì**
+
+- Đọc SPEC/DATA-MODEL/UI-FLOW/TASKS/TRACEABILITY trước code; phát hiện 6 điểm
+  lệnh G5 vênh với docs/code (path avatar, regex student_code, full_name 2–60,
+  baseline 26 test, tên branch/file SQL, route profile) → DỪNG và xin quyết
+  định chủ dự án trước khi chạm code (xem quyết định bên dưới).
+- Deps: `npx expo install expo-image-picker expo-image-manipulator
+  base64-arraybuffer` (đúng line SDK 57, `--check` chỉ còn drift có sẵn của
+  expo/expo-constants/expo-router nên không đụng vào).
+- Feature profile mới: `schemas.ts` (giữ luật G3/DB: full_name max 100,
+  student_code 1–30 không regex), `errors.ts` (`toProfileErrorMessage` map
+  23505 + `toAvatarErrorMessage`), `avatar.ts` (path timestamp, guard
+  MIME/size, TTL 3600s/cache 55 phút), `api.ts` (`getProfile`,
+  `updateProfile`, `uploadAvatar` base64→ArrayBuffer, `createAvatarSignedUrl`),
+  `queries.ts` (`useProfile`/`useUpdateProfile`/`useAvatarUrl`/`useUploadAvatar`),
+  `pickAvatar.ts` (quyền → crop 1:1 → resize ≤512 JPEG 0.7 → guard 2MB),
+  `ProfileView.tsx` (3 trạng thái loading/error/ready, Snackbar thay Alert).
+- Viết lại `app/(app)/profile/index.tsx`: container điều phối query/mutation,
+  giữ link đổi mật khẩu + đăng xuất; từ chối quyền ảnh thì Snackbar kèm nút
+  “Mở Cài đặt” (`Linking.openSettings()`).
+- `scripts/storage-rls-proof.ts`: 5 check Storage (A upload folder mình,
+  A không đọc file B qua download + signed URL, anon không đọc/không list),
+  chạy remote **5/5 PASS, exit 0**.
+- Unit test: 33 test mới (schema, path, guard, map lỗi, render ProfileView 3
+  state bằng react-test-renderer + SafeAreaProvider, mock không gọi mạng);
+  tổng **84/84 PASS** (giữ nguyên 51 cũ).
+- Docs: tick hết G5 (bài 1 DONE), FR-04 → `đạt`; DATA-MODEL ghi quy ước path
+  timestamp (migration G2 đã apply giữ nguyên); SETUP hoàn chỉnh clone → SQL →
+  Auth/Brevo/OTP-6/rate-limit → Expo Go; TEST-CHECKLIST thêm demo A/B 2 máy
+  (FR-05, FR-03 Brevo, FR-04); REPORT-NOTES thêm ảnh G5 + 4 Q&A avatar;
+  README viết lại cho v1.0.0.
+
+**Quyết định và lý do**
+
+- Quyết định: path avatar `avatar_<timestamp>.jpg` theo lệnh G5 thay vì
+  `avatar.{ext}` của DATA-MODEL.
+- Lý do: chủ dự án chọn phương án timestamp khi được hỏi; SPEC không quy định
+  format path nên không vỡ SPEC; migration đã apply không sửa, chỉ cập nhật
+  DATA-MODEL + code.
+- Quyết định: giữ validate SPEC/DB/G3, bỏ regex `^[A-Za-z0-9]{6,15}$` và
+  full_name 2–60 của lệnh G5.
+- Lý do: chủ dự án chọn giữ luật; regex mới loại user hợp lệ hiện tại và đòi
+  migration siết constraint ngoài phạm vi.
+- Quyết định: không tạo `supabase/sql/g5_storage.sql`, tái dùng migration G2.
+- Lý do: chủ dự án chọn; bucket private + 4 policy đã nằm trong migration G2
+  và proof remote xanh — file mới chỉ trùng lặp.
+- Quyết định: branch `feat/g5-profile-docs` theo TASKS.md (lệnh G5 ghi
+  `feat/g5-profile`).
+- Lý do: TASKS.md là nguồn chọn branch theo AGENTS.md.
+- Quyết định: test render dùng `react-test-renderer` (transitive của jest-expo,
+  đúng version React) thay vì thêm testing-library.
+- Lý do: AGENTS cấm tự thêm package ngoài stack; render 3 state vẫn đạt mà
+  không cần dep mới.
+
+**Đã kiểm thử**
+
+- Lệnh: `npx tsc --noEmit` → đạt (trước mỗi commit).
+- Lệnh: `npm run lint` → 0 errors, 2 warning lành tính React Compiler về
+  `watch()` (kế thừa G3/G4); đã xóa 1 import thừa trong `notes/api.ts`.
+- Lệnh: `npm test` → 8 suites, 84/84 PASS.
+- `scripts/storage-rls-proof.ts` trên remote → 5/5 PASS, exit 0 (lần chạy đầu
+  3/5 do bug script: signIn nhầm trên client anon; tách client đăng nhập riêng
+  rồi chạy lại xanh; RLS/policy/bucket trên server đúng từ đầu).
+- Test tay trên thiết bị thật (demo A/B 2 máy, OTP Brevo, đổi avatar): chưa
+  làm — chủ dự án chạy theo TEST-CHECKLIST mục G5.
+
+**Còn nợ / giới hạn đã biết**
+
+- Test tay G5 trên Expo Go thuộc chủ dự án (kịch bản đã có trong TEST-CHECKLIST).
+- Object avatar cũ đọng lại nếu bước xóa best-effort lỗi (đã log warning).
+- `npm audit` 14 moderate (drift dependency Expo SDK 57, không tự fix).
+- `npx expo install --check` báo expo/expo-constants/expo-router cũ hơn mong
+  đợi vài patch (drift có sẵn từ G4, không đụng vào để giữ stack).
+
+**Mốc Git**
+
+- Commit code cuối: `be9842e` (unit test profile; deps `1f4d50f`, feature
+  `f238893`, proof script `1dc85c9`)
+- Commit docs (TASKS/TRACEABILITY/TEST-CHECKLIST/SETUP/REPORT-NOTES/README/
+  DATA-MODEL/ARCHITECTURE/DEVLOG): commit này
+- Branch: `feat/g5-profile-docs`
+- Tag: `g5-done` + `v1.0.0` (tạo ngay sau tự merge theo quyết định chủ dự án,
+  đã push)
+- PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh

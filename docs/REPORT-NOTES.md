@@ -12,16 +12,20 @@ Chỉ điền bằng bằng chứng từ code/test thực tế. Không tuyên b�
 6. **Bảo mật:** JWT cung cấp `auth.uid()`; RLS cho từng lệnh; publishable key không thay thế policy; không có service-role key trong app.
 7. **Luồng chính:** đăng ký, login/logout, reset password bằng OTP email, sửa profile/avatar, CRUD note.
 8. **Kiểm thử:** bảng kết quả tốt/xấu; bằng chứng A/B cho RLS; lỗi offline/token/link hết hạn.
-9. **Git:** một branch/giai đoạn, commit theo task, PR review, tag mốc.
+9. **Git:** một branch/giai đoạn, commit theo task, push sau mỗi commit; G1–G3
+   PR review, từ G4 agent tự merge sau khi cổng xanh và tag mốc.
 10. **Giới hạn và bài học:** chỉ ghi điều thực tế sau G5.
 
 ## Ảnh/bằng chứng cần chuẩn bị
 
 - Mỗi màn hình ở trạng thái success và ít nhất một error/empty/loading tiêu biểu.
+- Riêng `/profile` G5: form đã điền + avatar hiển thị; Snackbar lỗi mã trùng;
+  avatar fallback chữ cái đầu khi chưa có ảnh; dialog/notice khi từ chối quyền ảnh.
 - Dashboard cho thấy RLS enabled và bucket `avatars` private; che project ref/key/email.
-- Kết quả truy cập chéo A/B cho SELECT/INSERT/UPDATE/DELETE.
-- `git log --oneline --decorate --graph --all` cho các mốc G1..G5.
-- Output type check/lint cuối; không chụp `.env`.
+- Kết quả truy cập chéo A/B cho SELECT/INSERT/UPDATE/DELETE (notes) và
+  download/signed URL + anon (avatar).
+- Output `npm test` (84/84), `npx tsc --noEmit`, `npm run lint` cuối; không chụp `.env`.
+- `git log --oneline --decorate --graph --all` cho các mốc G1..G5 + tag `v1.0.0`.
 
 ## Câu hỏi vấn đáp và trả lời gợi ý
 
@@ -92,3 +96,19 @@ Không. `resetPasswordForEmail` luôn trả thành công dù email chưa đăng 
 **Thoát app giữa lúc reset mật khẩu thì sao?**
 
 Email đang verify + thời điểm gửi mã lưu trong AsyncStorage nên mở lại app vẫn điền sẵn email và giữ cooldown. Nếu đã verify xong (recovery session còn hạn), route `/` đưa thẳng về `/reset-password` để đặt mật khẩu. Màn hình reset yêu cầu cả session lẫn cờ pending nên user login thường không dùng ké được.
+
+**Vì sao avatar dùng private bucket + signed URL thay vì public URL?**
+
+Avatar là dữ liệu tài khoản. Bucket private buộc mọi lượt đọc qua Storage policy (`foldername = auth.uid()`); signed URL TTL 3600s chỉ có hạn, app cache 55 phút rồi xin mới. DB chỉ lưu path, không lưu URL — URL lộ ra ngoài cũng tự hết hạn, còn public URL vĩnh viễn thì ai có link cũng xem được mãi.
+
+**Vì sao upload avatar phải base64 → ArrayBuffer mà không dùng `fetch(uri).blob()`?**
+
+Polyfill `fetch`/`blob` trong React Native lỗi với file local: `blob()` thường trả về 0 byte khiến Storage lưu file rỗng. `expo-image-manipulator` trả sẵn chuỗi base64 sau khi resize/nén; `base64-arraybuffer` decode thành ArrayBuffer mà `supabase.storage.upload` nhận trực tiếp với `contentType: 'image/jpeg'` — hết 0-byte, hết phụ thuộc polyfill.
+
+**Vì sao path avatar có timestamp thay vì ghi đè một file?**
+
+Quyết định chủ dự án G5: mỗi lần đổi tạo object mới `avatar_<ms>.jpg`, update DB xong mới xóa object cũ best-effort. Lợi: không bao giờ mất avatar nếu upload giữa chừng thất bại; hại: nếu xóa cũ lỗi sẽ đọng rác (chấp nhận được, đã log warning).
+
+**Lỗi signInWithPassword làm sai kết quả proof script là sao?**
+
+Bài học G5: gọi `signInWithPassword` trên client dùng chung khiến client đó mang session user A, nên case "anon" chạy nhầm quyền A và cho kết quả sai (anon đọc được file). Sửa bằng cách tách client đăng nhập riêng, giữ client anon thật sự ẩn danh — sau đó script 5/5 PASS.

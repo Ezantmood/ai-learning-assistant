@@ -84,8 +84,13 @@ Quyền execute/search path trong migration phải tối thiểu; function trigg
 ## Supabase Storage
 
 - Bucket: `avatars`, **private**, giới hạn 2 MB, MIME đề xuất `image/jpeg`, `image/png`, `image/webp`.
-- Object path cố định: `{auth.uid()}/avatar.{ext}`. Khi đổi phần mở rộng, xóa object cũ sau khi upload mới thành công.
-- `profiles.avatar_path` lưu đúng path; UI tạo signed URL ngắn hạn khi hiển thị.
+- Object path timestamp (quyết định chủ dự án G5): `{auth.uid()}/avatar_<timestamp-ms>.jpg`.
+  Mỗi lần đổi avatar tạo object mới; sau khi update `profiles.avatar_path`
+  thành công thì xóa object cũ best-effort (lỗi xóa không fail luồng chính).
+  Migration G2 đã apply vẫn ghi chú thích `avatar.{ext}` — giữ nguyên file
+  migration đã apply, quy ước mới chỉ ghi ở đây và code (`buildAvatarPath`).
+- `profiles.avatar_path` lưu đúng path; UI tạo signed URL ngắn hạn (TTL 3600s,
+  cache 55 phút) khi hiển thị.
 
 Policies trên `storage.objects` giới hạn `bucket_id = 'avatars'` và `(storage.foldername(name))[1] = auth.uid()::text`:
 

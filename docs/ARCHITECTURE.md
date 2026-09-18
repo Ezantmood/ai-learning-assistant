@@ -34,13 +34,18 @@ Kiến trúc theo feature, ít tầng và đủ rõ để sinh viên giải thí
 │   │   └── FullScreenStatus.tsx
 │   ├── features/
 │   │   ├── auth/{api.ts,schemas.ts,errors.ts,recovery.ts,recoveryStorage.ts,useSession.ts}
-│   │   ├── profile/{api.ts,schemas.ts,queries.ts}
-│   │   └── notes/{api.ts,schemas.ts,queries.ts}
+│   │   ├── auth/__tests__/
+│   │   ├── profile/{api.ts,schemas.ts,queries.ts,errors.ts,avatar.ts,pickAvatar.ts,ProfileView.tsx}
+│   │   ├── profile/__tests__/
+│   │   └── notes/{api.ts,schemas.ts,queries.ts,errors.ts}
 │   ├── lib/{env.ts,supabase.ts,queryClient.ts}
 │   ├── providers/AppProviders.tsx
 │   └── types/database.ts
 ├── supabase/migrations/
 │   └── 0001_account_manager.sql
+├── scripts/
+│   ├── rls-proof.ts (FR-05, chạy tay với credential .env.local)
+│   └── storage-rls-proof.ts (FR-04, tương tự)
 ├── docs/
 ├── .env.example
 ├── app.json
