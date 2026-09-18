@@ -636,7 +636,9 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog. Sau m
 
 **Mốc Git**
 
-- Commit code cuối: (ghi sau khi commit)
+- Commit code: `0947ad76fb5180d64c7c06396b8b71b65934b79d` (code),
+  `870eb042872670f4d9a4803f9f9da7c496101833` (test),
+  `58386a491f556a169cc64ce8a260b8b7b0294d6a` (docs)
 - Branch: `feat/g7-theme-switcher`
 - Tag: `v1.2.0` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
 - PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh
