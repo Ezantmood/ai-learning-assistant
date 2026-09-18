@@ -25,12 +25,12 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 }));
 
 type MemoryStorage = ThemeModeStorage & {
-  setCalls: Array<{ key: string; value: string }>;
+  setCalls: { key: string; value: string }[];
 };
 
 function createMemoryStorage(initial: string | null): MemoryStorage {
   let stored: string | null = initial;
-  const setCalls: Array<{ key: string; value: string }> = [];
+  const setCalls: { key: string; value: string }[] = [];
   return {
     getItem: async (key: string) => {
       void key;
@@ -72,7 +72,7 @@ function Probe({ onValue }: { onValue: (value: ThemeContextValue) => void }) {
   return null;
 }
 
-function lastValue(seen: Array<ThemeContextValue>): ThemeContextValue {
+function lastValue(seen: ThemeContextValue[]): ThemeContextValue {
   const value = seen[seen.length - 1];
   if (!value) {
     throw new Error('Probe chưa nhận giá trị theme nào.');
@@ -86,7 +86,7 @@ function toggleOf(tree: ReactTestRenderer) {
 
 describe('ThemeModeProvider', () => {
   it('hydrate mode dark từ storage, theme hiệu lực là dark', async () => {
-    const seen: Array<ThemeContextValue> = [];
+    const seen: ThemeContextValue[] = [];
     const storage = createMemoryStorage('dark');
 
     await renderWithTheme(
@@ -110,7 +110,7 @@ describe('ThemeModeProvider', () => {
   it("mode system bám theo hệ điều hành ('dark' → tối, 'light' → sáng)", async () => {
     const storage = createMemoryStorage('system');
 
-    const seenDark: Array<ThemeContextValue> = [];
+    const seenDark: ThemeContextValue[] = [];
     await renderWithTheme(
       <Probe
         onValue={(value) => {
@@ -124,7 +124,7 @@ describe('ThemeModeProvider', () => {
     expect(lastValue(seenDark).effectiveScheme).toBe('dark');
     expect(lastValue(seenDark).theme.dark).toBe(true);
 
-    const seenLight: Array<ThemeContextValue> = [];
+    const seenLight: ThemeContextValue[] = [];
     await renderWithTheme(
       <Probe
         onValue={(value) => {
@@ -139,7 +139,7 @@ describe('ThemeModeProvider', () => {
   });
 
   it('giá trị rác trong storage → fallback system', async () => {
-    const seen: Array<ThemeContextValue> = [];
+    const seen: ThemeContextValue[] = [];
 
     await renderWithTheme(
       <Probe
@@ -161,7 +161,7 @@ describe('ThemeToggleAction', () => {
     ['system', 'theme-light-dark'],
     ['light', 'weather-sunny'],
     ['dark', 'weather-night'],
-  ] as Array<[ThemeMode, string]>)(
+  ] as [ThemeMode, string][])(
     'mode %s render icon %s + testID theme-toggle',
     async (mode, icon) => {
       const tree = await renderWithTheme(

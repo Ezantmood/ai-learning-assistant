@@ -14,7 +14,7 @@ import {
 
 function memoryStorage(initial: string | null) {
   let stored: string | null = initial;
-  const setCalls: Array<{ key: string; value: string }> = [];
+  const setCalls: { key: string; value: string }[] = [];
   const storage: ThemeModeStorage = {
     getItem: async (key: string) => {
       void key;
