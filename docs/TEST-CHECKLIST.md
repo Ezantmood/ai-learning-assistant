@@ -116,6 +116,23 @@ Theo đúng khuôn `scripts/rls-proof.ts` của FR-05 (2 user test A/B, tự d�
 
 ### Thủ công trên Expo Go (từng FR)
 
+#### CN2-G1 — Upload + danh sách (FR-06, FR-07, FR-08 khung; chủ dự án chạy)
+
+- [ ] Dashboard: thẻ “Quản lý tài liệu học tập” hiện chip “Đang làm” (không phải “Sắp có”), bấm vào sang `/documents` không crash, ở cả light/dark.
+- [ ] `/documents` khi chưa có tài liệu: đủ icon lớn + câu dẫn + nút “Tải tài liệu lên” (cấm chỉ in “Không có dữ liệu”); bấm nút sang `/documents/upload`.
+- [ ] FR-06/FR-07: `/documents/upload` → “Chọn tệp” → chọn PDF hợp lệ → “Tải lên” → về `/documents` kèm Snackbar “Đã tải tài liệu lên.”, danh sách có tài liệu mới (mới nhất trước).
+- [ ] Lặp lại với 1 tệp DOCX và 1 tệp TXT hợp lệ → cả hai lên được.
+- [ ] Tệp quá 10 MB → chặn trước khi đọc, báo rõ giới hạn 10 MB, không tạo object/bản ghi nào.
+- [ ] Tệp sai định dạng (VD ảnh, zip) hoặc MIME lệch ext → từ chối + liệt kê định dạng được hỗ trợ (PDF, DOCX, TXT).
+- [ ] Tên tệp tiếng Việt có dấu, khoảng trắng thừa → danh sách hiển thị tên đã chuẩn hóa; object storage là UUID (kiểm tra qua Table Editor/Storage Dashboard).
+- [ ] Hủy picker giữa chừng → im lặng ở lại màn upload, không báo lỗi giả.
+- [ ] Mất mạng khi tải lên → báo lỗi + nút “Tải lên” bấm lại được, không có bản ghi nửa vời (không bản ghi thiếu object).
+- [ ] FR-08: mỗi dòng hiện tên hiển thị + “Chưa phân loại” + kích thước (B/KB/MB) + ngày tải; pull-to-refresh tải lại được; lỗi mạng có nút “Thử lại”.
+- [ ] Đăng xuất rồi đăng nhập lại → danh sách tài liệu còn nguyên, chỉ thấy tài liệu của mình.
+- [ ] Không thêm dependency nào ngoài `expo-crypto` ở G1; nếu G1 phải thêm, ghi lý do vào DEVLOG (hiện tại: không thêm).
+
+#### CN2-G2/G3 — phần còn lại (chưa làm, giữ nguyên)
+
 - [ ] FR-06/FR-07: tải PDF/DOCX/TXT hợp lệ → lên được, danh sách có mới.
 - [ ] Tệp quá 10 MB → chặn trước khi đọc, báo rõ giới hạn, không tạo gì.
 - [ ] Tệp sai định dạng (VD ảnh, zip) hoặc MIME lệch ext → từ chối + liệt kê

@@ -16,9 +16,9 @@ Chỉ chuyển trạng thái sau khi file/hàm tồn tại và case test tương
 
 | FR | File dự kiến | Hàm/điểm kiểm soát dự kiến | Cách kiểm thử | Trạng thái |
 |---|---|---|---|---|
-| FR-06 | `app/(app)/documents/upload.tsx`; `src/features/documents/{api.ts,storage.ts,schemas.ts}`; bucket `documents` | `pickDocument`; `uploadDocument`; guard ext/MIME/size | Unit test guard + proof script; test tay tệp hợp lệ/quá lớn/sai định dạng/offline | Đang làm |
-| FR-07 | Cùng FR-06 | Whitelist `pdf`/`docx`/`txt` + MIME tương ứng | Unit test whitelist; test tay mỗi định dạng + MIME lệch | Đang làm |
-| FR-08 | `app/(app)/documents/index.tsx`; `src/features/documents/queries.ts` | `listDocuments` (+`ilike` tìm kiếm theo tên, phân biệt dấu); key `['documents', userId]`; index `documents_user_created_idx` | Unit test query; test tay danh sách/empty/skeleton/lọc môn/tìm kiếm | Đang làm |
+| FR-06 | `app/(app)/documents/upload.tsx`; `app/(app)/documents/index.tsx`; `src/features/documents/{api.ts,storage.ts,schemas.ts,queries.ts,errors.ts}`; bucket `documents` | `pickDocument`; `uploadDocument` (guard ext/MIME/size + trần 100, Storage trước DB sau, insert lỗi dọn object); `useUploadDocument` invalidate `['documents', userId]` | G1: unit test 38 PASS (guard + path + trần 100 + format size); chờ test tay Expo Go (tệp hợp lệ/quá lớn/sai định dạng/offline) | Đang làm |
+| FR-07 | Cùng FR-06 | Whitelist `pdf`/`docx`/`txt` + MIME tương ứng (`EXT_TO_MIME`, `mimeMatchesExt`) | G1: unit test whitelist + MIME lệch PASS; test tay mỗi định dạng | Đang làm |
+| FR-08 | `app/(app)/documents/index.tsx`; `src/features/documents/{api.ts,queries.ts}` | `listDocuments` (kèm tên môn, `created_at desc`); key `['documents', userId]`; index `documents_user_created_idx` | G1: unit test query thuần PASS; chờ test tay danh sách/empty/skeleton (tìm kiếm + lọc môn là g2) | Đang làm |
 | FR-09 | `app/(app)/documents/[id].tsx`; `getDocumentUrl` (signed URL TTL 3600s) | `getDocument`; hiển thị tên/ngày/dung lượng/định dạng/môn/trạng thái; nút “Mở tài liệu” (`Linking.openURL`, ngoài FR) | Test tay chi tiết + mở xem ở light/dark | Đang làm |
 | FR-10 | Cùng màn chi tiết; `src/features/documents/api.ts` | `renameDocument` (chỉ đổi `display_name`, không đổi object) | Unit test schema tên; test tay tên sai/giữ tên cũ | Đang làm |
 | FR-11 | Cùng màn chi tiết; Storage policy `documents_delete_own` | `deleteDocument` (storage trước, DB sau, có dialog) | Proof script; test tay hủy dialog/xóa thật/không trỏ hư không | Đang làm |

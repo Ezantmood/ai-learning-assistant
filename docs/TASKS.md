@@ -83,16 +83,19 @@ có secret. Push ngay sau commit.
   (pick/guard/upload/list/get/rename/delete documents + CRUD subjects + signed
   URL TTL 3600s) và `scripts/documents-rls-proof.ts` theo khuôn FR-05; chạy
   proof trên remote đạt 100%. FR: FR-06..FR-13 (nền).
-- [ ] CN2-03: Màn `/documents` rỗng (Appbar + empty state đúng DESIGN-SYSTEM)
+- [x] CN2-03: Màn `/documents` rỗng (Appbar + empty state đúng DESIGN-SYSTEM)
   nối vào dashboard (thẻ CN2 dẫn tới đây); thẻ CN3–6 vẫn "Sắp có". Xong khi
   điều hướng không crash ở cả light/dark. FR: FR-08 (khung).
+  (2026-09-20, G1: làm vượt khung — danh sách thật skeleton/empty/error/retry +
+  pull-to-refresh, chưa tìm kiếm/lọc; thẻ CN2 chip “Đang làm”.)
 
 ## CN2-2 — Tải lên (FR-06, FR-07, phiên 1)
 
-- [ ] CN2-04: Màn `/documents/upload`: `expo-document-picker` + guard
+- [x] CN2-04: Màn `/documents/upload`: `expo-document-picker` + guard
   ext/MIME/size (trước khi đọc) + guard giới hạn 100 tài liệu (`count` trước
   insert) + upload base64→ArrayBuffer + progress + Snackbar. Xong khi tệp hợp
   lệ lên được, tệp sai/quá lớn/vượt giới hạn bị chặn, offline báo retry. FR: FR-06, FR-07.
+  (2026-09-20, G1: xong, chờ test tay Expo Go.)
 
 ## CN2-3 — Danh sách và chi tiết (FR-08, FR-09, phiên 1 + 2)
 
