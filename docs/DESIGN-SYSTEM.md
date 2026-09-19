@@ -42,20 +42,16 @@ trừ khi tool đổi theo. Sau khi sinh, cập nhật bảng này bằng giá t
 ## Màu phụ theo loại tệp
 
 Dùng cho icon/nhãn phân biệt PDF/DOCX/TXT (CN2, dùng lại ở CN3–CN6).
-Giá trị light đã tính tay theo WCAG với nền `surface #FFFBFE`:
-PDF `#B3261E` ≈ 6.5:1, DOCX `#6750A4` ≈ 6.4:1, TXT `#7D5260` ≈ 6.5:1 —
-đều đạt ngưỡng tối thiểu 4.5:1.
+Tỉ số tương phản WCAG tự tính theo công thức chuẩn (hex → sRGB tuyến tính →
+luminance tương đối → `(L1+0.05)/(L2+0.05)`), làm tròn 2 chữ số:
 
-| Loại tệp | Light (trên nền sáng) | Dark (trên nền tối) |
-|---|---|---|
-| `pdf` | `#B3261E` | `#F9DEDC` |
-| `docx` | `#6750A4` | `#EADDFF` |
-| `txt` | `#7D5260` | `#FFD8E4` |
+| Loại tệp | Light (nền `#FFFBFE`) | Tỉ số | Dark (nền `#1C1B1F`) | Tỉ số |
+|---|---|---|---|---|
+| `pdf` | `#B3261E` | 6.38:1 | `#F9DEDC` | 13.47:1 |
+| `docx` | `#6750A4` | 6.28:1 | `#EADDFF` | 13.28:1 |
+| `txt` | `#7D5260` | 6.31:1 | `#FFD8E4` | 13.21:1 |
 
-Biến thể dark là tonal sáng (≥80) trên nền `#1C1B1F` nên tương phản luôn
-cao theo cấu trúc MD3. Session code BẮT BUỘC đo lại cả 6 cặp bằng công cụ
-(Stark, Axes hoặc WebAIM) trước khi chốt; cặp nào dưới 4.5:1 thì nâng tonal
-rồi đo lại, không dùng bừa.
+Cả 6 cặp đều vượt ngưỡng tối thiểu 4.5:1, chốt dùng luôn, không cần đo lại.
 
 ## Spacing, bo góc
 
@@ -94,6 +90,6 @@ Bo góc: card 16 (`radius.xl`), chip 8 (`radius.md`), bottom sheet 28
       error (kèm Thử lại) / success theo quy ước trên.
 - [ ] Không hardcode màu; spacing/radius dùng token.
 - [ ] Control chỉ có icon có `accessibilityLabel`; vùng bấm tối thiểu 44×44.
-- [ ] Cặp màu mới (nếu có) đã đo tương phản ≥ 4.5:1 bằng công cụ, ghi kết quả
-      vào TEST-CHECKLIST.
+- [ ] Cặp màu mới (nếu có ngoài bảng file-type) đã tính tương phản ≥ 4.5:1
+      theo công thức WCAG ở mục “Màu phụ theo loại tệp”, ghi số vào TEST-CHECKLIST.
 - [ ] Test tay trên Expo Go theo `docs/TEST-CHECKLIST.md` đạt.

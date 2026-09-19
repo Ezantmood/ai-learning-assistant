@@ -279,9 +279,9 @@ Chạm avatar (Pressable overlay icon camera, label “Đổi ảnh đại diệ
 
 | Route | FR | Trạng thái |
 |---|---|---|
-| `/documents` | FR-08, FR-12 (lọc theo môn) | Skeleton khi tải; empty (icon lớn + câu dẫn + nút “Tải tài liệu lên”, cấm chỉ in “Không có dữ liệu”); lỗi kèm “Thử lại”; pull-to-refresh; lọc theo môn qua Chip/Dropdown (“Tất cả” + từng môn + “Chưa phân loại”) |
+| `/documents` | FR-08, FR-12 (lọc theo môn) | Skeleton khi tải; empty (icon lớn + câu dẫn + nút “Tải tài liệu lên”, cấm chỉ in “Không có dữ liệu”); lỗi kèm “Thử lại”; pull-to-refresh; lọc theo môn qua Chip/Dropdown (“Tất cả” + từng môn + “Chưa phân loại”); đúng một ô tìm kiếm theo tên (`ilike`, phân biệt dấu) |
 | `/documents/upload` | FR-06, FR-07 | `expo-document-picker` chọn 1 tệp → guard ext/MIME/size trước khi đọc → progress upload → success về danh sách + Snackbar; lỗi guard/signed URL/mất mạng báo rõ, không tạo bản ghi nửa vời |
-| `/documents/[id]` | FR-09, FR-10, FR-11 | Loading fetch; hiển thị tên/ngày/dung lượng/định dạng/môn/trạng thái trích xuất; đổi tên inline (validate 1–120); gán môn; nút Xóa màu error + dialog xác nhận |
+| `/documents/[id]` | FR-09, FR-10, FR-11 | Loading fetch; hiển thị tên/ngày/dung lượng/định dạng/môn/trạng thái trích xuất; nút “Mở tài liệu” (`Linking.openURL`, tiện ích ngoài FR); đổi tên inline (validate 1–120); đổi môn học CHỈ ở đây; nút Xóa màu error + dialog xác nhận |
 | `/subjects` | FR-12 | Danh sách môn + số tài liệu mỗi môn; tạo/sửa (validate 1–60, không trùng tên); xóa môn đang có tài liệu phải báo trước “tài liệu sẽ về Chưa phân loại” rồi mới cho xác nhận |
 
 ### Tầng dữ liệu CN2
@@ -290,9 +290,9 @@ Repository `src/features/documents/` (không import chéo sang feature khác;
 dùng chung qua `src/shared/`):
 
 - `pickDocument()` — bọc `expo-document-picker`, trả metadata (uri, name, size, mimeType), chưa đọc nội dung.
-- `uploadDocument()` — guard ext/MIME/size → đọc base64 bằng `expo-file-system` API mới (`File`) → decode ArrayBuffer (`base64-arraybuffer`) → upload lên `storage_path` → insert row `documents` (`extraction_status`: `pending` cho PDF/TXT, `unsupported` cho DOCX).
-- `listDocuments()` / `getDocument()` / `renameDocument()` / `deleteDocument()` qua typed client + RLS.
-- `listSubjects()` / `createSubject()` / `renameSubject()` / `deleteSubject()`.
+- `uploadDocument()` — guard ext/MIME/size + guard giới hạn 100 tài liệu (`count` trước insert) → đọc base64 bằng `expo-file-system` API mới (`File`) → decode ArrayBuffer (`base64-arraybuffer`) → upload lên `storage_path` → insert row `documents` (`extraction_status`: `pending` cho PDF/TXT, `unsupported` cho DOCX).
+- `listDocuments()` (kèm `ilike` tìm kiếm theo tên + lọc môn) / `getDocument()` / `renameDocument()` / `deleteDocument()` qua typed client + RLS.
+- `listSubjects()` / `createSubject()` (guard 30 môn) / `renameSubject()` / `deleteSubject()`.
 - `getDocumentUrl()` — tạo signed URL TTL 3600s, cache 55 phút qua TanStack Query (giống `useAvatarUrl` CN1).
 
 Query key và invalidate:

@@ -44,7 +44,7 @@
 | FR-06 | Tải lên tài liệu học tập | **Given** đã đăng nhập và chọn tệp hợp lệ (đúng định dạng, ≤ 10 MB), **When** xác nhận tải lên, **Then** object nằm trong bucket `documents` tại `{user_id}/{uuid}.{ext}`, bản ghi `documents` được tạo, danh sách hiển thị tài liệu mới. **Given** tệp sai định dạng hoặc quá lớn, **When** chọn tệp, **Then** bị chặn ngay trước khi đọc tệp kèm thông báo rõ ràng, không tạo object hay bản ghi nào. |
 | FR-07 | Hỗ trợ định dạng PDF, DOCX, TXT | **Given** tệp có phần mở rộng thuộc whitelist (`pdf`, `docx`, `txt`) và MIME tương ứng, **When** tải lên, **Then** được chấp nhận. **Given** tệp khác whitelist hoặc MIME không khớp phần mở rộng, **When** chọn tệp, **Then** bị từ chối kèm thông báo định dạng được hỗ trợ. |
 | FR-08 | Hiển thị danh sách tài liệu đã tải lên | **Given** đã đăng nhập, **When** mở màn tài liệu, **Then** thấy đúng và chỉ tài liệu của mình, sắp theo ngày tải mới nhất trước. **Given** chưa có tài liệu nào, **When** mở màn, **Then** thấy empty state (icon + câu dẫn + nút tải lên), không phải màn trắng hay chữ “Không có dữ liệu”. |
-| FR-09 | Xem thông tin tài liệu | **Given** đang ở chi tiết một tài liệu của mình, **When** xem, **Then** thấy tên hiển thị, ngày tải lên, kích thước (định dạng KB/MB), định dạng tệp, môn học (hoặc “Chưa phân loại”) và trạng thái trích xuất nội dung. |
+| FR-09 | Xem thông tin tài liệu | **Given** đang ở chi tiết một tài liệu của mình, **When** xem, **Then** thấy tên hiển thị, ngày tải lên, kích thước (định dạng KB/MB), định dạng tệp, môn học (hoặc “Chưa phân loại”) và trạng thái trích xuất nội dung. Nút “Mở tài liệu” gọi `Linking.openURL(signedUrl)` (tiện ích ngoài FR, mức tối thiểu — xem quyết định CN2-4 bên dưới). |
 | FR-10 | Đổi tên tài liệu | **Given** nhập tên mới hợp lệ (sau chuẩn hóa 1–120 ký tự), **When** lưu, **Then** chỉ nhãn hiển thị trong DB đổi, đường dẫn object trên storage giữ nguyên, UI hiển thị tên mới. **Given** tên rỗng/toàn khoảng trắng/quá dài, **When** lưu, **Then** bị chặn tại form, tên cũ giữ nguyên. |
 | FR-11 | Xóa tài liệu | **Given** đang ở tài liệu của mình, **When** bấm xóa và xác nhận hộp thoại, **Then** cả bản ghi DB lẫn object trên storage đều bị xóa, danh sách cập nhật. **Given** chưa xác nhận, **When** hủy dialog, **Then** không có gì bị xóa. Xóa thẳng, không có thùng rác. |
 | FR-12 | Tổ chức tài liệu theo môn học/chủ đề | **Given** đã đăng nhập, **When** tạo môn học tên hợp lệ, **Then** môn học thuộc về user, gán được cho tài liệu (mỗi tài liệu tối đa một môn). **Given** tài liệu chưa gán môn, **When** xem, **Then** hiển thị “Chưa phân loại”. **Given** xóa môn học đang có tài liệu, **When** xác nhận, **Then** môn học mất, các tài liệu rơi về “Chưa phân loại”, KHÔNG bị xóa theo. |
@@ -58,6 +58,9 @@
 - MIME type: `application/pdf`, `application/vnd.openxmlformats-officedocument.wordprocessingml.document`, `text/plain`; phải tương ứng với phần mở rộng, lệch thì từ chối.
 - Kích thước: tối đa 10 MB (10 × 1024 × 1024 byte); kiểm tra `size` do `expo-document-picker` trả về TRƯỚC khi đọc nội dung tệp; vượt thì báo lỗi, không đọc tệp.
 - Thứ tự kiểm tra khi chọn tệp: tồn tại tệp → phần mở rộng → MIME → kích thước; dừng ở lỗi đầu tiên với một thông báo rõ ràng.
+- Giới hạn số lượng mỗi user: tối đa 100 tài liệu và 30 môn học. Kiểm tra bằng `count` trước khi insert; vượt thì báo lỗi rõ ràng, không chèn im lặng. Lý do: Supabase free tier chỉ có 1 GB storage mà mỗi tệp tới 10 MB — 100 tệp đã chạm trần.
+- Tìm kiếm: đúng một ô tìm kiếm theo tên tài liệu ở màn danh sách, dùng `ilike`. Đây là ngoại lệ có chủ đích với luật cấm mở rộng phạm vi, lý do: chất lượng demo. Giới hạn đã biết: tìm kiếm PHÂN BIỆT DẤU tiếng Việt, vì hàm `unaccent` của Postgres không immutable nên không đánh index trực tiếp được; không bật extension `unaccent` ở giai đoạn này.
+- Đổi môn học của tài liệu CHỈ ở màn chi tiết; màn danh sách chỉ hiển thị và lọc, không có menu đổi nhanh.
 
 ### Quy tắc dữ liệu CN2
 
@@ -70,7 +73,14 @@
 
 ### OUT OF SCOPE của CN2 (đề không yêu cầu)
 
-Thùng rác/khôi phục, đánh dấu yêu thích, thống kê, dọn file mồ côi, chia sẻ tài liệu, đổi file gốc sau khi tải lên, tìm kiếm text nâng cao (chỉ liệt kê + lọc theo môn học), quan hệ nhiều-nhiều giữa tài liệu và môn học.
+Thùng rác/khôi phục, đánh dấu yêu thích, thống kê, dọn file mồ côi, chia sẻ tài liệu, đổi file gốc sau khi tải lên, quan hệ nhiều-nhiều giữa tài liệu và môn học.
+
+### Quyết định bổ sung của chủ dự án (sau đặc tả, không sửa FR)
+
+- CN2-1: KHÔNG làm viewer trong app. Nút “Mở tài liệu” gọi `Linking.openURL(signedUrl)` — `Linking` nằm trong `react-native` core, không thêm package. Lý do: đề FR-06→FR-13 không yêu cầu xem nội dung tài liệu; WebView trên Android không render được PDF, phải nhờ dịch vụ bên thứ ba. Đây là tiện ích ngoài phạm vi FR, làm ở mức tối thiểu.
+- CN2-2: CÓ ô tìm kiếm theo tên (ngoại lệ mở rộng phạm vi vì chất lượng demo), xem luật ở trên.
+- CN2-3: Giới hạn 100 tài liệu / 30 môn mỗi user, xem luật ở trên.
+- CN2-4: Đổi môn học chỉ ở màn chi tiết, xem luật ở trên.
 
 ## CẦN CHỦ DỰ ÁN QUYẾT ĐỊNH
 
