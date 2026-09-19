@@ -87,8 +87,64 @@ theo mẫu `YYYY-MM-DD | iOS/Android + Expo Go | A/B | đạt/lỗi + ghi chú n
 - [ ] Từ chối quyền ảnh → Snackbar hướng dẫn mở Cài đặt kèm nút “Mở Cài đặt”.
 - [ ] A thử xem/sửa profile B (nếu biết cách gọi API) → RLS chặn; đã chứng minh tự động bằng `scripts/storage-rls-proof.ts` 5/5 PASS.
 
-## Smoke test cuối
+## CN2 — Tài liệu học tập (FR-06 → FR-13)
 
+### Tự động (không cần mạng, không cần thiết bị)
+
+Test được thuần túy: schema zod tên tài liệu (1–120 sau chuẩn hóa) và tên
+môn học (1–60, không trùng); kiểm tra whitelist phần mở rộng (`pdf`, `docx`,
+`txt`, lowercase, tệp không ext bị từ chối); kiểm tra giới hạn 10 MB
+(10 × 1024 × 1024 byte, vượt/bằng/dưới ngưỡng); hàm format dung lượng
+(B/KB/MB); hàm dựng đường dẫn object `{user_id}/{uuid}.{ext}`; hàm suy loại
+tệp từ ext; map trạng thái `extraction_status` sang nhãn tiếng Việt.
+
+Phải mock (không gọi mạng thật): supabase client (Postgres + Storage),
+`expo-document-picker` (asset giả gồm uri/name/size/mimeType),
+`expo-file-system` API mới (`File`). Test không được chạm network.
+
+### Kịch bản rls-proof cho documents và subjects
+
+Theo đúng khuôn `scripts/rls-proof.ts` của FR-05 (2 user test A/B, tự dọn):
+
+- `documents`: A SELECT/INSERT/UPDATE/DELETE row của A được; A SELECT row của
+  B trả 0 dòng; A INSERT với `user_id = B`, UPDATE/DELETE row B đều bị RLS
+  từ chối; B đối xứng.
+- `subjects`: tương tự cho CRUD môn học của A/B.
+- Storage `documents`: A upload vào `{A}/` được; A không download/không tạo
+  signed URL được object trong `{B}/`; anon không đọc/không list.
+- Thoát criteria: script exit 0, log số check pass đầy đủ.
+
+### Thủ công trên Expo Go (từng FR)
+
+- [ ] FR-06/FR-07: tải PDF/DOCX/TXT hợp lệ → lên được, danh sách có mới.
+- [ ] Tệp quá 10 MB → chặn trước khi đọc, báo rõ giới hạn, không tạo gì.
+- [ ] Tệp sai định dạng (VD ảnh, zip) hoặc MIME lệch ext → từ chối + liệt kê
+      định dạng được hỗ trợ.
+- [ ] Tên tệp tiếng Việt có dấu, khoảng trắng thừa, rất dài → chuẩn hóa đúng,
+      object storage là UUID không dấu.
+- [ ] Mất mạng giữa chừng khi tải lên → báo lỗi + retry, không có bản ghi
+      nửa vời (không bản ghi thiếu object).
+- [ ] FR-08: danh sách chỉ tài liệu của mình, mới nhất trước; empty state đủ
+      icon + câu dẫn + nút tải lên.
+- [ ] FR-09: chi tiết hiện đúng tên/ngày/dung lượng/định dạng/môn/trạng thái.
+- [ ] FR-10: đổi tên sai (rỗng/quá dài) bị chặn, tên cũ giữ nguyên; đổi đúng
+      thì object storage không đổi.
+- [ ] FR-11: hủy dialog thì không xóa gì; xác nhận thì mất cả DB lẫn object.
+- [ ] FR-12: tạo môn trùng tên bị chặn; xóa môn đang có tài liệu → tài liệu về
+      “Chưa phân loại”, không mất file nào.
+- [ ] FR-13: PDF/TXT mới hiện “Chưa xử lý”; DOCX hiện “Không hỗ trợ” + gợi ý
+      chuyển sang PDF.
+- [ ] Đăng xuất rồi đăng nhập lại → dữ liệu tài liệu/môn học còn nguyên.
+
+### Kiểm tra giao diện CN2
+
+- [ ] Mỗi màn (`/documents`, `/documents/upload`, `/documents/[id]`,
+      `/subjects`) ở cả light và dark: skeleton/empty/error/success đúng
+  DESIGN-SYSTEM, không hardcode màu, không chữ trùng nền.
+- [ ] Cặp màu file-type mới đã đo tương phản ≥ 4.5:1 bằng công cụ, ghi kết quả
+      vào đây.
+
+## Smoke test cuối
 - [ ] Android và iOS/Expo Go mục tiêu: mở app, điều hướng toàn luồng không crash.
 - [ ] Không thấy warning nghiêm trọng, secret, token hoặc password trong console/UI.
 - [ ] `git diff --cached` không chứa key/token/password trước commit.
