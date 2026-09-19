@@ -453,7 +453,7 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog, secre
 
 **Mốc Git**
 
-- Commit merge: (điền sau merge — xem branch `docs/cn3-hash` nếu có)
+- Commit merge: `cc1233fee08b11263e1abf9a5e0703e7dd0bc17a` (merge --no-ff)
 - Branch: `docs/cn3`
 - Tag: `docs-cn3` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
