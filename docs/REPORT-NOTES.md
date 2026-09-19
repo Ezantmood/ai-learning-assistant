@@ -146,6 +146,22 @@ Quyết định chủ dự án G5: mỗi lần đổi tạo object mới `avatar
 
 Bài học G5: gọi `signInWithPassword` trên client dùng chung khiến client đó mang session user A, nên case "anon" chạy nhầm quyền A và cho kết quả sai (anon đọc được file). Sửa bằng cách tách client đăng nhập riêng, giữ client anon thật sự ẩn danh — sau đó script 5/5 PASS.
 
+**Vì sao DOCX dùng được ở CN2 nhưng AI không nhận?**
+
+Quyết định sản phẩm có chủ đích: DOCX được tải lên, xem, đổi tên, xóa, gán
+môn đầy đủ nên FR-07 (“hỗ trợ định dạng”) vẫn thỏa. Nhưng Gemini không đọc
+trực tiếp DOCX và không có thư viện trích xuất DOCX nào chạy được trên
+Expo Go, nên DOCX nhận `extraction_status = 'unsupported'` và UI gợi ý chuyển
+sang PDF. CN3 → CN6 chỉ nhận PDF/TXT.
+
+**Vì sao FR-13 tách làm hai nửa CN2/CN3?**
+
+CN2 không có API key AI hay Edge Function nên chỉ làm hạ tầng: bảng
+`documents` có sẵn `extracted_text` (nullable) và `extraction_status`
+(`pending`/`processing`/`done`/`failed`/`unsupported`). CN3 gọi Gemini trích
+nội dung rồi đổ vào hai cột đó. Tách như vậy CN2 làm được ngay mà FR-13
+không bị bỏ sót.
+
 **Vì sao icon Paper không hiện trên Expo Go và sửa thế nào?**
 
 `react-native-paper` resolve icon qua `react-native-vector-icons`, package
