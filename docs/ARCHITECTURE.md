@@ -52,7 +52,8 @@ Kiến trúc theo feature, ít tầng và đủ rõ để sinh viên giải thí
 │   │   ├── profile/{api.ts,schemas.ts,queries.ts,errors.ts,avatar.ts,pickAvatar.ts,ProfileView.tsx}
 │   │   ├── profile/__tests__/
 │   │   ├── notes/{api.ts,schemas.ts,queries.ts,errors.ts}
-│   │   ├── documents/.gitkeep (FR-06 → FR-13, chưa code)
+│   │   ├── documents/{api.ts,storage.ts,schemas.ts,queries.ts,errors.ts} (CN2, FR-06 → FR-13)
+│   │   ├── documents/__tests__/
 │   │   ├── summary/.gitkeep (FR-14 → FR-22, chưa code)
 │   │   ├── chat/.gitkeep (FR-23 → FR-30, chưa code)
 │   │   ├── scan/.gitkeep (FR-31 → FR-37, chưa code)
@@ -273,6 +274,36 @@ Chạm avatar (Pressable overlay icon camera, label “Đổi ảnh đại diệ
 - Delete note bắt buộc confirm; chỉ đóng màn hình sau khi server xác nhận.
 - Mọi màn hình có keyboard avoidance và label accessibility cơ bản.
 - Thông báo đăng ký/quên mật khẩu không tiết lộ email đã tồn tại nếu Supabase cấu hình trả phản hồi trung tính; test vẫn xác nhận không tạo duplicate.
+
+### Màn CN2 — tài liệu (route dự kiến, session code quyết định cuối)
+
+| Route | FR | Trạng thái |
+|---|---|---|
+| `/documents` | FR-08, FR-12 (lọc theo môn) | Skeleton khi tải; empty (icon lớn + câu dẫn + nút “Tải tài liệu lên”, cấm chỉ in “Không có dữ liệu”); lỗi kèm “Thử lại”; pull-to-refresh; lọc theo môn qua Chip/Dropdown (“Tất cả” + từng môn + “Chưa phân loại”) |
+| `/documents/upload` | FR-06, FR-07 | `expo-document-picker` chọn 1 tệp → guard ext/MIME/size trước khi đọc → progress upload → success về danh sách + Snackbar; lỗi guard/signed URL/mất mạng báo rõ, không tạo bản ghi nửa vời |
+| `/documents/[id]` | FR-09, FR-10, FR-11 | Loading fetch; hiển thị tên/ngày/dung lượng/định dạng/môn/trạng thái trích xuất; đổi tên inline (validate 1–120); gán môn; nút Xóa màu error + dialog xác nhận |
+| `/subjects` | FR-12 | Danh sách môn + số tài liệu mỗi môn; tạo/sửa (validate 1–60, không trùng tên); xóa môn đang có tài liệu phải báo trước “tài liệu sẽ về Chưa phân loại” rồi mới cho xác nhận |
+
+### Tầng dữ liệu CN2
+
+Repository `src/features/documents/` (không import chéo sang feature khác;
+dùng chung qua `src/shared/`):
+
+- `pickDocument()` — bọc `expo-document-picker`, trả metadata (uri, name, size, mimeType), chưa đọc nội dung.
+- `uploadDocument()` — guard ext/MIME/size → đọc base64 bằng `expo-file-system` API mới (`File`) → decode ArrayBuffer (`base64-arraybuffer`) → upload lên `storage_path` → insert row `documents` (`extraction_status`: `pending` cho PDF/TXT, `unsupported` cho DOCX).
+- `listDocuments()` / `getDocument()` / `renameDocument()` / `deleteDocument()` qua typed client + RLS.
+- `listSubjects()` / `createSubject()` / `renameSubject()` / `deleteSubject()`.
+- `getDocumentUrl()` — tạo signed URL TTL 3600s, cache 55 phút qua TanStack Query (giống `useAvatarUrl` CN1).
+
+Query key và invalidate:
+
+- `['documents', userId]` (danh sách, kèm filter môn ở client), `['document', docId]`, `['subjects', userId]`.
+- Mutation upload/rename/delete/subject xong invalidate đúng key; không invalidate toàn bộ cache.
+
+Giữ đồng bộ bản ghi DB ↔ object storage (FR-11 xóa, FR-06 tải lên):
+
+- Xóa: xóa **object storage trước**, rồi mới xóa bản ghi DB. Storage lỗi → dừng, giữ bản ghi (UI không bao giờ trỏ vào hư không). DB lỗi sau khi storage đã xóa → còn object mồ côi: chấp nhận, log warning (dọn rác ngoài đề, không làm).
+- Tải lên: upload storage trước → insert DB. Insert lỗi → xóa object vừa tạo best-effort rồi báo lỗi, không để bản ghi thiếu object.
 
 ## Lý do chọn công nghệ
 - **Expo SDK 57 + TypeScript strict:** một codebase React Native, vòng lặp phát triển nhanh và lỗi kiểu được phát hiện sớm.
