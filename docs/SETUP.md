@@ -1,4 +1,4 @@
-# Dựng dự án từ số 0 (hoàn chỉnh CN1; CN2 chỉ thêm mục 5b, 7b, 10)
+# Dựng dự án từ số 0 (hoàn chỉnh CN1 + CN2; mục 5b/7b là bước CN2)
 
 Tài liệu duy nhất để dựng app từ clone tới chạy trên Expo Go. Dừng ngay nếu
 package được nêu bị deprecated hoặc Expo báo không tương thích SDK 57; báo chủ
@@ -22,6 +22,10 @@ npx expo install --check
 Chỉ cài thêm package bằng `npx expo install <tên-package>` sau khi chủ dự án
 duyệt. G5 dùng thêm `expo-image-picker`, `expo-image-manipulator`
 (Expo Go, SDK 57) và `base64-arraybuffer` (decode upload avatar, thuần JS).
+CN2 dùng thêm `expo-document-picker` (chọn tệp), `expo-file-system` (đọc tệp
+bằng API mới `File`/`Directory`/`Paths`), `expo-crypto` (`Crypto.randomUUID()`
+đặt tên object vì `crypto` toàn cục không đảm bảo có trên Hermes) —
+cả ba cài đúng line SDK 57 bằng `npx expo install`.
 
 ## 3. Tạo Supabase project bằng Dashboard (làm tay)
 
@@ -128,8 +132,13 @@ quan trên Dashboard, không phải bước tạo:
 ```bash
 npx tsc --noEmit
 npm run lint
-npm test
+npm test               # 17 suites, 177/177 PASS — mock supabase, không gọi mạng
 ```
+
+`npm test` bao gồm: schema/validate CN1, 64 test tầng dữ liệu documents
+(guard ext/MIME/size, trần 100 tài liệu/30 môn, path UUID, tìm kiếm `ilike`
+phân biệt dấu, đổi tên/xóa/gán môn, nhãn `extraction_status`), theme
+(palette indigo CN2-13) và component dùng chung.
 
 Kiểm chứng RLS trên remote (đọc credential từ `.env` + `.env.local`, tự tạo và
 tự xóa user/object test, không in secret):
@@ -147,6 +156,10 @@ npx tsc --ignoreConfig --types node scripts/storage-rls-proof.ts \
   --target es2021 --esModuleInterop --skipLibCheck --strict
 NODE_PATH="$PWD/node_modules" node /tmp/storageproof-out/storage-rls-proof.js
 ```
+
+Lưu ý: chưa có proof A/B cho `documents`/`subjects` (kịch bản có trong
+`docs/TEST-CHECKLIST.md` mục CN2 nhưng chưa viết script); cách ly CN2 hiện
+dựa vào verify 14/14 ở mục 5b và hai proof CN1 ở trên.
 
 ## 9. Chạy app trên Expo Go
 

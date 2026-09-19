@@ -60,6 +60,15 @@ light → dark (cùng nội dung để thấy tương phản):
 sáng; không có chỗ nào hardcode màu còn sót (đặc biệt overlay camera trên
 avatar và Snackbar).
 
+## Ảnh v2.0.0 (theme indigo — chụp lại toàn bộ, ảnh theme tím cũ hết dùng được)
+
+Từ CN2-13 app dùng bảng màu riêng seed `#4A5FC1` (primary light `#505B92`,
+dark `#B9C3FF`); mọi ảnh chụp trước v2.0.0 (tím `#6750A4`) không còn khớp UI
+thật. Chủ dự án chụp lại theo `docs/TEST-CHECKLIST.md` mục chụp ảnh báo cáo
+(thứ tự màn hình), mỗi màn light + dark. Điểm cần thấy: primary indigo trên
+FAB/nút/icon; dark nền `#1B1B21`; badge camera trên avatar vẫn đọc được
+(trắng trên `#505B92` 6.46:1).
+
 ## Câu hỏi vấn đáp và trả lời gợi ý
 
 **Vì sao cần RLS khi client đã filter `user_id`?**
@@ -190,3 +199,13 @@ với `MaterialCommunityIcons` từ `@expo/vector-icons` (cài đúng line SDK 5
 bằng `npx expo install`, chạy trong Expo Go không cần dev build). Tên icon
 sai cũng render rỗng nên toàn bộ tên đã đối chiếu glyphmap thật và liệt kê
 trong `docs/ARCHITECTURE.md` (bảng icon ở mục “Luồng màn hình”).
+
+**Vì sao đổi theme sang seed indigo `#4A5FC1` và làm sao biết không vỡ tương phản?**
+
+Task CN2-13 cố ý đặt cuối cùng vì đổi theme sớm làm hỏng mọi ảnh báo cáo.
+Bảng màu sinh bằng Material Theme Builder (`material-color-utilities`,
+variant TonalSpot) rồi giữ nguyên ánh xạ tone → token của Paper nên mọi cặp
+chữ/nền vẫn đạt WCAG AA (yếu nhất 4.98:1, đã tính tay và ghi trong
+`docs/DESIGN-SYSTEM.md`). `adaptNavigationTheme` gọi một lần ở module scope
+(gọi trong render sẽ remount navigator). Unit test `theme.test.ts` khóa giá
+trị palette chống regress về tím mặc định.
