@@ -155,4 +155,4 @@ render rỗng im lặng mà không báo lỗi. Fix: `PaperProvider`
 với `MaterialCommunityIcons` từ `@expo/vector-icons` (cài đúng line SDK 57
 bằng `npx expo install`, chạy trong Expo Go không cần dev build). Tên icon
 sai cũng render rỗng nên toàn bộ tên đã đối chiếu glyphmap thật và liệt kê
-trong `docs/UI-FLOW.md` (bảng icon G6).
+trong `docs/ARCHITECTURE.md` (bảng icon ở mục “Luồng màn hình”).

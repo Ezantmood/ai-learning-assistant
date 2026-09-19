@@ -83,13 +83,13 @@ NODE_PATH="$PWD/node_modules" node /tmp/storageproof-out/storage-rls-proof.js
 - [Đặc tả và quyết định](docs/SPEC.md)
 - [Kiến trúc](docs/ARCHITECTURE.md)
 - [Mô hình dữ liệu/RLS](docs/DATA-MODEL.md)
-- [Luồng UI](docs/UI-FLOW.md)
+- [Luồng UI](docs/ARCHITECTURE.md#luồng-màn-hình)
 - [Backlog G1–G5](docs/TASKS.md)
 - [Nhật ký phát triển](docs/DEVLOG.md)
 - [Truy vết FR](docs/FR-TRACEABILITY.md)
 - [Dựng môi trường](docs/SETUP.md)
 - [Checklist test](docs/TEST-CHECKLIST.md)
 - [Nguyên liệu báo cáo](docs/REPORT-NOTES.md)
-- [Quy trình Git](docs/GIT-WORKFLOW.md)
+- [Quy trình Git](AGENTS.md#quy-tắc-git-bắt-buộc)
 
 Đọc `AGENTS.md` trước mỗi session để biết luật dự án và file cần đọc theo loại công việc.
