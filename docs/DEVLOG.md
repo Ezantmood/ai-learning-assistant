@@ -713,3 +713,59 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog. Sau m
 - Branch: `chore/rebrand-system`
 - Tag: `v1.3.0` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
 - PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### Docs CN2 — Đặc tả quản lý tài liệu FR-06 → FR-13 — 2026-09-19
+
+**Đã làm gì**
+
+- Dọn tài liệu: nhập `GIT-WORKFLOW.md` vào AGENTS.md (103 dòng), nhập
+  `UI-FLOW.md` vào ARCHITECTURE.md mục “Luồng màn hình”, `git rm` cả hai
+  file, sửa liên kết trong README/REPORT-NOTES. Giữ SETUP và
+  FR-TRACEABILITY riêng. DEVLOG quá khứ không sửa.
+- SPEC thêm mục CN2: acceptance FR-06→FR-13, luật validate (tên 1–120,
+  môn 1–60, whitelist ext+MIME, 10 MB kiểm tra trước khi đọc), out of scope.
+- DATA-MODEL thêm DDL tham chiếu `subjects`/`documents` (index FR-08/lọc môn,
+  CHECK `extraction_status`, RLS 4 lệnh, bucket `documents` + policy
+  `{user_id}/`). ARCHITECTURE thêm màn CN2, tầng repository/queryKey, thứ tự
+  xóa storage-trước-DB-sau.
+- Tạo mới `docs/DESIGN-SYSTEM.md`: token MD3 đọc từ Paper đang cài, màu
+  file-type (light tính tay ≥ 6.4:1), spacing/radius thật, checklist màn hoàn
+  thành. Chưa áp vào code.
+- TASKS thêm backlog CN2-01→CN2-12 (branch `feat/cn2-documents`); TRACEABILITY
+  FR-06→FR-13 “Đang làm”; TEST-CHECKLIST thêm mục CN2; SETUP thêm mục 5b/7b;
+  README cập nhật bảng trạng thái.
+
+**Quyết định và lý do**
+
+- Quyết định: FR-13 tách đôi — CN2 chỉ làm hạ tầng hai cột, CN3 thực thi AI.
+- Lý do: CN2 không phụ thuộc API key/Edge Function, làm được ngay; đã ghi
+  trong SPEC/DATA-MODEL/TRACEABILITY để session sau không tưởng bỏ sót.
+- Quyết định: DOCX được CRUD đầy đủ nhưng AI không nhận (`unsupported`).
+- Lý do: Gemini không đọc trực tiếp DOCX và không có thư viện trích xuất
+  chạy trên Expo Go; FR-07 chỉ yêu cầu “hỗ trợ định dạng” nên vẫn thỏa.
+- Quyết định: xóa storage trước, DB sau khi xóa tài liệu.
+- Lý do: bản ghi trỏ hư không tệ hơn object mồ côi (UI bấm vào lỗi); mồ côi
+  chỉ tốn dung lượng, dọn rác ngoài đề nên chấp nhận + log.
+- Quyết định: không dùng alias `@/*`, không sinh hex seed indigo bằng tay.
+- Lý do: Metro/Jest chưa kiểm chứng alias; tonal palette không tính tay được
+  nên DESIGN-SYSTEM ghi số Paper thật + quy trình sinh bằng tool.
+
+**Cố tình chưa làm (theo lệnh session)**
+
+- Không code ứng dụng, không file `.ts/.tsx`/`.sql`, không migration/Dashboard.
+- Không cài/gỡ/nâng package (document-picker + file-system do chủ dự án cài
+  sẵn trước session, để nguyên chưa commit).
+- Không sửa test, logic CN1, đặc tả FR-01→FR-05; không đặc tả FR-14→FR-45.
+
+**Đã kiểm thử**
+
+- `npx tsc --noEmit` → đạt; `npm test` → 14 suites, 110/110 PASS (giữ nguyên).
+- Liên kết chết tới 2 file đã xóa: hết (DEVLOG quá khứ giữ nguyên có chủ đích).
+
+**Mốc Git**
+
+- Branch: `docs/cn2-spec`
+- Tag: `docs-cn2` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
+- PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh

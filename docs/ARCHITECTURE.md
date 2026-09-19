@@ -52,7 +52,8 @@ Kiến trúc theo feature, ít tầng và đủ rõ để sinh viên giải thí
 │   │   ├── profile/{api.ts,schemas.ts,queries.ts,errors.ts,avatar.ts,pickAvatar.ts,ProfileView.tsx}
 │   │   ├── profile/__tests__/
 │   │   ├── notes/{api.ts,schemas.ts,queries.ts,errors.ts}
-│   │   ├── documents/.gitkeep (FR-06 → FR-13, chưa code)
+│   │   ├── documents/{api.ts,storage.ts,schemas.ts,queries.ts,errors.ts} (CN2, FR-06 → FR-13)
+│   │   ├── documents/__tests__/
 │   │   ├── summary/.gitkeep (FR-14 → FR-22, chưa code)
 │   │   ├── chat/.gitkeep (FR-23 → FR-30, chưa code)
 │   │   ├── scan/.gitkeep (FR-31 → FR-37, chưa code)
@@ -99,6 +100,210 @@ Auth event → useSession → route guard trong layout → (auth) hoặc (app)
   feature; cần dùng chung thì đưa lên `shared`.
 - Session, theme và providers giữ một instance ở root nên mọi chức năng dùng
   chung Auth mà không cần login lại.
+
+## Luồng màn hình
+
+### Sơ đồ điều hướng
+
+```text
+Khởi động `/`
+├─ đang khôi phục session → splash/loading
+├─ chưa login → `/sign-in`
+│  ├─ `/sign-up` → vào app khi dev / xác nhận email khi demo
+│  └─ `/forgot-password` → email → `/verify-reset-otp` → `/reset-password`
+└─ đã login → `/dashboard` (màn chính: 6 thẻ chức năng)
+   ├─ thẻ Chức năng 1 → `/notes`
+   │  ├─ `/notes/new` → tạo → `/notes`
+   │  ├─ `/notes/[id]` → sửa/xóa → `/notes`
+   │  └─ `/profile` → cập nhật / đăng xuất → `/sign-in`
+   └─ thẻ Chức năng 2 → 6: "Sắp có", bị vô hiệu hóa, không điều hướng
+```
+
+Route group `(auth)` và `(app)` không xuất hiện trong URL. Layout mỗi group thực hiện guard; redirect chỉ sau khi `useSession` hoàn tất loading.
+
+### Màn hình và trạng thái (G6)
+
+Mọi màn hình dùng `ScreenContainer` (SafeArea + KeyboardAvoidingView +
+ScrollView theo token `src/shared/theme`); tiêu đề `headlineSmall`, phụ đề
+`bodyMedium`; không dùng `<Text>` trần cho tiêu đề. Nút submit chính
+`mode="contained"` có icon, `loading` + `disabled` khi đang gửi; link phụ
+`mode="text"`.
+
+### Quy ước header (G6.1)
+
+- Header duy nhất là Paper `Appbar`; **toàn bộ Stack để
+  `headerShown: false`** (root, `(app)`, `(auth)`) kèm `contentStyle` nền
+  theo theme để hết dải trắng/flash trắng khi chuyển màn.
+- Navigation theme (`ThemeProvider` từ `expo-router`) suy ra từ theme MD3
+  G6 qua `adaptNavigationTheme` (`src/shared/theme/navigation.ts`) — một nguồn
+  theme duy nhất, gọi ở module scope, không gọi trong render.
+- Màn con trong `(app)` (profile, đổi mật khẩu, tạo/sửa note) dùng
+  `ScreenHeader` qua prop `header` của `ScreenContainer` (trong SafeArea,
+  ngoài ScrollView): `Appbar.BackAction` (label “Quay lại”) chỉ render khi
+  `router.canGoBack()`, `Appbar.Content` title tiếng Việt (“Thông tin cá
+  nhân”, “Đổi mật khẩu”, “Ghi chú mới”, “Sửa ghi chú”). Màn Notes và
+  Dashboard giữ `Appbar` sẵn có làm header duy nhất.
+- `StatusBar` đặt một chỗ duy nhất ở root provider theo theme
+  (sáng chữ tối / tối chữ sáng).
+
+| Route | Mục đích | Component chính | Loading / empty / error / success |
+|---|---|---|---|
+| `/` | Chọn nhánh theo session | `LoadingState` | Loading khi khôi phục session; lỗi cấu hình hiển thị rõ; thành công redirect |
+| `/dashboard` | Màn chính sau login: 6 thẻ CN | `Card` + `Chip` (testID `dashboard-card-<id>`) | Không loading (không fetch); thẻ CN1 bấm tới `/notes`; thẻ CN2–6 "Sắp có", disabled |
+| `/sign-in` | FR-02 đăng nhập | `FormTextInput` (email `email-outline`), `PasswordInput`, `Button` icon `login` (testID `login-submit`), link đăng ký/quên mật khẩu | Button spinner; không có empty; lỗi field/API; thành công về `/dashboard` |
+| `/sign-up` | FR-01 đăng ký | Full name (`account`)/student code (`badge-account-horizontal-outline`)/email (`email-outline`) + 2 `PasswordInput` (testID `password-toggle`, `password-confirm-toggle`), nút icon `account-plus` (testID `register-submit`) | Spinner; lỗi Zod/email hoặc student code trùng; dev vào app ngay, demo yêu cầu kiểm tra email theo env |
+| `/forgot-password` | FR-03 gửi email reset | Email form icon `email-outline`, nút icon `send` (testID `forgot-submit`) | Spinner; luôn dùng thông báo success trung tính; offline cho retry |
+| `/verify-reset-otp` | FR-03 xác minh mã | Ô OTP icon `numeric`, căn giữa + letterSpacing rộng (testID `otp-input`), nút Xác minh icon `check` (testID `otp-submit`), nút gửi lại icon `refresh` (testID `otp-resend`) | Spinner; OTP sai/hết hạn báo lỗi; success tạo recovery session rồi sang reset |
+| `/reset-password` | FR-03 đặt mật khẩu mới | 2 `PasswordInput` + độ mạnh mật khẩu, nút icon `check` (testID `reset-submit`) | Thiếu recovery session thì về verify OTP; thành công về sign-in |
+| `/notes` | FR-05 danh sách riêng | `Appbar` (action `account-circle`), `List.Item` icon `note-text-outline` + `Divider`, `FAB` icon `plus` (testID `notes-fab`), `EmptyState` icon `notebook-outline` | `ListSkeleton` khi tải; empty có CTA “Tạo ghi chú”; lỗi có Retry; pull-to-refresh nối vào `refetch`; success danh sách theo `updated_at desc` |
+| `/notes/new` | FR-05 tạo note | Title (`format-title`)/content (`text`) form, nút icon `content-save` (testID `note-save`) | Spinner khi lưu; lỗi validation/API; success invalidate `notes` rồi back |
+| `/notes/[id]` | FR-05 sửa/xóa note | Form, nút Lưu icon `content-save` (testID `note-update`), nút Xóa icon `trash-can-outline` màu error, confirm dialog | Loading fetch; không tìm thấy/không có quyền dùng cùng thông báo; lỗi retry; success back |
+| `/profile` | FR-04 xem/sửa hồ sơ, avatar, logout | `ProfileView` (thuần hiển thị) + container query/mutation; avatar bọc `Pressable` overlay icon `camera` (testID `avatar-picker`, label “Đổi ảnh đại diện”); nút Lưu icon `content-save` (testID `profile-save`); link đổi mật khẩu icon `lock-reset`; nút đăng xuất icon `logout` màu error; `FeedbackSnackbar` thay Alert | Profile loading → spinner “Đang tải hồ sơ…”; query lỗi → `EmptyState` “Không tải được hồ sơ.” + nút “Thử lại” (testID `profile-retry`, gọi refetch); ready → form + avatar; lưu/upload pending → disable + spinner trên nút; success/error báo bằng Snackbar (không Alert), xem chi tiết luồng avatar bên dưới |
+| `/profile/change-password` | FR-03 đổi pass khi đã login | 3 `PasswordInput`, nút icon `lock-reset` (testID `change-password-submit`) | Spinner; sai pass hiện tại/trùng pass cũ báo riêng; success banner + về hồ sơ |
+
+### Bảng icon (G6, MaterialCommunityIcons qua settings.icon)
+
+Mọi tên dưới đây đã đối chiếu glyphmap thật của `@expo/vector-icons`;
+tên sai Paper sẽ render rỗng im lặng nên không tự ý đổi tên.
+
+| Icon | Dùng ở đâu |
+|---|---|
+| `login` | Nút Đăng nhập |
+| `account-plus` | Nút Đăng ký |
+| `account` | Ô họ tên, nút “Về hồ sơ” |
+| `badge-account-horizontal-outline` | Ô mã sinh viên |
+| `email-outline` | Ô email mọi form auth |
+| `lock-outline` | Ô mật khẩu (`PasswordInput` left icon) |
+| `eye` / `eye-off` | Toggle hiện/ẩn mật khẩu |
+| `send` | Nút Gửi mã OTP |
+| `numeric` | Ô OTP + nút “Nhập mã OTP” |
+| `check` | Nút Xác minh OTP, nút Đặt lại mật khẩu |
+| `refresh` | Nút Gửi lại mã OTP |
+| `lock-reset` | Nút Đổi mật khẩu (form + link ở profile) |
+| `check-circle` | Banner thành công, Snackbar success |
+| `alert-circle` | Banner/Snackbar lỗi, empty lỗi |
+| `information` | Snackbar info |
+| `close` | Nút đóng Snackbar |
+| `email-check` | Banner đã gửi email |
+| `history` | Banner khôi phục email giữa luồng |
+| `camera` | Overlay đổi avatar |
+| `account-circle` | Appbar mở hồ sơ, thẻ CN1 trên dashboard |
+| `content-save` | Nút Lưu (profile, tạo/sửa note) |
+| `logout` | Nút Đăng xuất (màu error) |
+| `plus` | FAB thêm ghi chú |
+| `note-text-outline` | Icon mỗi dòng ghi chú |
+| `notebook-outline` | Empty danh sách notes |
+| `format-title` / `text` | Ô tiêu đề / nội dung note |
+| `trash-can-outline` | Nút Xóa ghi chú (màu error) |
+| `theme-light-dark` | Chủ đề “Hệ thống” (toggle + SegmentedButtons) |
+| `weather-sunny` | Chủ đề “Sáng” (toggle + SegmentedButtons) |
+| `weather-night` | Chủ đề “Tối” (toggle + SegmentedButtons) |
+| `file-document-outline` | Thẻ CN2 trên dashboard |
+| `text-box-outline` | Thẻ CN3 trên dashboard |
+| `message-text-outline` | Thẻ CN4 trên dashboard |
+| `lightbulb-outline` | Thẻ CN6 trên dashboard |
+| `clock-outline` | Chip “Sắp có” trên dashboard |
+
+Mọi control chỉ có icon đều có `accessibilityLabel` và vùng bấm tối thiểu
+44x44 (avatar `Pressable` dùng `hitSlop` + `minHeight/minWidth`).
+
+### Chủ đề giao diện (G7)
+
+Ba mode (`ThemeMode` trong `src/shared/theme/themeMode.ts`): `light`, `dark`,
+`system`. `effectiveScheme = mode === 'system' ? (useColorScheme() ?? 'light') : mode`.
+Lựa chọn lưu ở AsyncStorage key `app.theme.mode`, đọc ra validate bằng
+type guard — giá trị rác → fallback `system`, không throw.
+
+Hai điểm truy cập đọc/ghi cùng một state (`ThemeModeProvider` ở root,
+bọc ngoài PaperProvider và ThemeProvider navigation):
+
+- Nút nhanh `Appbar.Action` (testID `theme-toggle`) trên Notes và Profile:
+  bấm cycle `system → light → dark → system`; icon và
+  `accessibilityLabel` tiếng Việt đổi động theo mode.
+- `Card` “Giao diện” trong Profile: Paper `SegmentedButtons` (testID
+  `theme-segmented`) 3 giá trị Sáng / Tối / Hệ thống.
+
+| Mode | Icon toggle + segmented | Nhãn accessibility toggle |
+|---|---|---|
+| `system` | `theme-light-dark` | “Chủ đề: Theo hệ thống. Chạm để đổi chủ đề” |
+| `light` | `weather-sunny` | “Chủ đề: Sáng. Chạm để đổi chủ đề” |
+| `dark` | `weather-night` | “Chủ đề: Tối. Chạm để đổi chủ đề” |
+
+Chống flash: khi chưa đọc xong storage (`isThemeHydrated === false`)
+app render `null` — splash hệ thống vẫn hiển thị (provider bọc ngoài
+`AuthProvider`, nơi gọi `hideAsync`) nên không nháy sáng→tối.
+`StatusBar` giữ một chỗ duy nhất ở root provider, đổi theo theme hiệu lực.
+
+### Luồng đổi avatar (`/profile`, FR-04)
+
+```text
+Chạm avatar (Pressable overlay icon camera, label “Đổi ảnh đại diện”)
+→ xin quyền thư viện (từ chối → Snackbar + nút “Mở Cài đặt”)
+→ picker (images, crop 1:1) → hủy → im lặng, giữ avatar cũ
+→ kiểm tra MIME khai báo → resize cạnh dài ≤ 512px, JPEG ~0.7, lấy base64
+→ guard > 2MB → chặn bằng Snackbar, giữ file cũ
+→ upload ArrayBuffer lên <uid>/avatar_<timestamp>.jpg (image/jpeg)
+→ update profiles.avatar_path → invalidate ['profile', userId]
+→ xóa object cũ best-effort (lỗi xóa chỉ warn, không fail)
+→ Snackbar “Đã đổi avatar.”
+```
+
+- Xem: `full_name`, `student_code`, email (từ auth), avatar qua signed URL
+  TTL 3600s (cache 55 phút). Chưa có `avatar_path` hoặc signed URL lỗi →
+  fallback `Avatar.Text` chữ cái đầu (`full_name`, rồi email, rồi `?`).
+- Sửa: form RHF + `profileSchema` (giữ luật G3/DB), lỗi field nằm dưới ô nhập;
+  nút Lưu loading/disabled khi đang lưu, giữ form khi lỗi mạng để thử lại.
+- Vị trí Snackbar lỗi (đều trong màn `/profile`, không Alert thô):
+  - Lưu hồ sơ lỗi → Snackbar (mã trùng đúng hoa/thường → “Mã sinh viên này
+    đã được sử dụng.” nhờ map 23505; offline → câu báo mạng + thử lại).
+  - Upload/signed URL lỗi → Snackbar; từ chối quyền ảnh → Snackbar kèm action
+    “Mở Cài đặt”; đăng xuất lỗi → Snackbar.
+
+### Hành vi theo trạng thái xác thực
+
+- Chưa login truy cập route `(app)`: `replace('/sign-in')`, không để Back quay vào dữ liệu cũ.
+- Đã login truy cập route `(auth)` trừ luồng recovery hợp lệ: `replace('/dashboard')`.
+- Recovery session chỉ được tạo sau `verifyOtp` thành công; không phụ thuộc deep link.
+- Khi logout hoặc token refresh thất bại: xóa cache React Query chứa dữ liệu user, đóng route riêng tư và về `/sign-in`.
+- Khi app quay lại foreground: Supabase tiếp tục auto-refresh token; UI giữ loading ngắn trong lúc xác định session.
+
+### Quy tắc form và phản hồi
+
+- Validate khi submit, lỗi nằm ngay dưới field; password không log/giữ ngoài form.
+- Chặn submit lặp trong mutation; giữ dữ liệu form khi lỗi mạng để người dùng thử lại.
+- Delete note bắt buộc confirm; chỉ đóng màn hình sau khi server xác nhận.
+- Mọi màn hình có keyboard avoidance và label accessibility cơ bản.
+- Thông báo đăng ký/quên mật khẩu không tiết lộ email đã tồn tại nếu Supabase cấu hình trả phản hồi trung tính; test vẫn xác nhận không tạo duplicate.
+
+### Màn CN2 — tài liệu (route dự kiến, session code quyết định cuối)
+
+| Route | FR | Trạng thái |
+|---|---|---|
+| `/documents` | FR-08, FR-12 (lọc theo môn) | Skeleton khi tải; empty (icon lớn + câu dẫn + nút “Tải tài liệu lên”, cấm chỉ in “Không có dữ liệu”); lỗi kèm “Thử lại”; pull-to-refresh; lọc theo môn qua Chip/Dropdown (“Tất cả” + từng môn + “Chưa phân loại”) |
+| `/documents/upload` | FR-06, FR-07 | `expo-document-picker` chọn 1 tệp → guard ext/MIME/size trước khi đọc → progress upload → success về danh sách + Snackbar; lỗi guard/signed URL/mất mạng báo rõ, không tạo bản ghi nửa vời |
+| `/documents/[id]` | FR-09, FR-10, FR-11 | Loading fetch; hiển thị tên/ngày/dung lượng/định dạng/môn/trạng thái trích xuất; đổi tên inline (validate 1–120); gán môn; nút Xóa màu error + dialog xác nhận |
+| `/subjects` | FR-12 | Danh sách môn + số tài liệu mỗi môn; tạo/sửa (validate 1–60, không trùng tên); xóa môn đang có tài liệu phải báo trước “tài liệu sẽ về Chưa phân loại” rồi mới cho xác nhận |
+
+### Tầng dữ liệu CN2
+
+Repository `src/features/documents/` (không import chéo sang feature khác;
+dùng chung qua `src/shared/`):
+
+- `pickDocument()` — bọc `expo-document-picker`, trả metadata (uri, name, size, mimeType), chưa đọc nội dung.
+- `uploadDocument()` — guard ext/MIME/size → đọc base64 bằng `expo-file-system` API mới (`File`) → decode ArrayBuffer (`base64-arraybuffer`) → upload lên `storage_path` → insert row `documents` (`extraction_status`: `pending` cho PDF/TXT, `unsupported` cho DOCX).
+- `listDocuments()` / `getDocument()` / `renameDocument()` / `deleteDocument()` qua typed client + RLS.
+- `listSubjects()` / `createSubject()` / `renameSubject()` / `deleteSubject()`.
+- `getDocumentUrl()` — tạo signed URL TTL 3600s, cache 55 phút qua TanStack Query (giống `useAvatarUrl` CN1).
+
+Query key và invalidate:
+
+- `['documents', userId]` (danh sách, kèm filter môn ở client), `['document', docId]`, `['subjects', userId]`.
+- Mutation upload/rename/delete/subject xong invalidate đúng key; không invalidate toàn bộ cache.
+
+Giữ đồng bộ bản ghi DB ↔ object storage (FR-11 xóa, FR-06 tải lên):
+
+- Xóa: xóa **object storage trước**, rồi mới xóa bản ghi DB. Storage lỗi → dừng, giữ bản ghi (UI không bao giờ trỏ vào hư không). DB lỗi sau khi storage đã xóa → còn object mồ côi: chấp nhận, log warning (dọn rác ngoài đề, không làm).
+- Tải lên: upload storage trước → insert DB. Insert lỗi → xóa object vừa tạo best-effort rồi báo lỗi, không để bản ghi thiếu object.
 
 ## Lý do chọn công nghệ
 - **Expo SDK 57 + TypeScript strict:** một codebase React Native, vòng lặp phát triển nhanh và lỗi kiểu được phát hiện sớm.

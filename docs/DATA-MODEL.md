@@ -110,3 +110,86 @@ Policies trên `storage.objects` giới hạn `bucket_id = 'avatars'` và `(stor
 | DELETE | Chỉ object trong thư mục user hiện tại |
 
 Không tạo bucket public, không lưu avatar dạng base64 trong Postgres, không dùng service-role để vượt policy.
+
+## Bảng `public.subjects` (CN2, FR-12)
+
+| Cột | Kiểu/ràng buộc | Ý nghĩa |
+|---|---|---|
+| `id` | `uuid primary key default gen_random_uuid()` | ID môn học |
+| `user_id` | `uuid not null references auth.users(id) on delete cascade` | Chủ sở hữu |
+| `name` | `text not null`, `check (char_length(name) between 1 and 60)`, `unique (user_id, name)` | Tên môn học; mỗi user không trùng tên |
+| `created_at` | `timestamptz not null default now()` | Thời điểm tạo |
+| `updated_at` | `timestamptz not null default now()` | Thời điểm sửa cuối |
+
+Index: `subjects_user_idx on subjects(user_id)`.
+
+RLS policies cho cả bốn lệnh (`auth.uid() = user_id` cho `USING`/`WITH CHECK`
+tương tự `study_notes`); grants `authenticated` CRUD như CN1.
+
+Xóa môn học đang có tài liệu: `documents.subject_id` dùng
+`references subjects(id) on delete set null` — tài liệu rơi về “Chưa phân
+loại”, không bị xóa theo. Lý do: môn học là nhãn tổ chức, xóa nhãn không được
+phép kéo theo mất dữ liệu gốc của user.
+
+## Bảng `public.documents` (CN2, FR-06 → FR-13)
+
+| Cột | Kiểu/ràng buộc | Ý nghĩa |
+|---|---|---|
+| `id` | `uuid primary key default gen_random_uuid()` | ID tài liệu |
+| `user_id` | `uuid not null references auth.users(id) on delete cascade` | Chủ sở hữu |
+| `subject_id` | `uuid null references subjects(id) on delete set null` | Môn học; NULL = “Chưa phân loại” |
+| `display_name` | `text not null`, `check (char_length(display_name) between 1 and 120)` | Tên hiển thị (tên gốc đã chuẩn hóa); FR-10 chỉ đổi cột này, không đổi object |
+| `storage_path` | `text not null unique` | Đường dẫn object `{user_id}/{uuid}.{ext}`; bất biến sau khi tạo (FR-10 không đổi) |
+| `file_ext` | `text not null`, `check (file_ext in ('pdf', 'docx', 'txt'))` | Phần mở rộng đã lowercase (FR-07 whitelist) |
+| `mime_type` | `text not null` | MIME đã đối chiếu với `file_ext` ở client |
+| `file_size` | `bigint not null`, `check (file_size > 0 and file_size <= 10485760)` | Byte; tối đa 10 MB |
+| `extracted_text` | `text null` | Nội dung trích cho AI; NULL cho tới khi CN3 đổ vào |
+| `extraction_status` | `text not null default 'pending'`, `check (extraction_status in ('pending', 'processing', 'done', 'failed', 'unsupported'))` | Trạng thái trích xuất (xem ánh xạ tiếng Việt bên dưới) |
+| `created_at` | `timestamptz not null default now()` | Ngày tải lên (FR-09) |
+| `updated_at` | `timestamptz not null default now()` | Thời điểm sửa cuối |
+
+Index:
+
+- `documents_user_created_idx on documents(user_id, created_at desc)` — phục vụ FR-08 liệt kê theo user, mới nhất trước.
+- `documents_subject_idx on documents(subject_id)` — phục vụ lọc theo môn học (FR-12).
+
+`extraction_status` ánh xạ UI tiếng Việt: `pending` → “Chưa xử lý”,
+`processing` → “Đang xử lý”, `done` → “Thành công”, `failed` → “Thất bại”,
+`unsupported` → “Không hỗ trợ”. PDF/TXT mới tải lên nhận `pending`;
+DOCX nhận `unsupported` ngay khi upload (giới hạn có chủ đích, xem SPEC).
+CN2 chỉ làm hạ tầng hai cột này; CN3 gọi AI trích nội dung rồi đổ vào —
+FR-13 tách đôi, không phải bỏ sót.
+
+RLS policies cho cả bốn lệnh (`USING`/`WITH CHECK` ràng buộc
+`auth.uid() = user_id`, `WITH CHECK` ở UPDATE ngăn đổi `user_id`);
+grants `authenticated` CRUD như CN1. Policy DELETE cho phép FR-11 xóa thẳng;
+thứ tự xóa storage-trước-DB-sau xem `docs/ARCHITECTURE.md`.
+Trigger `updated_at` tái dùng
+`public.set_updated_at()` có sẵn, không tạo function mới.
+
+## Supabase Storage — bucket `documents` (CN2)
+
+- Bucket: `documents`, **private**, giới hạn 10 MB, whitelist MIME
+  `application/pdf`,
+  `application/vnd.openxmlformats-officedocument.wordprocessingml.document`,
+  `text/plain`.
+- Quy ước đường dẫn object: `{user_id}/{uuid}.{ext}` (`uuid` sinh ở client
+  bằng `crypto.randomUUID()`; `{ext}` là phần mở rộng đã lowercase).
+  DB chỉ lưu đường dẫn này ở `documents.storage_path`, không lưu URL.
+- Tên file trên storage là UUID, không dùng tên gốc (tên gốc có dấu tiếng
+  Việt, khoảng trắng, ký tự lạ và có thể trùng). Tên gốc đã chuẩn hóa lưu ở
+  `documents.display_name` làm nhãn.
+- Xem/tải bằng signed URL TTL 3600s, cache qua TanStack Query (giống avatar CN1).
+
+Policies trên `storage.objects` giới hạn `bucket_id = 'documents'` và
+`(storage.foldername(name))[1] = auth.uid()::text`:
+
+| Lệnh | Quyền |
+|---|---|
+| SELECT | Chỉ object trong thư mục user hiện tại |
+| INSERT | Chỉ tạo trong thư mục user hiện tại (`WITH CHECK` giữ cùng chủ) |
+| UPDATE | Chỉ object trong thư mục user hiện tại, `WITH CHECK` giữ cùng chủ |
+| DELETE | Chỉ object trong thư mục user hiện tại |
+
+Không tạo bucket public, không lưu nội dung tệp dạng base64 trong Postgres,
+không dùng service-role để vượt policy.

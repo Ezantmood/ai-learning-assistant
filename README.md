@@ -20,7 +20,7 @@ base64-arraybuffer. Chạy bằng Expo Go, không development build.
 | Chức năng | Dải FR | Nội dung | Trạng thái |
 |---|---|---|---|
 | 1. Quản lý tài khoản người dùng | FR-01 → FR-05 | Đăng ký/đăng nhập/OTP/hồ sơ/`study_notes` | Xong — unit test + `rls-proof` 7/7 + `storage-rls-proof` 5/5 |
-| 2. Quản lý tài liệu học tập | FR-06 → FR-13 | — | Chưa làm |
+| 2. Quản lý tài liệu học tập | FR-06 → FR-13 | Tải lên PDF/DOCX/TXT, danh sách, chi tiết, đổi tên, xóa, môn học, hạ tầng trích xuất | Đặc tả xong (`docs-cn2`), chưa code |
 | 3. AI tóm tắt tài liệu PDF | FR-14 → FR-22 | — | Chưa làm |
 | 4. AI hỏi đáp dựa trên tài liệu | FR-23 → FR-30 | — | Chưa làm |
 | 5. Quét hình ảnh đề bài bằng AI | FR-31 → FR-37 | — | Chưa làm |
@@ -81,15 +81,15 @@ NODE_PATH="$PWD/node_modules" node /tmp/storageproof-out/storage-rls-proof.js
 ## Tài liệu
 
 - [Đặc tả và quyết định](docs/SPEC.md)
-- [Kiến trúc](docs/ARCHITECTURE.md)
+- [Kiến trúc + luồng màn hình](docs/ARCHITECTURE.md)
 - [Mô hình dữ liệu/RLS](docs/DATA-MODEL.md)
-- [Luồng UI](docs/UI-FLOW.md)
-- [Backlog G1–G5](docs/TASKS.md)
+- [Hệ thống thiết kế](docs/DESIGN-SYSTEM.md)
+- [Backlog CN1 + CN2](docs/TASKS.md)
 - [Nhật ký phát triển](docs/DEVLOG.md)
 - [Truy vết FR](docs/FR-TRACEABILITY.md)
 - [Dựng môi trường](docs/SETUP.md)
 - [Checklist test](docs/TEST-CHECKLIST.md)
 - [Nguyên liệu báo cáo](docs/REPORT-NOTES.md)
-- [Quy trình Git](docs/GIT-WORKFLOW.md)
+- [Quy tắc Git](AGENTS.md#quy-tắc-git-bắt-buộc)
 
 Đọc `AGENTS.md` trước mỗi session để biết luật dự án và file cần đọc theo loại công việc.
