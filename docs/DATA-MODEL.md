@@ -184,7 +184,9 @@ Trigger `updated_at` tái dùng
   `application/vnd.openxmlformats-officedocument.wordprocessingml.document`,
   `text/plain`.
 - Quy ước đường dẫn object: `{user_id}/{uuid}.{ext}` (`uuid` sinh ở client
-  bằng `crypto.randomUUID()`; `{ext}` là phần mở rộng đã lowercase).
+  bằng `Crypto.randomUUID()` của `expo-crypto` — cấm `crypto.randomUUID()`
+  toàn cục vì Hermes trên Expo Go không đảm bảo có, thiếu thì nổ đúng lúc
+  bấm upload chứ không lỗi lúc build).
   DB chỉ lưu đường dẫn này ở `documents.storage_path`, không lưu URL.
 - Tên file trên storage là UUID, không dùng tên gốc (tên gốc có dấu tiếng
   Việt, khoảng trắng, ký tự lạ và có thể trùng). Tên gốc đã chuẩn hóa lưu ở
