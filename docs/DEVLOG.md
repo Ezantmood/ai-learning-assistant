@@ -1044,7 +1044,7 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog. Sau m
 
 **Mốc Git**
 
-- Commit cuối: (điền sau merge, xem dòng merge bên dưới)
+- Commit cuối: `a034134814bc964b0eb46d264efd45d2375471a6` (merge --no-ff)
 - Branch: `cn2-g2`
 - Tag: `cn2-g2-done` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
 - PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh
