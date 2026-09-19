@@ -113,6 +113,9 @@ Không tạo bucket public, không lưu avatar dạng base64 trong Postgres, kh�
 
 ## Bảng `public.subjects` (CN2, FR-12)
 
+> DDL chính thức chạy được: `supabase/migrations/0002_cn2_documents.sql`.
+> Khi hai bên lệch nhau thì file migration là nguồn sự thật, tài liệu phải sửa theo.
+
 | Cột | Kiểu/ràng buộc | Ý nghĩa |
 |---|---|---|
 | `id` | `uuid primary key default gen_random_uuid()` | ID môn học |
@@ -132,6 +135,9 @@ loại”, không bị xóa theo. Lý do: môn học là nhãn tổ chức, xóa
 phép kéo theo mất dữ liệu gốc của user.
 
 ## Bảng `public.documents` (CN2, FR-06 → FR-13)
+
+> DDL chính thức chạy được: `supabase/migrations/0002_cn2_documents.sql`.
+> Khi hai bên lệch nhau thì file migration là nguồn sự thật, tài liệu phải sửa theo.
 
 | Cột | Kiểu/ràng buộc | Ý nghĩa |
 |---|---|---|
@@ -168,6 +174,10 @@ Trigger `updated_at` tái dùng
 `public.set_updated_at()` có sẵn, không tạo function mới.
 
 ## Supabase Storage — bucket `documents` (CN2)
+
+> DDL chính thức chạy được: `supabase/migrations/0002_cn2_documents.sql`
+> (mục 6, `on conflict do update` nên bucket tạo tay trước vẫn đúng cấu hình).
+> Khi hai bên lệch nhau thì file migration là nguồn sự thật, tài liệu phải sửa theo.
 
 - Bucket: `documents`, **private**, giới hạn 10 MB, whitelist MIME
   `application/pdf`,
