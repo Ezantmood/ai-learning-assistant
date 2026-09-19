@@ -769,3 +769,35 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog. Sau m
 - Branch: `docs/cn2-spec`
 - Tag: `docs-cn2` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
 - PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### Docs CN2.1 — Chốt 4 quyết định + tách 3 phiên + contrast thật — 2026-09-19
+
+**Đã làm gì**
+
+- SPEC ghi 4 quyết định chủ dự án: mở tài liệu bằng `Linking.openURL`
+  (tiện ích ngoài FR, không viewer/WebView); ô tìm kiếm theo tên bằng `ilike`
+  (ngoại lệ mở rộng vì demo, phân biệt dấu đã biết); giới hạn 100 tài liệu /
+  30 môn (`count` trước insert, vì free tier 1 GB); đổi môn chỉ ở chi tiết.
+- TASKS tách backlog CN2 thành 3 phiên (`feat/cn2-g1`/`cn2-g2`/`feat/cn2-polish`,
+  tag `cn2-g1`/`cn2-g2`/`v2.0.0`); thêm task cuối CN2-13 chuẩn hóa bảng màu
+  (đặt cuối vì đổi theme sớm hỏng ảnh báo cáo).
+- DESIGN-SYSTEM điền tỉ số WCAG tự tính bằng python (light 6.28–6.38:1,
+  dark 13.21–13.47:1, đều vượt 4.5:1, chốt luôn không cần đo tool).
+- Đồng bộ ARCHITECTURE, TEST-CHECKLIST, FR-TRACEABILITY theo 4 quyết định.
+
+**Cố tình chưa làm**
+
+- Không code `.ts/.tsx`/`.sql`, không package, không schema thật (giữ luật
+  session tài liệu). Không sửa đặc tả FR-01→FR-05 hay CN1.
+
+**Đã kiểm thử**
+
+- `npx tsc --noEmit` → đạt; `npm test` → 14 suites, 110/110 PASS (giữ nguyên).
+
+**Mốc Git**
+
+- Branch: `docs/cn2-decisions`
+- Tag: `docs-cn2.1` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
+- PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh
