@@ -149,3 +149,66 @@ có secret. Push ngay sau commit.
   đã chụp. FR: FR-06..FR-13 (giao diện).
   (2026-09-20, polish: TonalSpot + ánh xạ tone của Paper, mọi cặp ≥ 4.5:1,
   test khóa palette; ảnh do chủ dự án chụp lại.)
+
+---
+
+# Backlog CN3 — AI tóm tắt tài liệu (FR-14 → FR-22)
+
+Chia BA phiên code, mỗi phiên một branch, merge `--no-ff` và tag riêng sau
+khi cổng xanh (quyết định chủ dự án 2026-09-19 cho G4+, áp tiếp cho CN3).
+Mỗi checkbox là một commit độc lập và phải để app chạy được. Trước commit chạy
+`npx tsc --noEmit`, `npm run lint`, `npm test` và test tay phần liên quan;
+staged diff phải không có secret. Push ngay sau commit.
+
+Đặc tả đã chốt ở session `docs/cn3` (tag `docs-cn3`): model `gemini-2.5-flash`,
+đọc PDF bằng native vision (không lib), bấm nút (không auto), bảng riêng
+`document_summaries` (migration `0004` đã apply + verify 10/10 ở session docs).
+Tag `edge-probe` được lệnh nhắc tới nhưng không tồn tại nên probe làm lại từ
+đầu trong CN3-01 — không code gọi Gemini trước khi probe xong.
+
+- Phiên 1 — branch `cn3-g1`, tag `cn3-g1`: CN3-01 → CN3-02 (probe chốt đường
+  key + tầng dữ liệu summaries + máy trạng thái). Lý do: probe là tiền đề kiến
+  trúc nhưng nhỏ, gộp chung với repo không-gọi-mạng làm song song được; xong
+  g1 là có nền chạy được, chưa đốt quota.
+- Phiên 2 — branch `cn3-g2`, tag `cn3-g2`: CN3-03 → CN3-04 (gọi Gemini theo
+  nhánh đã chốt + UI vùng tóm tắt + chặn lặp/quota/retry). Lý do: xong g2 là
+  có luồng dọc demo được end-to-end.
+- Phiên 3 — branch `cn3-g3`, tag `cn3-g3` (tag version lớn do chủ dự án quyết
+  lúc đóng gói): CN3-05 → CN3-06 (proof RLS A/B + polish/test/docs cuối).
+  Lý do: khóa cách ly và bằng chứng báo cáo trước khi nhận CN3 xong.
+
+## CN3-1 — Probe key và nền dữ liệu (phiên 1)
+
+- [ ] CN3-01: Probe Edge Function proxy `summarize` (deploy thử lên Supabase,
+  key Gemini trong secret, app gửi JWT; ghi kết quả đạt/không vào SPEC/REPORT).
+  Probe đạt → code nhánh proxy; probe thất bại → code nhánh
+  `EXPO_PUBLIC_GEMINI_API_KEY` + ghi giới hạn demo. Xong khi một nhánh được
+  chốt bằng bằng chứng deploy thật, không chốt bằng suy đoán. FR: FR-21.
+- [ ] CN3-02: Viết `src/features/summary/{api.ts,schemas.ts,queries.ts,errors.ts}`
+  (upsert `document_summaries` ghi đè theo `UNIQUE(document_id)`, máy
+  `pending → processing → done/failed`, `reclaimStaleProcessing` 15 phút theo
+  `updated_at`, guard DOCX/`unsupported`/vượt ngưỡng) + unit test mock
+  supabase/Gemini (không gọi mạng). Xong khi test xanh và app mở không crash
+  dù chưa gọi AI thật. FR: FR-17, FR-20 (logic), FR-22 (nền).
+
+## CN3-2 — Gọi AI và UI (phiên 2)
+
+- [ ] CN3-03: `summarizeWithGemini` theo đúng MỘT nhánh CN3-01 (PDF base64
+  inline nguyên file, TXT text trực tiếp; map lỗi 429/quota/5xx/mạng/vượt
+  20.000 ký tự sang tiếng Việt) + `requestSummary` end-to-end
+  (guard → `processing` → upsert → `done`, lỗi → `failed`). Không retry tự
+  động, mỗi lần bấm tối đa một request. FR: FR-14, FR-15, FR-16, FR-21.
+- [ ] CN3-04: Vùng tóm tắt trong `/documents/[id]`: nút “Tóm tắt bằng AI”
+  (DOCX ẩn nút + Banner gợi ý PDF), spinner + disabled khi chạy, empty/lỗi +
+  “Thử lại” (chỉ khi `failed`), banner hạn mức khi 429 (không retry), tự thu
+  hồi `processing` treo. Xong khi 4 trạng thái chạy tay ở light/dark. FR:
+  FR-18, FR-19, FR-20.
+
+## CN3-3 — Cách ly và đóng gói (phiên 3)
+
+- [ ] CN3-05: Viết `scripts/summaries-rls-proof.ts` theo khuôn FR-05 (A/B cho
+  CRUD `document_summaries`); chạy proof trên remote đạt 100%; hồi quy
+  `rls-proof` 7/7 + `storage-rls-proof` 5/5 còn xanh. FR: FR-22.
+- [ ] CN3-06: Unit test full tầng summary, cập nhật traceability (FR-14→FR-22
+  “đạt”), checklist tay CN3, devlog, nguyên liệu báo cáo theo code cuối; rà
+  `git diff --cached` không có key. FR: FR-14..FR-22.

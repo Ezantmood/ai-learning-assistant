@@ -140,6 +140,19 @@ Theo đúng khuôn `scripts/rls-proof.ts` của FR-05 (2 user test A/B, tự d�
   signed URL được object trong `{B}/`; anon không đọc/không list.
 - Thoát criteria: script exit 0, log số check pass đầy đủ.
 
+## 14. Tóm tắt AI (`/documents/[id]` vùng tóm tắt — CN3, code ở phiên sau, checklist viết trước)
+
+- [ ] PDF của mình bấm “Tóm tắt bằng AI” → spinner, nút disabled → hiện bản
+  tóm tắt tiếng Việt; bấm dồn lúc đang chạy không sinh request thứ hai.
+- [ ] DOCX: nút tóm tắt ẩn + Banner gợi ý chuyển sang PDF; không có request AI.
+- [ ] Tóm tắt lại khi đã có bản → bản cũ bị ghi đè (một bản duy nhất).
+- [ ] Bật chế độ máy bay rồi bấm → lỗi tiếng Việt + “Thử lại”, trạng thái về
+  `failed`, không kẹt spinner.
+- [ ] Kill app giữa lúc đang tóm tắt → mở lại sau 15 phút thấy `failed` + cho
+  thử lại (thu hồi `processing` treo).
+- [ ] Chạm quota free → banner hạn mức + giờ reset, không tự retry.
+- [ ] A tóm tắt → B không thấy bản của A (cách ly RLS `document_summaries`).
+
 ## Smoke test cuối
 
 - [ ] Android và iOS/Expo Go mục tiêu: mở app, điều hướng toàn luồng không crash.

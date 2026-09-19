@@ -31,19 +31,19 @@ Chỉ chuyển trạng thái sau khi file/hàm tồn tại và case test tương
 - Chưa viết `scripts/documents-rls-proof.ts` (kịch bản A/B cho `documents`/`subjects` + Storage theo khuôn FR-05): cách ly hiện chỉ được chứng minh gián tiếp qua verify schema remote 14/14 (đủ 4+4 policy bảng, đủ 4 policy storage, RLS enabled) và proof CN1 (7/7 + 5/5). TASKS CN2-02 giữ nguyên chưa tick.
 - `src/shared/types/database.ts` đồng bộ tay theo `0002` (chờ regen bằng CLI): TASKS CN2-01 giữ nguyên chưa tick.
 
-## Chức năng 3 — AI tóm tắt tài liệu PDF (chưa làm)
+## Chức năng 3 — AI tóm tắt tài liệu PDF (chưa làm — đặc tả xong ở session `docs/cn3`)
 
 | FR | File dự kiến | Hàm/điểm kiểm soát dự kiến | Cách kiểm thử | Trạng thái |
 |---|---|---|---|---|
-| FR-14 | | | | Chưa làm |
-| FR-15 | | | | Chưa làm |
-| FR-16 | | | | Chưa làm |
-| FR-17 | | | | Chưa làm |
-| FR-18 | | | | Chưa làm |
-| FR-19 | | | | Chưa làm |
-| FR-20 | | | | Chưa làm |
-| FR-21 | | | | Chưa làm |
-| FR-22 | | | | Chưa làm |
+| FR-14 | Vùng tóm tắt trong `app/(app)/documents/[id].tsx`; `src/features/summary/{api.ts,schemas.ts,queries.ts,errors.ts}` | `requestSummary`; `summarizeWithGemini` (model `gemini-2.5-flash`); key `['summary', documentId]` | Unit test guard + mock Gemini (không gọi mạng); test tay bấm nút → có bản tiếng Việt (chủ dự án) | Chưa làm |
+| FR-15 | Cùng FR-14 | PDF gửi base64 inline nguyên file, không lib trích xuất PDF | Unit test payload inline + test tay PDF thật; grep không thấy dependency PDF mới | Chưa làm |
+| FR-16 | Cùng màn chi tiết | Guard `unsupported`: ẩn nút + Banner gợi ý PDF; `requestSummary` từ chối DOCX | Unit test guard DOCX + test tay DOCX không sinh request | Chưa làm |
+| FR-17 | Bảng `document_summaries` (`0004_cn3_summaries.sql`) | Upsert ghi đè theo `UNIQUE(document_id)`; CASCADE khi xóa tài liệu | Verify `cn3-schema-verify.sql` 10/10; unit test ghi đè; test tay xóa tài liệu mất summary theo | Chưa làm |
+| FR-18 | Cùng màn chi tiết | Bốn trạng thái vùng tóm tắt: spinner/empty/nội dung/lỗi + “Thử lại” | Test tay 4 trạng thái light/dark (chủ dự án) | Chưa làm |
+| FR-19 | Cùng màn + `requestSummary` | Nút disabled khi pending; guard `processing`; map lỗi 429/quota sang banner hạn mức, không auto-retry | Unit test chặn bấm đôi + map lỗi; test tay bấm dồn | Chưa làm |
+| FR-20 | Cùng màn + `reclaimStaleProcessing` | Retry khi `failed`; thu hồi `processing` treo (> 15 phút theo `updated_at`) về `failed` | Unit test ngưỡng 15 phút; test tay kill app giữa chừng | Chưa làm |
+| FR-21 | `supabase/functions/summarize` (nhánh proxy) hoặc `EXPO_PUBLIC_GEMINI_API_KEY` (nhánh fallback) | Probe CN3-01 chốt một nhánh; key không bao giờ vào repo | Probe deploy thật; `git diff --cached` không có key | Chưa làm |
+| FR-22 | Bảng `document_summaries` + 4 RLS policy `auth.uid() = user_id` | Cách ly theo `user_id` như FR-05 | Proof A/B theo khuôn `rls-proof.ts` (viết ở CN3) | Chưa làm |
 
 ## Chức năng 4 — AI hỏi đáp dựa trên tài liệu (chưa làm)
 

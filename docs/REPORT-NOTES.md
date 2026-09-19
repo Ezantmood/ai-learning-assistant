@@ -209,3 +209,58 @@ chữ/nền vẫn đạt WCAG AA (yếu nhất 4.98:1, đã tính tay và ghi tr
 `docs/DESIGN-SYSTEM.md`). `adaptNavigationTheme` gọi một lần ở module scope
 (gọi trong render sẽ remount navigator). Unit test `theme.test.ts` khóa giá
 trị palette chống regress về tím mặc định.
+
+## Hỏi đáp CN3 — AI tóm tắt (chuẩn bị từ session `docs/cn3`, chờ code)
+
+**Vì sao tóm tắt phải bấm nút thay vì tự động sau upload?**
+
+Mỗi lần tóm tắt tốn đúng một request quota miễn phí (khoảng 1.500 lượt/ngày
+cho cả project demo). Tự động sau upload sẽ đốt quota cho file user chưa cần
+đọc, một buổi test là hết quota cả lớp. Nút bấm vừa tiết kiệm quota vừa là
+chốt chặn gọi lặp tự nhiên nhất.
+
+**Vì sao bản tóm tắt nằm ở bảng riêng thay vì thêm cột vào `documents`?**
+
+Tách vòng đời: tóm tắt lại chỉ UPDATE một row (`UNIQUE(document_id)` đảm bảo
+mỗi tài liệu một bản đang dùng); `documents` không phình thêm;
+`extracted_text` của CN2 giữ nguyên cho CN4 hỏi đáp; RLS viết độc lập theo
+`user_id`; xóa tài liệu kéo theo xóa summary qua `ON DELETE CASCADE`, không
+cần bước xóa riêng.
+
+**Vì sao không cần thư viện trích xuất PDF mà FR-15 vẫn thỏa?**
+
+Không có lib PDF nào chạy trên Expo Go (đều cần native module → development
+build, trái quyết định đã chốt). Gemini 2.5 Flash đọc PDF trực tiếp bằng
+native vision: app gửi nguyên file base64 inline là xong, FR-15 thỏa mà stack
+không thêm package nào.
+
+**Ngưỡng file gửi Gemini là bao nhiêu, vượt thì sao?**
+
+Tra tài liệu Google ngày 2026-09-19: inline data tối đa 100 MB/request,
+riêng PDF 50 MB. App chặn 10 MB từ CN2 nên mọi tệp hợp lệ đều gửi nguyên file
+được, không chia nhỏ. Vượt ngưỡng (chỉ khi luật CN2 đổi) thì từ chối trước khi
+gọi và báo rõ — chunking ngoài đề nên không làm.
+
+**Free tier ~1.500 request/ngày thì demo thế nào?**
+
+Ba lớp chống chạm trần: nút disabled khi đang chạy + guard `processing` trong
+`requestSummary` + `UNIQUE(document_id)` chặn ghi đôi (mỗi lần bấm tối đa một
+request, không auto-retry). Chạm trần thật thì UI báo rõ giới hạn và giờ reset
+(nửa đêm giờ Thái Bình Dương), không treo spinner.
+
+**App bị kill giữa lúc tóm tắt thì sao?**
+
+Trạng thái kẹt ở `processing`. Không có cron server nên màn chi tiết tự thu
+hồi: `processing` mà `updated_at` quá 15 phút thì app đưa về `failed` và cho
+“Thử lại”. Mốc giờ lấy từ trigger `updated_at` có sẵn, không thêm cột.
+
+**API key Gemini để ở đâu, có an toàn không?**
+
+Đường đúng: Edge Function proxy giữ key trong secret Supabase, app chỉ gửi
+JWT (probe ở CN3-01; tag `edge-probe` được nhắc trong lệnh nhưng không tồn
+tại nên probe làm lại từ đầu). Nếu probe thất bại, bản demo dùng
+`EXPO_PUBLIC_GEMINI_API_KEY` — key trong bundle giải nén ra được nên ĐÂY LÀ
+GIỚI HẠN ĐÃ BIẾT CỦA BẢN DEMO, không dùng cho bản thật: key phải restrict
+riêng Gemini API trong Google Cloud Console (từ 2026-06-19 Google chặn key
+không restrict), quota free vẫn tính theo project, và lộ key đồng nghĩa người
+khác đốt quota của mình.
