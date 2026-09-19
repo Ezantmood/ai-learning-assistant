@@ -847,3 +847,53 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog. Sau m
 - Branch: `chore/cn2-migration`
 - Tag: `cn2-migration` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
 - PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### Apply CN2 0002 qua psql remote + verify + hồi quy — 2026-09-20
+
+**Đã làm gì**
+
+- Branch `chore/cn2-apply-0002` từ `main`. Không sửa `0002_cn2_documents.sql`
+  (đã apply lên production) và không viết code CN2 theo lệnh session.
+- Apply `supabase/migrations/0002_cn2_documents.sql` lên remote bằng
+  `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f`, chạy HAI LẦN liên tiếp,
+  cả hai `exit 0`. Output mỗi lần: `extension "pgcrypto" already exists`,
+  `relation "subjects"/"documents"/3 index already exists, skipping`,
+  còn lại `CREATE TABLE/DO/CREATE INDEX/ALTER TABLE/DROP+CREATE POLICY ×12
+  (8 bảng + 4 storage)/GRANT ×4/REVOKE ×2/DROP+CREATE TRIGGER ×2/
+  INSERT 0 1 (bucket documents upsert)`. Lần chạy nào cũng success nên
+  idempotent đã chứng minh trên DB thật, không chỉ Postgres local.
+- Chạy `scripts/cn2-schema-verify.sql` trên remote: **14/14 ĐẠT**, không có
+  dòng KHÔNG ĐẠT nên KHÔNG viết `0003_*.sql`; 0002 giữ nguyên.
+- Hồi quy sau apply (số thật, không sửa test): `npm test` 14 suites
+  **110/110 PASS**; `scripts/rls-proof.ts` **7/7** (source `.env` +
+  `.env.local` trước khi chạy); `scripts/storage-rls-proof.ts` **5/5**.
+  Schema CN2 không ảnh hưởng CN1.
+- Audit docs-cn2.1 (đi kèm, không đổi bảng màu): cả ba việc ĐÃ CÓ nên để
+  nguyên, không sửa — a) `docs/TASKS.md:65,68,71` tách 3 phiên
+  (`feat/cn2-g1`/`cn2-g2`/`feat/cn2-polish`, tag `cn2-g1`/`cn2-g2`/`v2.0.0`);
+  b) `docs/DESIGN-SYSTEM.md:45,48,54` ghi sẵn tỉ số số (light 6.28–6.38:1,
+  dark 13.21–13.47:1) + kết luận vượt 4.5:1, grep không thấy chuỗi
+  “hãy tự đo”; c) `docs/TASKS.md:131` task CN2-13 chuẩn hóa bảng màu nằm
+  CUỐI backlog kèm lý do “Đặt cuối vì đổi theme sớm làm hỏng mọi ảnh…”.
+
+**Cố tình không làm (theo lệnh session)**
+
+- Không viết code CN2, không đổi bảng màu, không sửa test cho qua.
+- Không tick checkbox CN2-01→CN2-13 nào trong `docs/TASKS.md`: CN2-01 đòi
+  thêm regen `database.ts` bằng CLI (chưa làm trong phiên này), tick sớm
+  là nói dối tiến độ; backlog giữ nguyên như audit.
+
+**Đã kiểm thử**
+
+- Lệnh: `npx tsc --noEmit` → đạt (exit 0).
+- Lệnh: `npm run lint` → 0 errors, 2 warning `watch()` cũ (kế thừa G3–G7).
+- Lệnh: `npm test` → 14 suites, 110/110 PASS (giữ nguyên, không sửa test).
+- `scripts/rls-proof.ts` → 7/7; `scripts/storage-rls-proof.ts` → 5/5.
+
+**Mốc Git**
+
+- Branch: `chore/cn2-apply-0002`
+- Tag: `cn2-migration-applied` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
+- PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh
