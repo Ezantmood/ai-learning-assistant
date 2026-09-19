@@ -1,0 +1,179 @@
+import { router } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
+import { Appbar, Avatar, Card, Chip, Text, useTheme } from 'react-native-paper';
+
+import { ScreenContainer } from '../../src/shared/components/ScreenContainer';
+import { ThemeToggleAction } from '../../src/shared/components/ThemeToggleAction';
+import { useSession } from '../../src/features/auth/useSession';
+import { spacing } from '../../src/shared/theme/spacing';
+import type { AppTheme } from '../../src/shared/theme/theme';
+
+type FeatureCard = {
+  description: string;
+  frRange: string;
+  icon: string;
+  id: string;
+  route?: '/notes';
+  status: 'done' | 'soon';
+  title: string;
+};
+
+const FEATURES: FeatureCard[] = [
+  {
+    description: 'Đăng ký, đăng nhập, OTP email, hồ sơ và ghi chú học tập.',
+    frRange: 'FR-01 → FR-05',
+    icon: 'account-circle',
+    id: '1',
+    route: '/notes',
+    status: 'done',
+    title: 'Quản lý tài khoản người dùng',
+  },
+  {
+    description: 'Tải lên, lưu trữ và quản lý tài liệu học tập.',
+    frRange: 'FR-06 → FR-13',
+    icon: 'file-document-outline',
+    id: '2',
+    status: 'soon',
+    title: 'Quản lý tài liệu học tập',
+  },
+  {
+    description: 'AI tóm tắt nội dung tài liệu PDF.',
+    frRange: 'FR-14 → FR-22',
+    icon: 'text-box-outline',
+    id: '3',
+    status: 'soon',
+    title: 'AI tóm tắt tài liệu PDF',
+  },
+  {
+    description: 'AI hỏi đáp dựa trên nội dung tài liệu.',
+    frRange: 'FR-23 → FR-30',
+    icon: 'message-text-outline',
+    id: '4',
+    status: 'soon',
+    title: 'AI hỏi đáp dựa trên tài liệu',
+  },
+  {
+    description: 'Quét hình ảnh đề bài bằng AI.',
+    frRange: 'FR-31 → FR-37',
+    icon: 'camera',
+    id: '5',
+    status: 'soon',
+    title: 'Quét hình ảnh đề bài bằng AI',
+  },
+  {
+    description: 'AI gợi ý lời giải cho bài tập.',
+    frRange: 'FR-38 → FR-45',
+    icon: 'lightbulb-outline',
+    id: '6',
+    status: 'soon',
+    title: 'AI gợi ý lời giải',
+  },
+];
+
+/**
+ * Màn chính sau đăng nhập: liệt kê 6 chức năng lớn của hệ thống
+ * AI Learning Assistant. Chỉ Chức năng 1 bấm được; 5 thẻ còn lại
+ * hiển thị "Sắp có" và không điều hướng (chưa có route).
+ */
+export default function DashboardScreen() {
+  const theme = useTheme<AppTheme>();
+  const { user } = useSession();
+
+  return (
+    <ScreenContainer
+      header={
+        <Appbar.Header>
+          <Appbar.Content title="AI Learning Assistant" />
+          <ThemeToggleAction />
+          <Appbar.Action
+            accessibilityLabel="Mở hồ sơ"
+            icon="account-circle"
+            onPress={() => router.push('/profile')}
+          />
+        </Appbar.Header>
+      }
+    >
+      <Text variant="bodyMedium">
+        Xin chào{user?.email ? `, ${user.email}` : ''}! Chọn một chức năng để
+        tiếp tục.
+      </Text>
+      {FEATURES.map((feature) => {
+        const enabled = feature.status === 'done';
+        const target = enabled ? feature.route : undefined;
+        return (
+          <Card
+            accessibilityLabel={`Chức năng ${feature.id}: ${feature.title}`}
+            accessibilityRole={enabled ? 'button' : undefined}
+            accessibilityState={{ disabled: !enabled }}
+            key={feature.id}
+            mode="outlined"
+            onPress={target ? () => router.push(target) : undefined}
+            style={
+              enabled
+                ? undefined
+                : { backgroundColor: theme.colors.surfaceVariant }
+            }
+            testID={`dashboard-card-${feature.id}`}
+          >
+            <Card.Title
+              left={() => (
+                <Avatar.Icon
+                  color={
+                    enabled
+                      ? theme.colors.primary
+                      : theme.colors.onSurfaceVariant
+                  }
+                  icon={feature.icon}
+                  size={40}
+                  style={
+                    enabled
+                      ? undefined
+                      : { backgroundColor: theme.colors.surfaceVariant }
+                  }
+                />
+              )}
+              right={() => (
+                <View style={styles.chipWrap}>
+                  <Chip
+                    icon={enabled ? 'check' : 'clock-outline'}
+                    testID={
+                      enabled
+                        ? `dashboard-done-${feature.id}`
+                        : `dashboard-coming-soon-${feature.id}`
+                    }
+                  >
+                    {enabled ? 'Hoàn thành' : 'Sắp có'}
+                  </Chip>
+                </View>
+              )}
+              subtitle={feature.frRange}
+              subtitleStyle={
+                enabled ? undefined : { color: theme.colors.onSurfaceVariant }
+              }
+              title={feature.title}
+              titleStyle={
+                enabled ? undefined : { color: theme.colors.onSurfaceVariant }
+              }
+            />
+            <Card.Content>
+              <Text
+                style={
+                  enabled ? undefined : { color: theme.colors.onSurfaceVariant }
+                }
+                variant="bodyMedium"
+              >
+                {feature.description}
+              </Text>
+            </Card.Content>
+          </Card>
+        );
+      })}
+    </ScreenContainer>
+  );
+}
+
+const styles = StyleSheet.create({
+  chipWrap: {
+    marginRight: spacing.md,
+  },
+});

@@ -25,5 +25,5 @@ export default function IndexScreen() {
     return <Redirect href="/reset-password" />;
   }
 
-  return <Redirect href={session ? '/notes' : '/sign-in'} />;
+  return <Redirect href={session ? '/dashboard' : '/sign-in'} />;
 }

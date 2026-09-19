@@ -22,7 +22,7 @@ export default function AuthLayout() {
   }
 
   if (session && !RECOVERY_PATHS.includes(pathname)) {
-    return <Redirect href="/notes" />;
+    return <Redirect href="/dashboard" />;
   }
 
   return (
