@@ -27,6 +27,7 @@ export type DisplayNameValues = {
 };
 
 export const MAX_DISPLAY_NAME_LENGTH = 120;
+export const MAX_SUBJECT_NAME_LENGTH = 60;
 
 /**
  * Suy nhãn hiển thị từ tên tệp gốc: chuẩn hóa, cắt còn 120 ký tự.
@@ -45,3 +46,21 @@ export function deriveDisplayName(
   }
   return normalizeDisplayName(normalized.slice(0, MAX_DISPLAY_NAME_LENGTH));
 }
+
+/**
+ * Schema tên môn học CN2 (FR-12): chuẩn hóa như tên tài liệu,
+ * sau chuẩn hóa 1–60 ký tự. Trùng tên (so sau chuẩn hóa, phân biệt
+ * hoa/thường) do guard trong `api.ts` + unique (user_id, name) chặn.
+ */
+export const subjectNameSchema = z
+  .string()
+  .transform(normalizeDisplayName)
+  .pipe(
+    z
+      .string()
+      .min(1, 'Tên môn học không được để trống.')
+      .max(
+        MAX_SUBJECT_NAME_LENGTH,
+        'Tên môn học tối đa 60 ký tự.',
+      ),
+  );
