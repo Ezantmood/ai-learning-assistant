@@ -961,7 +961,7 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog. Sau m
 
 **Mốc Git**
 
-- Commit cuối: `<điền full hash sau merge>`
+- Commit cuối: `39d1361d6ef9675330b96d84b558df05ac243f1b` (merge --no-ff)
 - Branch: `cn2-g1`
 - Tag: `cn2-g1-done` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
 - PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh
