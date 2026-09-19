@@ -138,9 +138,9 @@ phép kéo theo mất dữ liệu gốc của user.
 | `id` | `uuid primary key default gen_random_uuid()` | ID tài liệu |
 | `user_id` | `uuid not null references auth.users(id) on delete cascade` | Chủ sở hữu |
 | `subject_id` | `uuid null references subjects(id) on delete set null` | Môn học; NULL = “Chưa phân loại” |
-| `display_name` | `text not null`, `check (char_length(display_name) between 1 and 120)` | Tên hiển thị (tên gốc đã chuẩn hóa) |
-| `storage_path` | `text not null unique` | Đường dẫn object `{user_id}/{uuid}.{ext}` |
-| `file_ext` | `text not null`, `check (file_ext in ('pdf', 'docx', 'txt'))` | Phần mở rộng đã lowercase |
+| `display_name` | `text not null`, `check (char_length(display_name) between 1 and 120)` | Tên hiển thị (tên gốc đã chuẩn hóa); FR-10 chỉ đổi cột này, không đổi object |
+| `storage_path` | `text not null unique` | Đường dẫn object `{user_id}/{uuid}.{ext}`; bất biến sau khi tạo (FR-10 không đổi) |
+| `file_ext` | `text not null`, `check (file_ext in ('pdf', 'docx', 'txt'))` | Phần mở rộng đã lowercase (FR-07 whitelist) |
 | `mime_type` | `text not null` | MIME đã đối chiếu với `file_ext` ở client |
 | `file_size` | `bigint not null`, `check (file_size > 0 and file_size <= 10485760)` | Byte; tối đa 10 MB |
 | `extracted_text` | `text null` | Nội dung trích cho AI; NULL cho tới khi CN3 đổ vào |
@@ -162,7 +162,9 @@ FR-13 tách đôi, không phải bỏ sót.
 
 RLS policies cho cả bốn lệnh (`USING`/`WITH CHECK` ràng buộc
 `auth.uid() = user_id`, `WITH CHECK` ở UPDATE ngăn đổi `user_id`);
-grants `authenticated` CRUD như CN1. Trigger `updated_at` tái dùng
+grants `authenticated` CRUD như CN1. Policy DELETE cho phép FR-11 xóa thẳng;
+thứ tự xóa storage-trước-DB-sau xem `docs/ARCHITECTURE.md`.
+Trigger `updated_at` tái dùng
 `public.set_updated_at()` có sẵn, không tạo function mới.
 
 ## Supabase Storage — bucket `documents` (CN2)
