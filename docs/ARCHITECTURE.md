@@ -117,6 +117,8 @@ Khởi động `/`
    │  ├─ `/notes/[id]` → sửa/xóa → `/notes`
    │  └─ `/profile` → cập nhật / đăng xuất → `/sign-in`
    └─ thẻ Chức năng 2 → 6: "Sắp có", bị vô hiệu hóa, không điều hướng
+   (từ CN2-G1: thẻ Chức năng 2 chip “Đang làm”, bấm tới `/documents`;
+   thẻ CN3–6 vẫn "Sắp có")
 ```
 
 Route group `(auth)` và `(app)` không xuất hiện trong URL. Layout mỗi group thực hiện guard; redirect chỉ sau khi `useSession` hoàn tất loading.
@@ -191,6 +193,8 @@ tên sai Paper sẽ render rỗng im lặng nên không tự ý đổi tên.
 | `content-save` | Nút Lưu (profile, tạo/sửa note) |
 | `logout` | Nút Đăng xuất (màu error) |
 | `plus` | FAB thêm ghi chú |
+| `upload` | FAB/nút tải tài liệu lên (CN2) |
+| `progress-clock` | Chip “Đang làm” thẻ CN2 trên dashboard |
 | `note-text-outline` | Icon mỗi dòng ghi chú |
 | `notebook-outline` | Empty danh sách notes |
 | `format-title` / `text` | Ô tiêu đề / nội dung note |
@@ -279,7 +283,7 @@ Chạm avatar (Pressable overlay icon camera, label “Đổi ảnh đại diệ
 
 | Route | FR | Trạng thái |
 |---|---|---|
-| `/documents` | FR-08, FR-12 (lọc theo môn) | Skeleton khi tải; empty (icon lớn + câu dẫn + nút “Tải tài liệu lên”, cấm chỉ in “Không có dữ liệu”); lỗi kèm “Thử lại”; pull-to-refresh; lọc theo môn qua Chip/Dropdown (“Tất cả” + từng môn + “Chưa phân loại”); đúng một ô tìm kiếm theo tên (`ilike`, phân biệt dấu) |
+| `/documents` | FR-08, FR-12 (lọc theo môn) | Skeleton khi tải; empty (icon lớn + câu dẫn + nút “Tải tài liệu lên”, cấm chỉ in “Không có dữ liệu”); lỗi kèm “Thử lại”; pull-to-refresh; lọc theo môn qua Chip/Dropdown (“Tất cả” + từng môn + “Chưa phân loại”); đúng một ô tìm kiếm theo tên (`ilike`, phân biệt dấu). **G1 chỉ xong khung danh sách** (chưa tìm kiếm/lọc — g2) |
 | `/documents/upload` | FR-06, FR-07 | `expo-document-picker` chọn 1 tệp → guard ext/MIME/size trước khi đọc → progress upload → success về danh sách + Snackbar; lỗi guard/signed URL/mất mạng báo rõ, không tạo bản ghi nửa vời |
 | `/documents/[id]` | FR-09, FR-10, FR-11 | Loading fetch; hiển thị tên/ngày/dung lượng/định dạng/môn/trạng thái trích xuất; nút “Mở tài liệu” (`Linking.openURL`, tiện ích ngoài FR); đổi tên inline (validate 1–120); đổi môn học CHỈ ở đây; nút Xóa màu error + dialog xác nhận |
 | `/subjects` | FR-12 | Danh sách môn + số tài liệu mỗi môn; tạo/sửa (validate 1–60, không trùng tên); xóa môn đang có tài liệu phải báo trước “tài liệu sẽ về Chưa phân loại” rồi mới cho xác nhận |

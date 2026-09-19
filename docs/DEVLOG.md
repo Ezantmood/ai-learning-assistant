@@ -897,3 +897,71 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog. Sau m
 - Branch: `chore/cn2-apply-0002`
 - Tag: `cn2-migration-applied` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
 - PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### CN2-G1 — Upload + danh sách tài liệu (FR-06, FR-07, FR-08 khung) — 2026-09-20
+
+**Đã làm gì**
+
+- Branch `cn2-g1` từ `main` (lệnh session ghi `cn2-g1`, ngắn hơn `feat/cn2-g1`
+  trong backlog nhưng cùng phiên 1).
+- Commit 1: `npx expo install expo-crypto` (lockfile) + sửa `docs/DATA-MODEL.md`
+  (`crypto.randomUUID()` → `Crypto.randomUUID()` của expo-crypto kèm một dòng
+  lý do). Không thêm dependency nào khác: `expo-document-picker`,
+  `expo-file-system`, `base64-arraybuffer` đã có sẵn từ CN1.
+- Commit 2: module `src/features/documents/{storage,schemas,errors,api,queries}.ts`
+  + `__tests__/documents.test.ts` (38 test) + route `app/(app)/documents/{index,upload}.tsx`
+  + dashboard thẻ CN2 dẫn tới `/documents` + checklist tay G1 trong TEST-CHECKLIST.
+- Types `subjects`/`documents` đồng bộ tay vào `src/shared/types/database.ts`
+  theo đúng `0002_cn2_documents.sql` (chờ regen bằng CLI ở CN2-01).
+- Upload: guard tồn tại → ext → MIME → size TRƯỚC khi đọc; đọc bằng
+  `new File(uri).base64()` (API mới, không import legacy); decode ArrayBuffer
+  (`base64-arraybuffer`) + contentType (cấm `fetch(uri).blob()`); Storage trước,
+  DB sau; insert lỗi thì dọn object vừa upload. DOCX nhận
+  `extraction_status='unsupported'`, PDF/TXT nhận `'pending'` (hạ tầng FR-13).
+- Danh sách: tên hiển thị + môn (`null` → “Chưa phân loại”) + kích thước
+  (B/KB/MB) + ngày tải, mới nhất trước; đủ skeleton/empty/error+retry/pull-to-refresh.
+- Icon mới `upload`, `progress-clock` đã đối chiếu glyphmap
+  MaterialCommunityIcons thật (984402, 985494); Paper `settings.icon` giữ nguyên.
+
+**Quyết định và lý do**
+
+- Dùng `Crypto.randomUUID()` của expo-crypto: `crypto` toàn cục không đảm bảo
+  có trên Hermes, thiếu thì nổ đúng lúc bấm upload chứ không lỗi lúc build.
+- Thẻ dashboard CN2 để chip “Đang làm” (trạng thái `partial` mới) thay vì
+  “Hoàn thành”: FR-09→FR-13 chưa làm, ghi “Hoàn thành” là nói dối demo.
+- Không viết `scripts/documents-rls-proof.ts` ở G1: lệnh session chỉ yêu cầu
+  unit test tầng dữ liệu; proof A/B remote để cho phiên g2 (đủ CRUD mới proof
+  một thể).
+
+**Cố tình không làm và lý do**
+
+- Màn chi tiết/đổi tên/xóa/gán môn/tìm kiếm-lọc (g2); viewer/WebView/PDF render;
+  gọi Gemini; đổi bảng màu; sửa file `.sql` — tất cả ngoài phạm vi G1 theo lệnh.
+- `getDocumentUrl` (signed URL): chỉ màn chi tiết G2 cần, viết sớm là code chết.
+- Không tick CN2-01 (đòi regen `database.ts` bằng CLI + proof remote), CN2-02
+  (đòi proof script 100%), CN2-05 (đòi tìm kiếm + lọc môn); chỉ tick CN2-03,
+  CN2-04 đúng nội dung đã xong.
+
+**Đã kiểm thử**
+
+- Lệnh: `npx tsc --noEmit` → đạt (exit 0, gồm cả regen `.expo/types/router.d.ts`
+  cho 2 route mới bằng cách chạy `npx expo start` rồi tắt).
+- Lệnh: `npm run lint` → 0 errors, 2 warning `watch()` cũ (kế thừa G3–G7).
+- Lệnh: `npm test` → 15 suites, **148/148 PASS** (giữ 110 cũ, +38 mới, không
+  sửa test cũ, không gọi mạng).
+- Test tay Expo Go: chưa chạy (không có thiết bị trong phiên); checklist G1 đã
+  viết trong `docs/TEST-CHECKLIST.md` để chủ dự án chạy.
+
+**Còn nợ / giới hạn đã biết**
+
+- Cần chủ dự án chạy checklist tay CN2-G1 trên Expo Go (12 case).
+- Proof RLS documents/subjects remote + regen `database.ts` bằng CLI (g2).
+
+**Mốc Git**
+
+- Commit cuối: `<điền full hash sau merge>`
+- Branch: `cn2-g1`
+- Tag: `cn2-g1-done` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
+- PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh

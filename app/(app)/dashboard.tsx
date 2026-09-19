@@ -13,8 +13,8 @@ type FeatureCard = {
   frRange: string;
   icon: string;
   id: string;
-  route?: '/notes';
-  status: 'done' | 'soon';
+  route?: '/notes' | '/documents';
+  status: 'done' | 'partial' | 'soon';
   title: string;
 };
 
@@ -33,7 +33,8 @@ const FEATURES: FeatureCard[] = [
     frRange: 'FR-06 → FR-13',
     icon: 'file-document-outline',
     id: '2',
-    status: 'soon',
+    route: '/documents',
+    status: 'partial',
     title: 'Quản lý tài liệu học tập',
   },
   {
@@ -98,8 +99,20 @@ export default function DashboardScreen() {
         tiếp tục.
       </Text>
       {FEATURES.map((feature) => {
-        const enabled = feature.status === 'done';
+        const enabled = feature.status !== 'soon';
         const target = enabled ? feature.route : undefined;
+        const chipIcon =
+          feature.status === 'done'
+            ? 'check'
+            : feature.status === 'partial'
+              ? 'progress-clock'
+              : 'clock-outline';
+        const chipLabel =
+          feature.status === 'done'
+            ? 'Hoàn thành'
+            : feature.status === 'partial'
+              ? 'Đang làm'
+              : 'Sắp có';
         return (
           <Card
             accessibilityLabel={`Chức năng ${feature.id}: ${feature.title}`}
@@ -135,14 +148,14 @@ export default function DashboardScreen() {
               right={() => (
                 <View style={styles.chipWrap}>
                   <Chip
-                    icon={enabled ? 'check' : 'clock-outline'}
+                    icon={chipIcon}
                     testID={
-                      enabled
-                        ? `dashboard-done-${feature.id}`
-                        : `dashboard-coming-soon-${feature.id}`
+                      feature.status === 'soon'
+                        ? `dashboard-coming-soon-${feature.id}`
+                        : `dashboard-done-${feature.id}`
                     }
                   >
-                    {enabled ? 'Hoàn thành' : 'Sắp có'}
+                    {chipLabel}
                   </Chip>
                 </View>
               )}

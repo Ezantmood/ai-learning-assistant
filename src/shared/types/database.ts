@@ -69,6 +69,83 @@ export type Database = {
         }
         Relationships: []
       }
+      subjects: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      documents: {
+        Row: {
+          created_at: string
+          display_name: string
+          extracted_text: string | null
+          extraction_status: string
+          file_ext: string
+          file_size: number
+          id: string
+          mime_type: string
+          storage_path: string
+          subject_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          extracted_text?: string | null
+          extraction_status?: string
+          file_ext: string
+          file_size: number
+          id?: string
+          mime_type: string
+          storage_path: string
+          subject_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          extracted_text?: string | null
+          extraction_status?: string
+          file_ext?: string
+          file_size?: number
+          id?: string
+          mime_type?: string
+          storage_path?: string
+          subject_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'documents_subject_id_fkey'
+            columns: ['subject_id']
+            isOneToOne: false
+            referencedRelation: 'subjects'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -209,6 +286,8 @@ export const Constants = {
 } as const
 
 // Alias tiện ích của project (giữ từ bản mirror G2 để code feature ngắn gọn).
+// Hai bảng CN2 (`subjects`, `documents`) đồng bộ tay theo
+// `supabase/migrations/0002_cn2_documents.sql` (chờ regen bằng CLI).
 export type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 export type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
 export type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
@@ -217,3 +296,13 @@ export type StudyNoteInsert =
   Database['public']['Tables']['study_notes']['Insert'];
 export type StudyNoteUpdate =
   Database['public']['Tables']['study_notes']['Update'];
+export type SubjectRow = Database['public']['Tables']['subjects']['Row'];
+export type SubjectInsert =
+  Database['public']['Tables']['subjects']['Insert'];
+export type SubjectUpdate =
+  Database['public']['Tables']['subjects']['Update'];
+export type DocumentRow = Database['public']['Tables']['documents']['Row'];
+export type DocumentInsert =
+  Database['public']['Tables']['documents']['Insert'];
+export type DocumentUpdate =
+  Database['public']['Tables']['documents']['Update'];
