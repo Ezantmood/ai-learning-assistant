@@ -316,6 +316,49 @@ Giữ đồng bộ bản ghi DB ↔ object storage (FR-11 xóa, FR-06 tải lên
 - Xóa: xóa **object storage trước**, rồi mới xóa bản ghi DB. Storage lỗi → dừng, giữ bản ghi (UI không bao giờ trỏ vào hư không). DB lỗi sau khi storage đã xóa → còn object mồ côi: chấp nhận, log warning (dọn rác ngoài đề, không làm).
 - Tải lên: upload storage trước → insert DB. Insert lỗi → xóa object vừa tạo best-effort rồi báo lỗi, không để bản ghi thiếu object.
 
+### Màn CN3 — tóm tắt (route dự kiến, session code quyết định cuối)
+
+| Route/vị trí | FR | Trạng thái |
+|---|---|---|
+| Vùng tóm tắt trong `/documents/[id]` (không route mới) | FR-14, FR-18 | Nút “Tóm tắt bằng AI” (DOCX ẩn nút + Banner gợi ý PDF); đang chạy → spinner + nút disabled; xong → văn bản tóm tắt; chưa có → empty dẫn bấm nút; lỗi → thông báo + “Thử lại” |
+| Cùng vùng trên | FR-19, FR-20 | `failed` mới có “Thử lại”; `processing` treo (> 15 phút) tự thu hồi về `failed`; lỗi quota/429 → banner hạn mức, không retry |
+
+Không route mới, không viewer mới: tóm tắt là một vùng trong màn chi tiết CN2
+đã có (quyết định CN3-TRIGGER: bấm nút, không auto sau upload — mỗi lần bấm
+tốn 1 request quota free nên phải do user chủ động).
+
+### Tầng dữ liệu CN3
+
+Repository `src/features/summary/` (không import chéo sang `documents`;
+đọc `document_id`/`user_id` qua tham số, dùng chung qua `src/shared/`):
+
+- `requestSummary(document)` — guard DOCX/`unsupported` + guard kích thước
+  vượt ngưỡng (PDF > 50 MB) + guard đang `processing` → UPDATE
+  `extraction_status = 'processing'` → gọi Gemini → upsert
+  `document_summaries` (ghi đè theo `UNIQUE(document_id)`) → UPDATE
+  `extraction_status = 'done'`; lỗi bất kỳ → `'failed'` + lỗi chuẩn hóa.
+- `getSummary(documentId)` / `retrySummary()` (= `requestSummary` khi
+  `failed`) / `reclaimStaleProcessing()` (thu hồi `processing` treo về
+  `failed` khi `updated_at` quá 15 phút).
+- `summarizeWithGemini()` — tầng gọi model, triển khai theo đúng MỘT nhánh
+  probe CN3-01: nhánh proxy (fetch Edge Function + JWT Supabase tự gắn) hoặc
+  nhánh trực tiếp (fetch REST Gemini + `EXPO_PUBLIC_GEMINI_API_KEY`). PDF gửi
+  base64 inline nguyên file (≤ 10 MB < ngưỡng 50 MB, quyết định CN3-SIZE);
+  TXT gửi text trực tiếp. Không lib trích xuất PDF (quyết định CN3-NOLIB).
+- Lỗi Gemini map sang tiếng Việt ở `errors.ts`: 429/quota → banner hạn mức
+  (~1.500 lượt/ngày, reset nửa đêm giờ Thái Bình Dương); 5xx/mất mạng → retry
+  tay; vượt 20.000 ký tự → báo rõ, không cắt im lặng.
+
+Query key và invalidate:
+
+- `['summary', documentId]` (bản tóm tắt), dùng chung `['document', docId]`
+  của CN2 cho trạng thái trích xuất.
+- Mutation xong invalidate cả hai key; không invalidate toàn bộ cache.
+
+Chặn gọi lặp (FR-19): ba lớp — nút disabled khi mutation pending; guard
+`processing` trong `requestSummary` (kể cả bấm từ hai chỗ cùng lúc, request
+thứ hai thấy `processing` thì dừng); `UNIQUE(document_id)` chặn ghi đôi ở DB.
+
 ## Lý do chọn công nghệ
 - **Expo SDK 57 + TypeScript strict:** một codebase React Native, vòng lặp phát triển nhanh và lỗi kiểu được phát hiện sớm.
 - **expo-router:** route dựa trên file; nhóm `(auth)` và `(app)` biểu diễn trực tiếp trạng thái truy cập.
@@ -337,6 +380,8 @@ Chỉ dùng hai biến public cần thiết cho client:
 EXPO_PUBLIC_SUPABASE_URL=
 EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 EXPO_PUBLIC_REQUIRE_EMAIL_CONFIRMATION=false
+# Chỉ dùng ở nhánh fallback CN3 (probe Edge Function thất bại, FR-21):
+# EXPO_PUBLIC_GEMINI_API_KEY=
 ```
 
 - Commit `.env.example` với giá trị rỗng; `.env` và `.env.local` bị ignore.

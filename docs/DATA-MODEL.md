@@ -205,3 +205,58 @@ Policies trên `storage.objects` giới hạn `bucket_id = 'documents'` và
 
 Không tạo bucket public, không lưu nội dung tệp dạng base64 trong Postgres,
 không dùng service-role để vượt policy.
+
+## Bảng `public.document_summaries` (CN3, FR-14 → FR-22)
+
+> DDL chính thức chạy được: `supabase/migrations/0004_cn3_summaries.sql`.
+> Khi hai bên lệch nhau thì file migration là nguồn sự thật, tài liệu phải sửa theo.
+> (File `0003` không tồn tại: CN2 đã xác nhận không cần bản vá, xem DEVLOG.)
+
+Quyết định CN3-SCHEMA: bảng riêng thay vì thêm cột vào `documents`. Lý do:
+tách vòng đời tóm tắt (tóm tắt lại chỉ UPDATE 1 row), không phình `documents`
+(`extracted_text` giữ cho CN4 hỏi đáp), `UNIQUE(document_id)` đảm bảo 1-1,
+RLS độc lập theo `user_id`, xóa document cascade xóa summary theo.
+
+| Cột | Kiểu/ràng buộc | Ý nghĩa |
+|---|---|---|
+| `id` | `uuid primary key default gen_random_uuid()` | ID bản tóm tắt |
+| `document_id` | `uuid not null unique`, FK về `documents(id) on delete cascade` (`document_summaries_document_id_fkey`, `document_summaries_document_unique`) | Tài liệu được tóm tắt; UNIQUE = mỗi tài liệu tối đa một bản đang dùng, tóm tắt lại là ghi đè |
+| `user_id` | `uuid not null references auth.users(id) on delete cascade` | Chủ sở hữu; denormalized từ `documents.user_id` để policy RLS viết trực tiếp `auth.uid() = user_id`, không join |
+| `summary_text` | `text not null`, `check (char_length(summary_text) between 1 and 20000)` (`document_summaries_summary_rules`) | Bản tóm tắt tiếng Việt |
+| `model` | `text not null default 'gemini-2.5-flash'`, `check (char_length(model) between 1 and 100)` (`document_summaries_model_rules`) | Model đã sinh bản này; để sau này đổi model không lẫn |
+| `created_at` | `timestamptz not null default now()` | Lần tóm tắt đầu |
+| `updated_at` | `timestamptz not null default now()` | Lần ghi đè cuối (trigger `set_updated_at()` tái dùng, không tạo function mới) |
+
+Index: `document_summaries_user_idx on document_summaries(user_id)`; tra theo
+document dùng unique index có sẵn của `document_summaries_document_unique`.
+
+RLS policies cho cả bốn lệnh (`USING`/`WITH CHECK` ràng buộc
+`auth.uid() = user_id`, `WITH CHECK` ở UPDATE ngăn đổi `user_id`);
+grants `authenticated` CRUD, `service_role` full, `revoke anon` như CN1/CN2.
+An toàn khi `document_id` bị tráo: row summary mang `user_id` của chủ tài liệu
+(do chủ tạo, `WITH CHECK` chặn ghi hộ), nên SELECT/UPDATE/DELETE chéo vẫn bị
+`USING` chặn dù attacker đoán đúng `document_id`.
+
+Xóa tài liệu (FR-11) không cần bước xóa summary riêng: FK CASCADE dọn kèm.
+Xóa user xóa cả hai bảng theo dây chuyền `auth.users → documents →
+document_summaries` và `auth.users → document_summaries`.
+
+## Máy trạng thái `extraction_status` trong CN3 (FR-19, FR-20)
+
+```
+pending → processing → done
+             └───────→ failed →(user bấm thử lại)→ processing
+unsupported (DOCX, trạng thái cuối, CN3 không chạm)
+```
+
+- Ai đặt, lúc nào: app (client) đặt `pending → processing` bằng UPDATE
+  `documents` ngay trước khi gọi Gemini; `processing → done` sau khi lưu xong
+  row `document_summaries`; `processing → failed` khi bất kỳ bước nào lỗi
+  (kèm lỗi đã chuẩn hóa, không lộ raw). Không có trigger/Edge nào đặt hộ.
+- Retry: chỉ khi `failed`, chỉ do user bấm “Thử lại” (không auto-retry để khỏi
+  đốt quota free; lỗi 429/quota báo rõ và cũng không retry).
+- App bị kill giữa chừng (`processing` treo): không có cron server nên client
+  tự thu hồi — khi mở màn chi tiết, nếu `extraction_status = 'processing'` mà
+  `updated_at` quá 15 phút (hằng số app) thì coi như `failed` (UPDATE về
+  `failed`) rồi cho thử lại. Mốc 15 phút dựa trên trigger `updated_at` có sẵn,
+  không thêm cột.

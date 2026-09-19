@@ -386,3 +386,74 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog, secre
 - Branch: `release/v2.0.0`
 - Tag: `v2.0.0` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### Docs CN3 — Đặc tả AI tóm tắt FR-14 → FR-22 + migration 0004 — 2026-09-20
+
+**Đã làm gì**
+
+- SPEC thêm mục CN3: bảng FR-14→FR-22 (diễn giải do session đề xuất — đề gốc
+  trong repo chỉ có tên Chức năng 3, không có nội dung từng FR), luật validate
+  (guard DOCX, ngưỡng inline, chống đốt quota, summary ≤ 20.000 ký tự, thu hồi
+  treo 15 phút), quy tắc dữ liệu, out of scope, 7 quyết định chốt (MODEL, NOLIB,
+  KEY, SIZE, STATUS, TRIGGER, SCHEMA) mỗi cái kèm lý do.
+- DATA-MODEL thêm bảng `document_summaries` + máy trạng thái
+  `extraction_status` (ai đặt/lúc nào/retry/thu hồi treo). ARCHITECTURE thêm
+  màn CN3 (vùng trong `/documents/[id]`, không route mới) + tầng
+  `src/features/summary/` + chặn gọi lặp 3 lớp + biến
+  `EXPO_PUBLIC_GEMINI_API_KEY` (chỉ nhánh fallback). REPORT-NOTES thêm 7 Q&A
+  CN3 (gồm giới hạn demo khi key nằm trong app). TRACEABILITY điền FR-14→FR-22
+  (file/hàm dự kiến, giữ “Chưa làm”). SETUP thêm mục 5c. TEST-CHECKLIST thêm
+  mục 14 (7 case tay CN3).
+- TASKS tách backlog CN3 thành 3 phiên (`cn3-g1`/`cn3-g2`/`cn3-g3`, task
+  CN3-01→CN3-06), probe Edge Function làm lại từ đầu trong CN3-01.
+- Mới `supabase/migrations/0004_cn3_summaries.sql` (idempotent, RLS 4 lệnh theo
+  `user_id`, constraint đặt tên rõ) + `scripts/cn3-schema-verify.sql` chỉ-đọc
+  (10 dòng ĐẠT/KHÔNG ĐẠT). Đánh số `0004` vì `0003` không tồn tại (CN2 xác nhận
+  không cần bản vá).
+- Apply `0004` lên remote bằng `psql` (credential có sẵn): chạy HAI LẦN liên
+  tiếp, cả hai `exit 0`; verify remote **10/10 ĐẠT**.
+
+**Quyết định và lý do (rút gọn, chi tiết trong SPEC)**
+
+- Bảng riêng `document_summaries` thay vì thêm cột: tách vòng đời, ghi đè 1
+  row qua `UNIQUE(document_id)`, RLS độc lập, CASCADE dọn kèm.
+- Bấm nút thay vì auto sau upload: mỗi lần bấm = 1 request quota (~1.500/ngày,
+  reset nửa đêm giờ Thái Bình Dương); auto đốt quota vô ích.
+- Không lib PDF: không bản nào chạy trên Expo Go; Gemini đọc PDF native vision.
+- Ngưỡng inline tra tài liệu Google 2026-09-19: 100 MB/request, PDF 50 MB;
+  app chặn 10 MB nên luôn gửi nguyên file, vượt thì từ chối, không chunk.
+- Key 2 nhánh vì tag `edge-probe` không tồn tại local/remote: probe đạt thì
+  proxy giữ key trong secret (app gửi JWT), không thì `EXPO_PUBLIC_...` + ghi
+  giới hạn demo; chỉ code một nhánh.
+
+**Cố tình không làm (theo lệnh session)**
+
+- Không viết code CN3 (`.ts/.tsx`), không Edge Function, không probe deploy,
+  không cài package, không đụng CN4→CN6.
+- Không sửa nội dung FR-01→FR-13 hay code CN1/CN2; không đổi theme/bảng màu.
+- Không tick checkbox CN3 nào: CN3-01→CN3-06 đòi code + probe + proof, tick sớm
+  là nói dối tiến độ.
+
+**Đã kiểm thử**
+
+- Postgres 16 local + mock `auth.users`/`auth.uid()`/`set_updated_at()`/bảng
+  `documents` tối thiểu (mô phỏng 0001+0002 đã apply): chạy 0004 hai lần liên
+  tiếp → cả hai `exit 0`; verify local → **10/10 ĐẠT**; smoke INSERT trùng
+  `document_id` bị UNIQUE chặn, xóa document CASCADE hết summary.
+- Remote (`psql $SUPABASE_DB_URL`): 0004 hai lần `exit 0`; verify **10/10 ĐẠT**.
+- `npx tsc --noEmit` → đạt; `npm run lint` → 0 errors, 2 warning `watch()` cũ;
+  `npm test` → 17 suites, **177/177 PASS** (giữ nguyên, không sửa test).
+
+**Còn nợ**
+
+- Probe Edge Function + code CN3 (3 phiên `cn3-g1`/`cn3-g2`/`cn3-g3`).
+- Proof RLS A/B `document_summaries` (CN3-05); test tay CN3 (mục 14 checklist).
+
+**Mốc Git**
+
+- Commit merge: (điền sau merge — xem branch `docs/cn3-hash` nếu có)
+- Branch: `docs/cn3`
+- Tag: `docs-cn3` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
+- PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh

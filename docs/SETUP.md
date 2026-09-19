@@ -88,6 +88,27 @@ DEVLOG G2). Thứ tự:
    trên project (lý do đã ghi ở DEVLOG G2, vẫn đúng tới nay).
 4. Không chạy từng đoạn rời rạc (thiếu policy/grant sẽ hở bảo mật).
 
+## 5c. Apply migration CN3 (SQL Editor, paste tay)
+
+1. Dán **TOÀN BỘ** file `supabase/migrations/0004_cn3_summaries.sql` →
+   Run. Mong đợi `Success. No rows returned`. Migration idempotent: chạy lại
+   vẫn success (đã kiểm chứng chạy 2 lần liên tiếp trên Postgres 16 local +
+   smoke test UNIQUE/CASCADE). Yêu cầu chạy trước: `0001` (hàm
+   `set_updated_at`) và `0002` (bảng `documents`). File `0003` không tồn tại
+   (CN2 xác nhận không cần bản vá) nên đánh số thẳng `0004`.
+   File này tạo bảng `document_summaries` (1-1 với `documents` qua
+   `UNIQUE(document_id)`, CASCADE cả hai FK), CHECK `summary_text` 1–20.000
+   ký tự, RLS đủ 4 lệnh theo `user_id`, trigger `updated_at` (tái dùng function
+   có sẵn). Không bucket mới, không Storage policy mới.
+2. Dán **TOÀN BỘ** file `scripts/cn3-schema-verify.sql` → Run để kiểm chứng.
+   File này chỉ đọc, gộp sẵn bằng `union all` nên hiện một bảng duy nhất.
+   Kết quả mong đợi — mọi dòng đều `DAT` (10 dòng):
+   bảng tồn tại; RLS bật; đủ 4 policy; unique `document_id`; FK `document_id`
+   CASCADE; FK `user_id` CASCADE; check `summary_text`; check `model`; index
+   user; trigger `updated_at`.
+   Dòng nào `KHÔNG DAT` thì migration chưa áp đúng — báo chủ dự án, không sửa
+   tay lẻ tẻ.
+
 ## 6. Cấu hình Supabase Auth (Dashboard, làm tay)
 
 1. Authentication → Providers/Sign In → **Email**: Enabled ON, Allow new users

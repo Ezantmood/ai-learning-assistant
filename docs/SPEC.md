@@ -82,6 +82,108 @@ Thùng rác/khôi phục, đánh dấu yêu thích, thống kê, dọn file mồ
 - CN2-3: Giới hạn 100 tài liệu / 30 môn mỗi user, xem luật ở trên.
 - CN2-4: Đổi môn học chỉ ở màn chi tiết, xem luật ở trên.
 
+### CN3 — AI tóm tắt tài liệu (FR-14 → FR-22)
+
+> Lưu ý nguồn: đề gốc trong repo chỉ liệt kê tên Chức năng 3 (“AI tóm tắt tài
+> liệu PDF”, FR-14 → FR-22) mà không kèm nội dung từng FR; tag `edge-probe`
+> cũng không tồn tại local lẫn remote ở thời điểm viết. Bảng dưới là diễn giải
+> do session `docs/cn3` đề xuất từ hạ tầng CN2 (`extracted_text`,
+> `extraction_status`) và 7 quyết định đã chốt bên dưới. Nếu đề gốc khác, sửa
+> bảng này trước, không sửa code theo bảng cũ.
+
+| FR | Yêu cầu | Acceptance criteria (Given / When / Then) |
+|----|---------|-------------------------------------------|
+| FR-14 | Tóm tắt tài liệu PDF/TXT của mình bằng Gemini 2.5 Flash | **Given** đã đăng nhập và đang ở chi tiết một tài liệu PDF/TXT của mình, **When** bấm “Tóm tắt bằng AI”, **Then** app gửi tệp cho model `gemini-2.5-flash` và lưu bản tóm tắt tiếng Việt vào `document_summaries`. **Given** mất mạng hoặc Gemini lỗi, **When** gọi, **Then** báo lỗi tiếng Việt rõ ràng, cho thử lại, không tạo bản tóm tắt nửa vời. |
+| FR-15 | Trích xuất nội dung PDF không cần thư viện ngoài | **Given** tài liệu PDF hợp lệ (≤ 10 MB theo luật CN2), **When** tóm tắt, **Then** PDF được gửi nguyên file (base64 inline) cho Gemini đọc bằng native vision, không cài thêm lib trích xuất PDF nào. FR-15 thỏa mà không cần lib. |
+| FR-16 | DOCX không gọi AI | **Given** tài liệu DOCX (`extraction_status = 'unsupported'` từ CN2), **When** mở chi tiết, **Then** nút tóm tắt bị ẩn/vô hiệu hóa, UI gợi ý chuyển sang PDF, không có request nào gửi đi. |
+| FR-17 | Mỗi tài liệu tối đa một bản tóm tắt đang dùng | **Given** tài liệu đã có bản tóm tắt, **When** bấm tóm tắt lại, **Then** bản cũ bị ghi đè (UPDATE cùng row, `UNIQUE(document_id)`), không tạo row thứ hai. Xóa tài liệu thì bản tóm tắt mất theo (`ON DELETE CASCADE`). |
+| FR-18 | Hiển thị bản tóm tắt ở màn chi tiết | **Given** đang ở chi tiết tài liệu của mình, **When** xem vùng tóm tắt, **Then** thấy đúng một trong bốn trạng thái: đang tóm tắt (spinner), bản tóm tắt mới nhất, empty (“Chưa có bản tóm tắt — bấm nút để tạo”), lỗi kèm “Thử lại”. |
+| FR-19 | Chặn gọi lặp và báo khi chạm hạn mức miễn phí | **Given** đang có request tóm tắt chạy (`processing`), **When** bấm nút lần nữa, **Then** bị chặn (nút disabled), không gửi request thứ hai. **Given** Gemini trả lỗi quota/429, **When** gọi, **Then** UI báo “Đã chạm giới hạn miễn phí hôm nay (khoảng 1.500 lượt/ngày, reset lúc nửa đêm giờ Thái Bình Dương), thử lại sau”, không tự retry. |
+| FR-20 | Thử lại khi thất bại, thu hồi trạng thái treo | **Given** lần tóm tắt trước `failed`, **When** bấm “Thử lại”, **Then** chạy lại từ `processing`. **Given** app bị kill giữa chừng để lại `processing` quá 15 phút (so `updated_at`), **When** mở lại chi tiết, **Then** app tự đưa về `failed` và cho thử lại, không kẹt vĩnh viễn. |
+| FR-21 | Bảo mật API key theo kết quả probe Edge Function | **Given** probe `cn3-g1` deploy được Edge Function proxy, **When** gọi AI, **Then** key nằm trong secret Supabase, app chỉ gửi JWT. **Given** probe thất bại, **When** gọi AI, **Then** dùng `EXPO_PUBLIC_GEMINI_API_KEY` và REPORT-NOTES ghi rõ đây là giới hạn đã biết của bản demo. Chỉ một nhánh được code, không làm cả hai. |
+| FR-22 | Bản tóm tắt cách ly theo tài khoản | **Given** hai tài khoản A/B mỗi người một bản tóm tắt, **When** A select/insert/update/delete qua Supabase client, **Then** A chỉ thao tác row có `user_id = auth.uid()`; truy cập row B bị RLS chặn (kiểm chứng A/B như FR-05). |
+
+### Luật validate và hành vi CN3
+
+- Đầu vào tóm tắt: chỉ tài liệu PDF/TXT của chính user (`extraction_status`
+  khác `unsupported`); DOCX không bao giờ tới được hàm gọi Gemini (chặn ở UI
+  lẫn guard trong `requestSummary`).
+- Ngưỡng dung lượng gửi Gemini (tra tài liệu Google ngày 2026-09-19):
+  inline data tối đa 100 MB/request, **riêng PDF 50 MB**. Mọi tệp qua app đều
+  ≤ 10 MB (luật CN2) nên luôn dưới ngưỡng → gửi nguyên file inline, không chia
+  nhỏ. Tệp vượt ngưỡng (chỉ xảy ra nếu luật CN2 đổi hoặc gọi trực tiếp) thì từ
+  chối trước khi gọi, báo rõ, không tự chunk — chunking ngoài đề.
+- TXT gửi text trực tiếp (đọc bằng `expo-file-system` API mới như CN2), không
+  base64.
+- Chống đốt quota: không tóm tắt tự động sau upload; không retry tự động
+  (kể cả lỗi mạng transient — user bấm “Thử lại”); mỗi lần bấm = tối đa một
+  request; lỗi 429/quota không retry, chỉ báo.
+- Bản tóm tắt lưu ở `document_summaries.summary_text`, tối đa 20.000 ký tự
+  (CHECK ở DB; model hiếm khi trả dài hơn cho tóm tắt, vượt thì báo lỗi rõ
+  thay vì cắt im lặng).
+- Timeout thu hồi `processing` treo: 15 phút so trên `updated_at` (có sẵn nhờ
+  trigger `set_updated_at()`), hằng số ở app, không phải job DB.
+
+### Quy tắc dữ liệu CN3
+
+- `document_summaries`: `id`, `document_id` (UNIQUE, FK về `documents(id)`
+  `ON DELETE CASCADE`), `user_id` (denormalized từ `documents.user_id` để RLS
+  viết trực tiếp `auth.uid() = user_id`, FK về `auth.users(id)` CASCADE),
+  `summary_text` (1–20.000 ký tự), `model` (mặc định `gemini-2.5-flash`),
+  timestamp. Chi tiết xem `docs/DATA-MODEL.md`; DDL thật ở
+  `supabase/migrations/0004_cn3_summaries.sql`.
+- Máy trạng thái `documents.extraction_status` trong CN3: `pending` →
+  `processing` → `done`/`failed`; DOCX đi thẳng `unsupported` từ lúc upload
+  (CN2) và CN3 không chạm. App đặt `pending → processing` ngay trước khi gọi
+  Gemini; `processing → done` khi lưu xong summary; `processing → failed` khi
+  lỗi. `unsupported` là trạng thái cuối, không retry.
+- Xóa tài liệu (FR-11) kéo theo xóa bản tóm tắt qua CASCADE; không cần bước
+  xóa riêng.
+
+### OUT OF SCOPE của CN3 (đề không yêu cầu)
+
+Tóm tắt hàng loạt nhiều tài liệu, streaming từng đoạn, chọn độ dài/phong cách
+tóm tắt, lịch sử nhiều bản tóm tắt, xuất file/share bản tóm tắt, đánh giá chất
+lượng tóm tắt, cache tóm tắt chung giữa các user, cron dọn `processing` treo
+phía server, File API upload (không cần vì mọi tệp ≤ 10 MB < ngưỡng 50 MB),
+hỏi đáp trên tài liệu (việc của CN4), model khác ngoài `gemini-2.5-flash`.
+
+### Quyết định CN3 đã chốt (mỗi cái kèm lý do)
+
+- CN3-MODEL: Model `gemini-2.5-flash`; free tier khoảng 1.500 request/ngày
+  (reset nửa đêm giờ Thái Bình Dương) nên phải có cơ chế chặn gọi lặp và thông
+  báo hạn mức (FR-19). Lý do: demo dùng chung một project/quota; không chặn
+  thì một buổi bấm thử vô tội vạ là hết quota cả lớp, không còn gì để demo.
+- CN3-NOLIB: Gemini đọc PDF bằng native vision, KHÔNG dùng lib trích xuất PDF
+  (không có bản nào chạy được trên Expo Go), FR-15 thỏa mà không cần lib.
+  Lý do: mọi lib PDF trên React Native đều cần native module → development
+  build, trái quyết định “chạy bằng Expo Go”; gửi PDF inline cho model vừa đủ
+  vừa giữ nguyên stack.
+- CN3-KEY: đường đi của key theo kết quả probe `cn3-g1` (tag `edge-probe`
+  được lệnh nhắc tới nhưng không tồn tại nên probe làm lại từ đầu trong
+  CN3-01). Deploy được thì Edge Function proxy giữ key trong secret Supabase,
+  app gửi JWT. Không được thì `EXPO_PUBLIC_GEMINI_API_KEY` và ghi rõ là giới
+  hạn đã biết của bản demo trong REPORT-NOTES. Lý do: key trong app đọc được
+  bằng giải nén bundle — chấp nhận được cho demo nhưng phải ghi thẳng, không
+  giả vờ an toàn; proxy là đường đúng cho bản thật.
+- CN3-SIZE: ngưỡng inline 100 MB/request, PDF 50 MB; tệp vượt ngưỡng thì từ
+  chối trước khi gọi, không chunk. Lý do: số liệu tra trực tiếp từ tài liệu
+  Google hiện hành; app chặn 10 MB nên nhánh vượt ngưỡng praktisch không bao
+  giờ xảy ra — code đơn giản, không ôm việc chia nhỏ ngoài đề.
+- CN3-STATUS: máy trạng thái `pending → processing → done/failed`, DOCX
+  thẳng `unsupported`; app đặt trạng thái; retry chỉ khi `failed` và do user
+  bấm; `processing` quá 15 phút coi như treo và tự thu hồi về `failed`.
+  Lý do: không có backend/cron nên client phải tự dọn; dùng `updated_at` có
+  sẵn thay vì thêm cột; không auto-retry để khỏi đốt quota free.
+- CN3-TRIGGER: kích hoạt tóm tắt bằng nút người dùng bấm, KHÔNG tự động sau
+  upload. Lý do: mỗi lần tóm tắt tốn 1 request quota; auto sẽ đốt quota cho
+  file user chưa cần đọc và làm demo khó kiểm soát; nút bấm cũng là chốt chặn
+  gọi lặp tự nhiên nhất.
+- CN3-SCHEMA: lưu bản tóm tắt ở bảng riêng `document_summaries`, không thêm
+  cột vào `documents`. Lý do: tách vòng đời (ghi đè 1 row, sau này muốn lịch
+  sử cũng không vỡ schema), không phình `documents`, RLS độc lập rõ ràng,
+  CASCADE dọn kèm khi xóa tài liệu.
+
 ## CẦN CHỦ DỰ ÁN QUYẾT ĐỊNH
 
 Không còn câu hỏi mở. Chủ dự án đã chốt:
