@@ -1,4 +1,4 @@
-# Kiến trúc
+# Kiến trúc — AI Learning Assistant
 
 ## Mục tiêu thiết kế
 
@@ -20,6 +20,7 @@ Kiến trúc theo feature, ít tầng và đủ rõ để sinh viên giải thí
 │   │   └── reset-password.tsx
 │   └── (app)/
 │       ├── _layout.tsx
+│       ├── dashboard.tsx (màn chính sau đăng nhập: 6 thẻ chức năng)
 │       ├── profile/
 │       │   ├── index.tsx
 │       │   └── change-password.tsx
@@ -28,28 +29,34 @@ Kiến trúc theo feature, ít tầng và đủ rõ để sinh viên giải thí
 │           ├── new.tsx
 │           └── [id].tsx
 ├── src/
-│   ├── components/
-│   │   ├── ScreenContainer.tsx
-│   │   ├── FormTextInput.tsx
-│   │   ├── PasswordInput.tsx
-│   │   ├── FeedbackSnackbar.tsx
-│   │   ├── EmptyState.tsx
-│   │   └── LoadingState.tsx
-│   ├── theme/
-│   │   ├── theme.ts
-│   │   ├── spacing.ts
-│   │   └── index.ts
+│   ├── shared/
+│   │   ├── components/
+│   │   │   ├── ScreenContainer.tsx
+│   │   │   ├── FormTextInput.tsx
+│   │   │   ├── PasswordInput.tsx
+│   │   │   ├── FeedbackSnackbar.tsx
+│   │   │   ├── EmptyState.tsx
+│   │   │   └── LoadingState.tsx
+│   │   ├── theme/
+│   │   │   ├── theme.ts
+│   │   │   ├── spacing.ts
+│   │   │   └── index.ts
+│   │   ├── lib/{env.ts,supabase.ts,queryClient.ts}
+│   │   ├── providers/AppProviders.tsx (PaperProvider + settings.icon cầu nối
+│   │   │   sang MaterialCommunityIcons của @expo/vector-icons + StatusBar theo theme)
+│   │   ├── test-utils/vectorIconsMock.tsx (stub icon đồng bộ, chỉ dùng trong Jest)
+│   │   └── types/database.ts
 │   ├── features/
 │   │   ├── auth/{api.ts,schemas.ts,errors.ts,recovery.ts,recoveryStorage.ts,useSession.ts}
 │   │   ├── auth/__tests__/
 │   │   ├── profile/{api.ts,schemas.ts,queries.ts,errors.ts,avatar.ts,pickAvatar.ts,ProfileView.tsx}
 │   │   ├── profile/__tests__/
-│   │   └── notes/{api.ts,schemas.ts,queries.ts,errors.ts}
-│   ├── lib/{env.ts,supabase.ts,queryClient.ts}
-│   ├── providers/AppProviders.tsx (PaperProvider + settings.icon cầu nối
-│   │   sang MaterialCommunityIcons của @expo/vector-icons + StatusBar theo theme)
-│   ├── test-utils/vectorIconsMock.tsx (stub icon đồng bộ, chỉ dùng trong Jest)
-│   └── types/database.ts
+│   │   ├── notes/{api.ts,schemas.ts,queries.ts,errors.ts}
+│   │   ├── documents/.gitkeep (FR-06 → FR-13, chưa code)
+│   │   ├── summary/.gitkeep (FR-14 → FR-22, chưa code)
+│   │   ├── chat/.gitkeep (FR-23 → FR-30, chưa code)
+│   │   ├── scan/.gitkeep (FR-31 → FR-37, chưa code)
+│   │   └── solver/.gitkeep (FR-38 → FR-45, chưa code)
 ├── supabase/migrations/
 │   └── 0001_account_manager.sql
 ├── scripts/
@@ -82,8 +89,18 @@ Auth event → useSession → route guard trong layout → (auth) hoặc (app)
 - Reset password dùng email + OTP 6 số: `resetPasswordForEmail` gửi mã, `verifyOtp({ email, token, type: 'recovery' })` tạo recovery session, rồi `updateUser` đổi mật khẩu. Deep link không nằm trên critical path.
 - Lỗi mạng/API được `api.ts` ném lên; screen chuyển thành thông báo tiếng Việt, không lộ chi tiết bảo mật.
 
-## Lý do chọn công nghệ
+## Cách 6 chức năng cùng tồn tại trong một app
 
+- Một route group `(app)` duy nhất sau đăng nhập; `dashboard.tsx` là màn chính
+  liệt kê 6 thẻ. Mỗi chức năng tương lai là một cặp song song: thư mục
+  `src/features/<ten>/` + route riêng dưới `(app)/`, không chạm code Chức năng 1.
+- `src/shared/` là nơi duy nhất chứa code dùng chung (theme, component,
+  supabase client, providers). Cấm import chéo trực tiếp giữa hai thư mục
+  feature; cần dùng chung thì đưa lên `shared`.
+- Session, theme và providers giữ một instance ở root nên mọi chức năng dùng
+  chung Auth mà không cần login lại.
+
+## Lý do chọn công nghệ
 - **Expo SDK 57 + TypeScript strict:** một codebase React Native, vòng lặp phát triển nhanh và lỗi kiểu được phát hiện sớm.
 - **expo-router:** route dựa trên file; nhóm `(auth)` và `(app)` biểu diễn trực tiếp trạng thái truy cập.
 - **Supabase Auth/Postgres/Storage:** cùng một nền tảng cho danh tính, dữ liệu quan hệ, avatar và policy dựa trên `auth.uid()`; phù hợp demo RLS.

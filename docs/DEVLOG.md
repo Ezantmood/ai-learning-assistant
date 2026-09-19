@@ -642,3 +642,74 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog. Sau m
 - Branch: `feat/g7-theme-switcher`
 - Tag: `v1.2.0` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
 - PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### Rebrand — Gộp 6 bài thành hệ thống AI Learning Assistant — 2026-09-19
+
+**Đã làm gì**
+
+- Đổi danh tính: `package.json` → `ai-learning-assistant`; `app.json`
+  name/slug → AI Learning Assistant; tiêu đề SPEC/README, comment
+  `database.ts`. Giữ version, dependency, scheme (chưa có nên không thêm).
+- Tái cấu trúc: code dùng chung (`lib`, `theme`, `components`,
+  `providers`, `types`, `test-utils`) gom vào `src/shared/`;
+  `src/features/auth|profile|notes` giữ nguyên; tạo 5 thư mục rỗng
+  documents/summary/chat/scan/solver kèm `.gitkeep`; xóa 2 thư mục rỗng
+  `constants`/`hooks`. Chỉ sửa đường dẫn import (1 lỗi tsc duy nhất ở
+  `AppProviders` → `../../features/...`).
+- Dashboard `app/(app)/dashboard.tsx`: màn chính sau đăng nhập, 6 thẻ Card
+  (icon + tên + mô tả + dải FR + Chip Hoàn thành/Sắp có); thẻ 1 tới
+  `/notes`, 5 thẻ còn lại không điều hướng, không tạo route rỗng.
+  Redirect sau login (`/` và `(auth)` guard) đổi `/notes` → `/dashboard`;
+  mọi route cũ (`/notes`, `/profile`, `/sign-in`…) giữ nguyên.
+- Keep-alive `.github/workflows/keep-alive.yml`: cron 2 ngày + bấm tay,
+  ping `Auth health` (200 đã kiểm chứng) bằng secrets, không nới RLS.
+- Docs: README (6 chức năng + 2 bước secret), AGENTS (phạm vi 45 FR + luật
+  feature/shared, 117 dòng), FR-TRACEABILITY (45 dòng), ARCHITECTURE
+  (cây mới + đoạn cùng tồn tại).
+
+**Quyết định và lý do**
+
+- Quyết định: giữ `src/features/notes` thay vì ép vào `profile`.
+- Lý do: notes là minh chứng FR-05 của Chức năng 1, đã là feature riêng;
+  ép vào profile chỉ đổi tên thư mục mà không dọn được gì.
+- Quyết định: code dùng chung vào `src/shared/`, không dùng alias `@/*`.
+- Lý do: `@/*` có trong tsconfig nhưng Jest chưa map và Metro chưa kiểm
+  chứng resolve; giữ import tương đối để tsc + test + bundle thật đều xanh.
+- Quyết định: keep-alive ping `GET /auth/v1/health` (kèm anon key) thay vì
+  query bảng.
+- Lý do: không bảng nào có RLS đọc ẩn danh (profiles/study_notes chỉ grant
+  `authenticated`); query bảng sẽ 401. Health trả 200, không đòi quyền,
+  không đụng RLS. Đã mô phỏng logic workflow: http=200.
+- Quyết định: giữ tên project Supabase (`student-account-manager`) trong
+  SETUP/MANUAL-STEPS.
+- Lý do: đó là định danh phía Supabase, cấm đổi theo lệnh session.
+
+**Cố tình chưa làm (theo lệnh session)**
+
+- Không code FR-06 → FR-45; không migration/bảng/bucket/policy; không đụng RLS.
+- Không cài/gỡ/nâng package; không sửa tsconfig/babel/eslint.
+- Không sửa test nào đang PASS; không sửa logic FR-01 → FR-05.
+- Không viết lại SPEC/DATA-MODEL/TASKS (để session 45 FR sau).
+
+**Đã kiểm thử**
+
+- Lệnh: `npx tsc --noEmit` → đạt (trước mỗi commit).
+- Lệnh: `npm run lint` → 0 errors, 2 warning `watch()` cũ (kế thừa G3–G7).
+- Lệnh: `npm test` → 14 suites, 110/110 PASS (giữ nguyên).
+- `scripts/rls-proof.ts` → 7/7 PASS; `scripts/storage-rls-proof.ts` → 5/5 PASS.
+- Dev server Metro khởi động đạt; bundle iOS entry http=200 chứa dashboard.
+- Test tay dashboard trên Expo Go (sáng/tối, bấm thẻ): chủ dự án chạy.
+
+**Còn nợ / giới hạn đã biết**
+
+- Chủ dự án tự thêm 2 secret `SUPABASE_URL`, `SUPABASE_ANON_KEY` trên GitHub
+  (README đã ghi 2 bước) rồi bấm Run workflow kiểm tra.
+- Test tay dashboard + toàn bộ TEST-CHECKLIST trên thiết bị thật.
+
+**Mốc Git**
+
+- Branch: `chore/rebrand-system`
+- Tag: `v1.3.0` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
+- PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh

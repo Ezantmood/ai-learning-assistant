@@ -2,9 +2,9 @@
 
 ## Phạm vi và mục tiêu
 
-- Dự án độc lập **Student Account Manager**, hoàn thành trong 5 ngày.
-- Chỉ làm quản lý tài khoản sinh viên và bảng minh chứng `study_notes`.
-- Không tạo module, bảng, route hay abstraction dự phòng cho chức năng tương lai.
+- Hệ thống duy nhất **AI Learning Assistant**: 6 chức năng, 45 FR (FR-01 → FR-45).
+- Chức năng 1 (tài khoản, FR-01 → FR-05) đã hoàn thành; FR-06 → FR-45 làm ở session sau.
+- Mỗi session chỉ làm đúng phạm vi được giao; không tạo module, bảng, route hay abstraction dự phòng.
 - Ưu tiên code ngắn, rõ, sinh viên có thể tự giải thích và bảo vệ.
 
 ## Stack cố định
@@ -26,7 +26,8 @@
 
 ## Cấu trúc và đặt tên
 
-- Route chỉ đặt trong `app/`; nghiệp vụ theo feature đặt trong `src/features/`.
+- Route chỉ đặt trong `app/`; nghiệp vụ theo feature đặt trong `src/features/<ten-chuc-nang>/`; code dùng chung đặt trong `src/shared/`.
+- Code của một chức năng chỉ được nằm trong thư mục feature của nó; muốn dùng chung thì đưa lên shared, cấm import chéo trực tiếp giữa hai feature.
 - Component: PascalCase; hook: `useXxx`; hàm/biến: camelCase; schema Zod: `xxxSchema`.
 - File route/component: kebab-case; file thư viện: camelCase; SQL: snake_case.
 - Bảng/cột Postgres và bucket/path Storage dùng snake_case.
@@ -35,7 +36,7 @@
 
 ## Điều cấm
 
-- Không thêm chức năng ngoài FR-01..FR-05; không social login, role/admin, chat, môn học, điểm, lịch học.
+- Không thêm chức năng ngoài FR-01..FR-45 đã chốt; không social login, role/admin, chat ngoài tài liệu, môn học, điểm, lịch học.
 - Không dùng service-role key trong app; không commit secret; không tắt RLS.
 - Không chỉ filter `user_id` ở client để bảo vệ dữ liệu; RLS là bắt buộc.
 - Không gọi Supabase trực tiếp từ screen; screen gọi API/query của feature.
