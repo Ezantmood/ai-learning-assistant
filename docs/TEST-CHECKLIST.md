@@ -126,7 +126,12 @@ Theo đúng khuôn `scripts/rls-proof.ts` của FR-05 (2 user test A/B, tự d�
       nửa vời (không bản ghi thiếu object).
 - [ ] FR-08: danh sách chỉ tài liệu của mình, mới nhất trước; empty state đủ
       icon + câu dẫn + nút tải lên.
-- [ ] FR-09: chi tiết hiện đúng tên/ngày/dung lượng/định dạng/môn/trạng thái.
+- [ ] Ô tìm kiếm theo tên: gõ đúng tên ra kết quả; gõ không dấu không ra tên
+      có dấu (phân biệt dấu đã biết); xóa ô tìm kiếm về lại toàn danh sách.
+- [ ] Vượt 100 tài liệu hoặc 30 môn học → báo lỗi rõ ràng, không chèn thêm.
+- [ ] FR-09: chi tiết hiện đúng tên/ngày/dung lượng/định dạng/môn/trạng thái;
+      nút “Mở tài liệu” mở được file ngoài app.
+- [ ] Đổi môn học chỉ làm được ở màn chi tiết; màn danh sách không có menu đổi.
 - [ ] FR-10: đổi tên sai (rỗng/quá dài) bị chặn, tên cũ giữ nguyên; đổi đúng
       thì object storage không đổi.
 - [ ] FR-11: hủy dialog thì không xóa gì; xác nhận thì mất cả DB lẫn object.
