@@ -382,6 +382,7 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog, secre
 
 **Mốc Git**
 
+- Commit merge: `dbdcd64219f71e48e372459c419bc2ddef379265` (merge --no-ff)
 - Branch: `release/v2.0.0`
 - Tag: `v2.0.0` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
