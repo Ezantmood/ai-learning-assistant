@@ -16,5 +16,7 @@ export const radius = {
   md: 8,
   lg: 12,
   xl: 16,
+  /** Bo góc bottom sheet theo DESIGN-SYSTEM (CN2-13). */
+  sheet: 28,
   full: 9999,
 } as const;

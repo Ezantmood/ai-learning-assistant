@@ -128,17 +128,24 @@ có secret. Push ngay sau commit.
 
 ## CN2-6 — Hạ tầng FR-13, DESIGN-SYSTEM, hoàn thiện (phiên 3)
 
-- [ ] CN2-10: Cột `extracted_text` + `extraction_status` hoạt động:
+- [x] CN2-10: Cột `extracted_text` + `extraction_status` hoạt động:
   PDF/TXT mới nhận `pending`, DOCX nhận `unsupported` + gợi ý chuyển sang PDF;
   UI hiện trạng thái đúng. FR: FR-13 (hạ tầng; thực thi ở CN3).
-- [ ] CN2-11: Áp `docs/DESIGN-SYSTEM.md` cho mọi màn CN2 (token màu/spacing,
+  (2026-09-20, polish: xác nhận `getExtractionStatusForExt`/`getExtractionStatusLabel`
+  + unit test + nhãn ở `/documents/[id]` đã có từ G1/G2.)
+- [x] CN2-11: Áp `docs/DESIGN-SYSTEM.md` cho mọi màn CN2 (token màu/spacing,
   skeleton/empty/error/Snackbar, đo contrast cặp màu mới, light+dark). FR:
   FR-06..FR-13 (giao diện).
-- [ ] CN2-12: Unit test (schema, whitelist, giới hạn size, format dung lượng,
+  (2026-09-20, polish: mọi màn đã dùng token/spacing từ G1/G2; phiên này đo lại
+  contrast trên nền mới, không còn hex hardcode ngoài `theme.ts`.)
+- [x] CN2-12: Unit test (schema, whitelist, giới hạn size, format dung lượng,
   dựng path, suy loại tệp — mock supabase/picker/file-system, không gọi mạng),
   cập nhật traceability/checklist/devlog/báo cáo theo code cuối. FR: FR-06..FR-13.
-- [ ] CN2-13 (CUỐI CÙNG): Chuẩn hóa bảng màu — thay bộ màu mặc định của Paper
+  (2026-09-20, polish: 64 test documents + 3 test theme, tổng 177/177; docs cập nhật.)
+- [x] CN2-13 (CUỐI CÙNG): Chuẩn hóa bảng màu — thay bộ màu mặc định của Paper
   bằng bộ màu riêng sinh từ seed indigo `#4A5FC1` (theo `docs/DESIGN-SYSTEM.md`),
   áp cho toàn app gồm cả các màn CN1, cập nhật bảng token bằng giá trị thật,
   rồi chụp lại toàn bộ ảnh báo cáo. Đặt cuối vì đổi theme sớm làm hỏng mọi ảnh
   đã chụp. FR: FR-06..FR-13 (giao diện).
+  (2026-09-20, polish: TonalSpot + ánh xạ tone của Paper, mọi cặp ≥ 4.5:1,
+  test khóa palette; ảnh do chủ dự án chụp lại.)
