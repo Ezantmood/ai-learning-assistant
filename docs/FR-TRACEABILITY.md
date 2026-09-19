@@ -12,18 +12,18 @@ Chỉ chuyển trạng thái sau khi file/hàm tồn tại và case test tương
 | FR-04 | `app/(app)/profile/index.tsx`; `src/features/profile/{api.ts,schemas.ts,queries.ts,errors.ts,avatar.ts,pickAvatar.ts,ProfileView.tsx}`; migration profile/Storage policy | `getProfile`; `updateProfile`; `uploadAvatar`; `useAvatarUrl` (signed URL TTL 3600s, cache 55 phút) | G5: unit test 84/84 PASS (giữ 51 cũ + 33 mới: profileSchema, buildAvatarPath, guard MIME/size, map lỗi 23505, render ProfileView loading/error/ready); `scripts/storage-rls-proof.ts` 5/5 PASS trên remote 2026-09-18 (A upload folder mình, A không đọc file B qua download + signed URL, anon không đọc/không list); chờ test tay đổi avatar + A/B chéo trên thiết bị | đạt |
 | FR-05 | `notes/*.tsx`; `src/features/notes/*`; migration `study_notes` | `listNotes`; `createNote`; `updateNote`; `deleteNote`; 4 RLS policies | G2: trigger/grants/4 policies + `scripts/rls-proof.ts` 7/7 PASS trên remote 2026-09-17 (log ở `RLS-PROOF.md` mục 7); G3: API/UI CRUD + unit test schema/errors PASS; chờ test tay A/B trên thiết bị | đạt |
 
-## Chức năng 2 — Quản lý tài liệu học tập (chưa làm)
+## Chức năng 2 — Quản lý tài liệu học tập (đang làm)
 
 | FR | File dự kiến | Hàm/điểm kiểm soát dự kiến | Cách kiểm thử | Trạng thái |
 |---|---|---|---|---|
-| FR-06 | | | | Chưa làm |
-| FR-07 | | | | Chưa làm |
-| FR-08 | | | | Chưa làm |
-| FR-09 | | | | Chưa làm |
-| FR-10 | | | | Chưa làm |
-| FR-11 | | | | Chưa làm |
-| FR-12 | | | | Chưa làm |
-| FR-13 | | | | Chưa làm |
+| FR-06 | `app/(app)/documents/upload.tsx`; `src/features/documents/{api.ts,storage.ts,schemas.ts}`; bucket `documents` | `pickDocument`; `uploadDocument`; guard ext/MIME/size | Unit test guard + proof script; test tay tệp hợp lệ/quá lớn/sai định dạng/offline | Đang làm |
+| FR-07 | Cùng FR-06 | Whitelist `pdf`/`docx`/`txt` + MIME tương ứng | Unit test whitelist; test tay mỗi định dạng + MIME lệch | Đang làm |
+| FR-08 | `app/(app)/documents/index.tsx`; `src/features/documents/queries.ts` | `listDocuments`; key `['documents', userId]`; index `documents_user_created_idx` | Unit test query; test tay danh sách/empty/skeleton/lọc môn | Đang làm |
+| FR-09 | `app/(app)/documents/[id].tsx`; `getDocumentUrl` (signed URL TTL 3600s) | `getDocument`; hiển thị tên/ngày/dung lượng/định dạng/môn/trạng thái | Test tay chi tiết + mở xem ở light/dark | Đang làm |
+| FR-10 | Cùng màn chi tiết; `src/features/documents/api.ts` | `renameDocument` (chỉ đổi `display_name`, không đổi object) | Unit test schema tên; test tay tên sai/giữ tên cũ | Đang làm |
+| FR-11 | Cùng màn chi tiết; Storage policy `documents_delete_own` | `deleteDocument` (storage trước, DB sau, có dialog) | Proof script; test tay hủy dialog/xóa thật/không trỏ hư không | Đang làm |
+| FR-12 | `app/(app)/subjects/index.tsx`; bảng `subjects`; `documents.subject_id ON DELETE SET NULL` | `listSubjects`; `createSubject`; `renameSubject`; `deleteSubject` | Proof script subjects; test tay xóa môn đang có tài liệu → “Chưa phân loại” | Đang làm |
+| FR-13 | Bảng `documents` (`extracted_text`, `extraction_status`) | Hạ tầng ở CN2 (`pending`/`unsupported`), thực thi trích xuất ở CN3 | Test tay trạng thái PDF/TXT vs DOCX | Đang làm |
 
 ## Chức năng 3 — AI tóm tắt tài liệu PDF (chưa làm)
 

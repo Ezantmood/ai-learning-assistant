@@ -51,3 +51,67 @@ Mỗi checkbox là một commit độc lập và phải để app chạy đượ
 - [x] Cập nhật traceability, setup, devlog và nguyên liệu báo cáo theo code cuối. File: `README.md`, `docs/*.md`. FR: FR-01..FR-05.
 
 Bài 1 DONE (G5): FR-01 → FR-05 đạt, tag `g5-done` + `v1.0.0`.
+
+---
+
+# Backlog CN2 — Quản lý tài liệu học tập (FR-06 → FR-13)
+
+Branch: `feat/cn2-documents`. Mỗi checkbox là một commit độc lập và phải để
+app chạy được. Trước commit chạy `npx tsc --noEmit`, `npm run lint`, `npm test`
+và test tay phần liên quan; staged diff phải không có secret. Push ngay sau
+commit. Tự merge `--no-ff` vào `main` sau khi cổng xanh và tag theo quyết định
+chủ dự án (xem AGENTS.md mục Quy tắc Git). Thứ tự dưới đây đi từ nền lên mặt;
+điều chỉnh được nhưng phải ghi lý do vào chính file này.
+
+## CN2-1 — Nền tảng schema, RLS, repository, màn rỗng
+
+- [ ] CN2-01: Áp DDL `subjects` + `documents` (theo `docs/DATA-MODEL.md`), RLS
+  4 lệnh mỗi bảng, bucket private `documents` + 4 Storage policy bằng SQL tay
+  trên Dashboard; regen `database.ts` bằng CLI. Xong khi Table Editor hiện RLS
+  enabled và bucket private. FR: FR-06..FR-13 (nền).
+- [ ] CN2-02: Viết `src/features/documents/{api.ts,storage.ts,schemas.ts,queries.ts,errors.ts}`
+  (pick/guard/upload/list/get/rename/delete documents + CRUD subjects + signed
+  URL TTL 3600s) và `scripts/documents-rls-proof.ts` theo khuôn FR-05; chạy
+  proof trên remote đạt 100%. FR: FR-06..FR-13 (nền).
+- [ ] CN2-03: Màn `/documents` rỗng (Appbar + empty state đúng DESIGN-SYSTEM)
+  nối vào dashboard (thẻ CN2 dẫn tới đây); thẻ CN3–6 vẫn "Sắp có". Xong khi
+  điều hướng không crash ở cả light/dark. FR: FR-08 (khung).
+
+## CN2-2 — Tải lên (FR-06, FR-07)
+
+- [ ] CN2-04: Màn `/documents/upload`: `expo-document-picker` + guard
+  ext/MIME/size trước khi đọc + upload base64→ArrayBuffer + progress +
+  Snackbar. Xong khi tệp hợp lệ lên được, tệp sai/quá lớn bị chặn trước khi
+  đọc, offline báo retry. FR: FR-06, FR-07.
+
+## CN2-3 — Danh sách và chi tiết (FR-08, FR-09)
+
+- [ ] CN2-05: Danh sách `/documents` thật: skeleton/empty/error/retry,
+  sắp `created_at desc`, lọc theo môn, pull-to-refresh. FR: FR-08, FR-12 (lọc).
+- [ ] CN2-06: Chi tiết `/documents/[id]`: tên/ngày/dung lượng/định dạng/
+  môn/trạng thái trích xuất + mở xem bằng signed URL. FR: FR-09.
+
+## CN2-4 — Đổi tên và xóa (FR-10, FR-11)
+
+- [ ] CN2-07: Đổi tên chỉ nhãn DB (không đổi object storage) + gán môn học
+  trong màn chi tiết; validate 1–120. FR: FR-10, FR-12 (gán).
+- [ ] CN2-08: Xóa có dialog xác nhận, thứ tự storage-trước-DB-sau theo
+  ARCHITECTURE; không còn bản ghi trỏ hư không. FR: FR-11.
+
+## CN2-5 — Môn học (FR-12)
+
+- [ ] CN2-09: Màn `/subjects`: CRUD môn (validate 1–60, không trùng tên),
+  xóa môn đang có tài liệu báo trước “về Chưa phân loại”. Xong khi xóa môn
+  không mất tài liệu nào (`ON DELETE SET NULL`). FR: FR-12.
+
+## CN2-6 — Hạ tầng FR-13, DESIGN-SYSTEM, hoàn thiện
+
+- [ ] CN2-10: Cột `extracted_text` + `extraction_status` hoạt động:
+  PDF/TXT mới nhận `pending`, DOCX nhận `unsupported` + gợi ý chuyển sang PDF;
+  UI hiện trạng thái đúng. FR: FR-13 (hạ tầng; thực thi ở CN3).
+- [ ] CN2-11: Áp `docs/DESIGN-SYSTEM.md` cho mọi màn CN2 (token màu/spacing,
+  skeleton/empty/error/Snackbar, đo contrast cặp màu mới, light+dark). FR:
+  FR-06..FR-13 (giao diện).
+- [ ] CN2-12: Unit test (schema, whitelist, giới hạn size, format dung lượng,
+  dựng path, suy loại tệp — mock supabase/picker/file-system, không gọi mạng),
+  cập nhật traceability/checklist/devlog/báo cáo theo code cuối. FR: FR-06..FR-13.
