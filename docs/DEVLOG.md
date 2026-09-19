@@ -831,6 +831,17 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog. Sau m
 
 - Chủ dự án dán 0002 + verify vào SQL Editor remote theo SETUP 5b, báo kết quả.
 
+**Áp remote (chủ dự án thực hiện, 2026-09-20)**
+
+- Dán toàn bộ `0002_cn2_documents.sql` vào SQL Editor: lần 1 success, chạy
+  lại lần 2 kiểm idempotent trên DB thật cũng success — idempotent đã xác
+  nhận trên remote, không chỉ Postgres local.
+- `cn2-schema-verify.sql`: **14/14 ĐẠT**, không có dòng KHÔNG ĐẠT nên không
+  cần bản vá 0003; 0002 giữ nguyên.
+- Hồi quy sau khi áp (agent chạy): `npm test` 14 suites **110/110 PASS**;
+  `scripts/rls-proof.ts` **7/7**; `scripts/storage-rls-proof.ts` **5/5**.
+  Schema CN2 không làm ảnh hưởng CN1.
+
 **Mốc Git**
 
 - Branch: `chore/cn2-migration`
