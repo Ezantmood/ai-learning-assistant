@@ -1,43 +1,50 @@
 # Hệ thống thiết kế dùng chung
 
-Chuẩn giao diện cho cả 6 chức năng. Session này chỉ ban hành chuẩn trên giấy;
-KHÔNG áp dụng vào code — session code CN2 chịu trách nhiệm áp dụng và đo kiểm.
+Chuẩn giao diện cho cả 6 chức năng. Bảng màu riêng đã áp vào code ở
+CN2-13 (seed indigo `#4A5FC1`); mục file-type giữ nguyên màu, chỉ cập
+nhật lại tỉ số trên nền mới.
 
 ## Bảng token màu MD3
 
-Gốc hiện tại trong repo (`src/shared/theme/theme.ts`) là màu mặc định của
-Paper (seed tím `primary40 #6750A4`), cộng thêm nhóm `success` tự định nghĩa:
+Sinh từ seed indigo `#4A5FC1` bằng Material Theme Builder
+(`@material/material-color-utilities`, variant TonalSpot — mặc định của
+tool), áp từ CN2-13. Cách sinh: lấy tonal palette TonalSpot của seed rồi
+giữ nguyên ánh xạ tone → token của `MD3LightTheme`/`MD3DarkTheme` trong
+`react-native-paper` đang cài (VD light `primary` = tone 40); nhóm
+`success` tự định nghĩa giữ nguyên; `elevation`/`surfaceDisabled`/
+`backdrop` tính lại theo đúng công thức Paper. Code: `src/shared/theme/theme.ts`.
 
 | Token light | Giá trị đang dùng | Token dark | Giá trị đang dùng |
 |---|---|---|---|
-| `primary` | `#6750A4` | `primary` | `#D0BCFF` |
-| `onPrimary` | `#FFFFFF` | `onPrimary` | `#381E72` |
-| `primaryContainer` | `#EADDFF` | `primaryContainer` | `#4F378B` |
-| `onPrimaryContainer` | `#21005D` | `onPrimaryContainer` | `#EADDFF` |
-| `secondary` | `#625B71` | `secondary` | `#CCC2DC` |
-| `onSecondary` | `#FFFFFF` | `onSecondary` | `#332D41` |
-| `secondaryContainer` | `#E8DEF8` | `secondaryContainer` | `#4A4458` |
-| `onSecondaryContainer` | `#1D1B20` | `onSecondaryContainer` | `#E8DEF8` |
-| `tertiary` | `#7D5260` | `tertiary` | `#EFB8C8` |
-| `onTertiary` | `#FFFFFF` | `onTertiary` | `#492532` |
-| `tertiaryContainer` | `#FFD8E4` | `tertiaryContainer` | `#633B48` |
-| `onTertiaryContainer` | `#31111D` | `onTertiaryContainer` | `#FFD8E4` |
-| `surface` / `background` | `#FFFBFE` | `surface` / `background` | `#1C1B1F` |
-| `onSurface` | `#1C1B1F` | `onSurface` | `#E6E1E5` |
-| `surfaceVariant` | `#E7E0EC` | `surfaceVariant` | `#49454F` |
-| `onSurfaceVariant` | `#49454F` | `onSurfaceVariant` | `#CAC4D0` |
-| `error` / `onError` | `#B3261E` / `#FFFFFF` | `error` / `onError` | `#F2B8B5` / `#601410` |
-| `errorContainer` / `onErrorContainer` | `#F9DEDC` / `#410E0B` | `errorContainer` / `onErrorContainer` | `#8C1D18` / `#F9DEDC` |
+| `primary` | `#505B92` | `primary` | `#B9C3FF` |
+| `onPrimary` | `#FFFFFF` | `onPrimary` | `#212C61` |
+| `primaryContainer` | `#DDE1FF` | `primaryContainer` | `#384379` |
+| `onPrimaryContainer` | `#09164B` | `onPrimaryContainer` | `#DDE1FF` |
+| `secondary` | `#5A5D72` | `secondary` | `#C3C5DD` |
+| `onSecondary` | `#FFFFFF` | `onSecondary` | `#2C2F42` |
+| `secondaryContainer` | `#DFE1F9` | `secondaryContainer` | `#434659` |
+| `onSecondaryContainer` | `#171B2C` | `onSecondaryContainer` | `#DFE1F9` |
+| `tertiary` | `#76546E` | `tertiary` | `#E5BAD8` |
+| `onTertiary` | `#FFFFFF` | `onTertiary` | `#44263E` |
+| `tertiaryContainer` | `#FFD7F2` | `tertiaryContainer` | `#5C3C55` |
+| `onTertiaryContainer` | `#2D1228` | `onTertiaryContainer` | `#FFD7F2` |
+| `surface` / `background` | `#FEFBFF` | `surface` / `background` | `#1B1B21` |
+| `onSurface` | `#1B1B21` | `onSurface` | `#E3E1E9` |
+| `surfaceVariant` | `#E3E1EC` | `surfaceVariant` | `#45464F` |
+| `onSurfaceVariant` | `#45464F` | `onSurfaceVariant` | `#C6C5D0` |
+| `error` / `onError` | `#BA1A1A` / `#FFFFFF` | `error` / `onError` | `#FFB4AB` / `#690005` |
+| `errorContainer` / `onErrorContainer` | `#FFDAD6` / `#410002` | `errorContainer` / `onErrorContainer` | `#93000A` / `#FFDAD6` |
 | `success` / `onSuccess` | `#1B7A3D` / `#FFFFFF` | `success` / `onSuccess` | `#6FDC8C` / `#00390F` |
 | `successContainer` / `onSuccessContainer` | `#D9F2E3` / `#0C3B1E` | `successContainer` / `onSuccessContainer` | `#0C5A28` / `#D9F2E3` |
-| `outline` / `outlineVariant` | `#79747E` / `#CAC4D0` | `outline` / `outlineVariant` | `#938F99` / `#49454F` |
-| `inverseSurface` / `inverseOnSurface` / `inversePrimary` | `#313033` / `#F4EFF4` / `#D0BCFF` | `inverseSurface` / `inverseOnSurface` / `inversePrimary` | `#E6E1E5` / `#313033` / `#6750A4` |
+| `outline` / `outlineVariant` | `#767680` / `#C6C5D0` | `outline` / `outlineVariant` | `#90909A` / `#45464F` |
+| `inverseSurface` / `inverseOnSurface` / `inversePrimary` | `#303036` / `#F2F0F7` / `#B9C3FF` | `inverseSurface` / `inverseOnSurface` / `inversePrimary` | `#E3E1E9` / `#303036` / `#505B92` |
 
-Các giá trị trên đọc từ `react-native-paper` đang cài (MD3 baseline), không
-bịa. Khi session code áp dụng: sinh lại toàn bộ nhóm `primary` / `secondary` /
-`tertiary` từ seed indigo `#4A5FC1` bằng Material Theme Builder
-(`material-color-utilities`), giữ nguyên nhóm `neutral`, `error`, `success`
-trừ khi tool đổi theo. Sau khi sinh, cập nhật bảng này bằng giá trị thật.
+Tương phản WCAG (tính theo công thức chuẩn ở mục dưới, làm tròn 2 chữ
+số): mọi cặp chữ/nền đều vượt 4.5:1. Yếu nhất light là
+`onSuccess`/`success` 5.39:1 và `onPrimary`/`primary` 6.46:1; yếu nhất
+dark là `inversePrimary`/`inverseSurface` 4.98:1 và
+`onSurfaceVariant`/`surfaceVariant` 5.49:1; còn lại đều ≥ 6.4:1
+(light) và ≥ 7.2:1 (dark). Không cặp nào phải chỉnh màu.
 
 ## Màu phụ theo loại tệp
 
@@ -45,13 +52,15 @@ Dùng cho icon/nhãn phân biệt PDF/DOCX/TXT (CN2, dùng lại ở CN3–CN6).
 Tỉ số tương phản WCAG tự tính theo công thức chuẩn (hex → sRGB tuyến tính →
 luminance tương đối → `(L1+0.05)/(L2+0.05)`), làm tròn 2 chữ số:
 
-| Loại tệp | Light (nền `#FFFBFE`) | Tỉ số | Dark (nền `#1C1B1F`) | Tỉ số |
+| Loại tệp | Light (nền `#FEFBFF`) | Tỉ số | Dark (nền `#1B1B21`) | Tỉ số |
 |---|---|---|---|---|
-| `pdf` | `#B3261E` | 6.38:1 | `#F9DEDC` | 13.47:1 |
-| `docx` | `#6750A4` | 6.28:1 | `#EADDFF` | 13.28:1 |
-| `txt` | `#7D5260` | 6.31:1 | `#FFD8E4` | 13.21:1 |
+| `pdf` | `#B3261E` | 6.37:1 | `#F9DEDC` | 13.47:1 |
+| `docx` | `#6750A4` | 6.27:1 | `#EADDFF` | 13.29:1 |
+| `txt` | `#7D5260` | 6.30:1 | `#FFD8E4` | 13.22:1 |
 
-Cả 6 cặp đều vượt ngưỡng tối thiểu 4.5:1, chốt dùng luôn, không cần đo lại.
+Cả 6 cặp đều vượt ngưỡng tối thiểu 4.5:1 trên nền mới (CN2-13 đo lại sau
+khi đổi theme; màu giữ nguyên vì không cặp nào rớt), chốt dùng luôn,
+không cần đo lại.
 
 ## Spacing, bo góc
 
@@ -59,8 +68,7 @@ Thang spacing duy nhất (`src/shared/theme/spacing.ts`): `xs 4`, `sm 8`,
 `md 12`, `lg 16`, `xl 24`, `xxl 32`. Cấm rải số lẻ trong style.
 
 Bo góc: card 16 (`radius.xl`), chip 8 (`radius.md`), bottom sheet 28
-(token mới `radius.sheet = 28`, thêm khi session code áp dụng; hiện tại
-`radius` lớn nhất là `xl 16`).
+(`radius.sheet`).
 
 ## Quy ước trạng thái
 
