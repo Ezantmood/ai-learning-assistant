@@ -1,4 +1,4 @@
-# Dựng dự án từ số 0 (hoàn chỉnh G5)
+# Dựng dự án từ số 0 (hoàn chỉnh CN1; CN2 chỉ thêm mục 5b, 7b, 10)
 
 Tài liệu duy nhất để dựng app từ clone tới chạy trên Expo Go. Dừng ngay nếu
 package được nêu bị deprecated hoặc Expo báo không tương thích SDK 57; báo chủ
@@ -62,6 +62,17 @@ DEVLOG G2). Thứ tự:
    được kiểm chứng bằng `scripts/storage-rls-proof.ts` thay vì SQL mới.
 3. Không chạy từng đoạn rời rạc (thiếu policy/grant sẽ hở bảo mật).
 
+## 5b. Apply DDL và RLS cho CN2 (SQL Editor, paste tay)
+
+DDL tham chiếu nằm ở `docs/DATA-MODEL.md` (mục `subjects`, `documents`,
+bucket `documents`); đó là văn bản tham chiếu, khi áp thì paste từng khối
+lệnh vào SQL Editor theo thứ tự: bảng + constraints/index → RLS policies +
+grants → trigger `updated_at` (tái dùng function có sẵn) → tạo bucket
+`documents` ở Storage (private, 10 MB, whitelist 3 MIME) + 4 Storage policy.
+Không dùng `supabase link` / `db push` vì access token `sbp_` không đủ quyền
+trên project (lý do đã ghi ở DEVLOG G2, vẫn đúng tới nay).
+Mong đợi `Success. No rows returned` cho mỗi khối.
+
 ## 6. Cấu hình Supabase Auth (Dashboard, làm tay)
 
 1. Authentication → Providers/Sign In → **Email**: Enabled ON, Allow new users
@@ -83,6 +94,21 @@ DEVLOG G2). Thứ tự:
    `avatars_{select,insert,update,delete}_own`, mỗi policy ràng buộc
    `(storage.foldername(name))[1] = auth.uid()::text`.
 3. Table Editor: `profiles` và `study_notes` hiện **RLS enabled**.
+
+## 7b. Kiểm tra bucket documents và keep-alive (làm tay)
+
+1. Storage → bucket `documents`: loại **private**, giới hạn 10 MB, đúng 3 MIME
+   whitelist (`application/pdf`, `...wordprocessingml.document`, `text/plain`).
+2. Storage → `documents` → Policies: đủ 4 policy giới hạn
+   `bucket_id = 'documents'` và `(storage.foldername(name))[1] = auth.uid()::text`.
+3. Table Editor: `subjects` và `documents` hiện **RLS enabled**.
+4. GitHub repo → Actions → workflow **Supabase keep-alive**: hai secret
+   `SUPABASE_URL` và `SUPABASE_ANON_KEY` đã được thêm ở
+   Settings → Secrets and variables → Actions. Bấm **Run workflow** để kiểm
+   tra tay; log phải hiện `Supabase Auth health http=200`.
+5. Nhắc lại: free tier tự pause sau khoảng 7 ngày không hoạt động; trước buổi
+   bảo vệ mở Dashboard kiểm tra project đang awake, resume nếu cần rồi chạy
+   lại workflow keep-alive.
 
 ## 8. Chạy kiểm chứng tự động
 
