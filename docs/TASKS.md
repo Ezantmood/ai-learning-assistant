@@ -56,14 +56,24 @@ Bài 1 DONE (G5): FR-01 → FR-05 đạt, tag `g5-done` + `v1.0.0`.
 
 # Backlog CN2 — Quản lý tài liệu học tập (FR-06 → FR-13)
 
-Branch: `feat/cn2-documents`. Mỗi checkbox là một commit độc lập và phải để
-app chạy được. Trước commit chạy `npx tsc --noEmit`, `npm run lint`, `npm test`
-và test tay phần liên quan; staged diff phải không có secret. Push ngay sau
-commit. Tự merge `--no-ff` vào `main` sau khi cổng xanh và tag theo quyết định
-chủ dự án (xem AGENTS.md mục Quy tắc Git). Thứ tự dưới đây đi từ nền lên mặt;
-điều chỉnh được nhưng phải ghi lý do vào chính file này.
+Chia BA phiên code, mỗi phiên một branch, merge `--no-ff` và tag riêng sau
+khi cổng xanh (quyết định chủ dự án 2026-09-19). Mỗi checkbox là một commit
+độc lập và phải để app chạy được. Trước commit chạy `npx tsc --noEmit`,
+`npm run lint`, `npm test` và test tay phần liên quan; staged diff phải không
+có secret. Push ngay sau commit.
 
-## CN2-1 — Nền tảng schema, RLS, repository, màn rỗng
+- Phiên 1 — branch `feat/cn2-g1`, tag `cn2-g1`: CN2-01 → CN2-05 (nền + tải
+  lên + danh sách). Lý do: xong phiên 1 là có luồng dọc chạy được — tải tệp
+  lên và thấy ngay trong danh sách; các phiên sau chỉ đắp thêm thao tác.
+- Phiên 2 — branch `feat/cn2-g2`, tag `cn2-g2`: CN2-06 → CN2-09 (chi tiết +
+  đổi tên/xóa + môn học). Lý do: hoàn thiện CRUD trên nền đã chạy, không đụng
+  luồng tải lên.
+- Phiên 3 — branch `feat/cn2-polish`, tag `v2.0.0`: CN2-10 → CN2-13 (hạ tầng
+  FR-13 + DESIGN-SYSTEM + test + chuẩn hóa bảng màu). Lý do: đóng gói toàn
+  CN2 nên xứng đáng mốc version lớn; task màu đặt cuối vì đổi theme sớm làm
+  hỏng mọi ảnh chụp đã có.
+
+## CN2-1 — Nền tảng schema, RLS, repository, màn rỗng (phiên 1)
 
 - [ ] CN2-01: Áp DDL `subjects` + `documents` (theo `docs/DATA-MODEL.md`), RLS
   4 lệnh mỗi bảng, bucket private `documents` + 4 Storage policy bằng SQL tay
@@ -77,34 +87,37 @@ chủ dự án (xem AGENTS.md mục Quy tắc Git). Thứ tự dưới đây đi
   nối vào dashboard (thẻ CN2 dẫn tới đây); thẻ CN3–6 vẫn "Sắp có". Xong khi
   điều hướng không crash ở cả light/dark. FR: FR-08 (khung).
 
-## CN2-2 — Tải lên (FR-06, FR-07)
+## CN2-2 — Tải lên (FR-06, FR-07, phiên 1)
 
 - [ ] CN2-04: Màn `/documents/upload`: `expo-document-picker` + guard
-  ext/MIME/size trước khi đọc + upload base64→ArrayBuffer + progress +
-  Snackbar. Xong khi tệp hợp lệ lên được, tệp sai/quá lớn bị chặn trước khi
-  đọc, offline báo retry. FR: FR-06, FR-07.
+  ext/MIME/size (trước khi đọc) + guard giới hạn 100 tài liệu (`count` trước
+  insert) + upload base64→ArrayBuffer + progress + Snackbar. Xong khi tệp hợp
+  lệ lên được, tệp sai/quá lớn/vượt giới hạn bị chặn, offline báo retry. FR: FR-06, FR-07.
 
-## CN2-3 — Danh sách và chi tiết (FR-08, FR-09)
+## CN2-3 — Danh sách và chi tiết (FR-08, FR-09, phiên 1 + 2)
 
 - [ ] CN2-05: Danh sách `/documents` thật: skeleton/empty/error/retry,
-  sắp `created_at desc`, lọc theo môn, pull-to-refresh. FR: FR-08, FR-12 (lọc).
+  sắp `created_at desc`, lọc theo môn, ô tìm kiếm theo tên (`ilike`, phân
+  biệt dấu), pull-to-refresh. FR: FR-08, FR-12 (lọc).
 - [ ] CN2-06: Chi tiết `/documents/[id]`: tên/ngày/dung lượng/định dạng/
-  môn/trạng thái trích xuất + mở xem bằng signed URL. FR: FR-09.
+  môn/trạng thái trích xuất + nút “Mở tài liệu” (`Linking.openURL`,
+  tiện ích ngoài FR) + đổi môn học tại đây (danh sách không có menu đổi
+  nhanh). FR: FR-09.
 
-## CN2-4 — Đổi tên và xóa (FR-10, FR-11)
+## CN2-4 — Đổi tên và xóa (FR-10, FR-11, phiên 2)
 
 - [ ] CN2-07: Đổi tên chỉ nhãn DB (không đổi object storage) + gán môn học
   trong màn chi tiết; validate 1–120. FR: FR-10, FR-12 (gán).
 - [ ] CN2-08: Xóa có dialog xác nhận, thứ tự storage-trước-DB-sau theo
   ARCHITECTURE; không còn bản ghi trỏ hư không. FR: FR-11.
 
-## CN2-5 — Môn học (FR-12)
+## CN2-5 — Môn học (FR-12, phiên 2)
 
 - [ ] CN2-09: Màn `/subjects`: CRUD môn (validate 1–60, không trùng tên),
   xóa môn đang có tài liệu báo trước “về Chưa phân loại”. Xong khi xóa môn
   không mất tài liệu nào (`ON DELETE SET NULL`). FR: FR-12.
 
-## CN2-6 — Hạ tầng FR-13, DESIGN-SYSTEM, hoàn thiện
+## CN2-6 — Hạ tầng FR-13, DESIGN-SYSTEM, hoàn thiện (phiên 3)
 
 - [ ] CN2-10: Cột `extracted_text` + `extraction_status` hoạt động:
   PDF/TXT mới nhận `pending`, DOCX nhận `unsupported` + gợi ý chuyển sang PDF;
@@ -115,3 +128,8 @@ chủ dự án (xem AGENTS.md mục Quy tắc Git). Thứ tự dưới đây đi
 - [ ] CN2-12: Unit test (schema, whitelist, giới hạn size, format dung lượng,
   dựng path, suy loại tệp — mock supabase/picker/file-system, không gọi mạng),
   cập nhật traceability/checklist/devlog/báo cáo theo code cuối. FR: FR-06..FR-13.
+- [ ] CN2-13 (CUỐI CÙNG): Chuẩn hóa bảng màu — thay bộ màu mặc định của Paper
+  bằng bộ màu riêng sinh từ seed indigo `#4A5FC1` (theo `docs/DESIGN-SYSTEM.md`),
+  áp cho toàn app gồm cả các màn CN1, cập nhật bảng token bằng giá trị thật,
+  rồi chụp lại toàn bộ ảnh báo cáo. Đặt cuối vì đổi theme sớm làm hỏng mọi ảnh
+  đã chụp. FR: FR-06..FR-13 (giao diện).
