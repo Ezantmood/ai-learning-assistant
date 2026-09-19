@@ -99,26 +99,32 @@ có secret. Push ngay sau commit.
 
 ## CN2-3 — Danh sách và chi tiết (FR-08, FR-09, phiên 1 + 2)
 
-- [ ] CN2-05: Danh sách `/documents` thật: skeleton/empty/error/retry,
+- [x] CN2-05: Danh sách `/documents` thật: skeleton/empty/error/retry,
   sắp `created_at desc`, lọc theo môn, ô tìm kiếm theo tên (`ilike`, phân
   biệt dấu), pull-to-refresh. FR: FR-08, FR-12 (lọc).
-- [ ] CN2-06: Chi tiết `/documents/[id]`: tên/ngày/dung lượng/định dạng/
+  (2026-09-20, G2: xong tìm kiếm debounce 300ms + Chip lọc Tất cả/môn/
+  Chưa phân loại; G1 đã xong khung + sắp xếp.)
+- [x] CN2-06: Chi tiết `/documents/[id]`: tên/ngày/dung lượng/định dạng/
   môn/trạng thái trích xuất + nút “Mở tài liệu” (`Linking.openURL`,
   tiện ích ngoài FR) + đổi môn học tại đây (danh sách không có menu đổi
   nhanh). FR: FR-09.
+  (2026-09-20, G2: xong, signed URL TTL 3600s + canOpenURL, không WebView.)
 
 ## CN2-4 — Đổi tên và xóa (FR-10, FR-11, phiên 2)
 
-- [ ] CN2-07: Đổi tên chỉ nhãn DB (không đổi object storage) + gán môn học
+- [x] CN2-07: Đổi tên chỉ nhãn DB (không đổi object storage) + gán môn học
   trong màn chi tiết; validate 1–120. FR: FR-10, FR-12 (gán).
-- [ ] CN2-08: Xóa có dialog xác nhận, thứ tự storage-trước-DB-sau theo
+  (2026-09-20, G2: xong, payload update chỉ `display_name`.)
+- [x] CN2-08: Xóa có dialog xác nhận, thứ tự storage-trước-DB-sau theo
   ARCHITECTURE; không còn bản ghi trỏ hư không. FR: FR-11.
+  (2026-09-20, G2: xong, DB fail sau storage → lỗi rõ + Snackbar “Thử lại”.)
 
 ## CN2-5 — Môn học (FR-12, phiên 2)
 
-- [ ] CN2-09: Màn `/subjects`: CRUD môn (validate 1–60, không trùng tên),
+- [x] CN2-09: Màn `/subjects`: CRUD môn (validate 1–60, không trùng tên),
   xóa môn đang có tài liệu báo trước “về Chưa phân loại”. Xong khi xóa môn
   không mất tài liệu nào (`ON DELETE SET NULL`). FR: FR-12.
+  (2026-09-20, G2: xong, dialog xóa ghi rõ số tài liệu ảnh hưởng.)
 
 ## CN2-6 — Hạ tầng FR-13, DESIGN-SYSTEM, hoàn thiện (phiên 3)
 

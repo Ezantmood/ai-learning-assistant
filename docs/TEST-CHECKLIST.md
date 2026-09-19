@@ -131,7 +131,47 @@ Theo đúng khuôn `scripts/rls-proof.ts` của FR-05 (2 user test A/B, tự d�
 - [ ] Đăng xuất rồi đăng nhập lại → danh sách tài liệu còn nguyên, chỉ thấy tài liệu của mình.
 - [ ] Không thêm dependency nào ngoài `expo-crypto` ở G1; nếu G1 phải thêm, ghi lý do vào DEVLOG (hiện tại: không thêm).
 
-#### CN2-G2/G3 — phần còn lại (chưa làm, giữ nguyên)
+#### CN2-G2 — chi tiết, đổi tên, xóa, môn học, tìm kiếm/lọc (chủ dự án chạy)
+
+Quy ước: Expo Go, đăng nhập 1 tài khoản có sẵn 2–3 tài liệu (1 PDF, 1 DOCX,
+1 TXT) và 2 môn học. Ghi kết quả `YYYY-MM-DD | iOS/Android + Expo Go | đạt/lỗi + ghi chú`.
+
+- [ ] FR-08/FR-12 (tìm kiếm + lọc): `/documents` có ô tìm kiếm + hàng Chip
+      (“Tất cả”, từng môn, “Chưa phân loại”). Gõ đúng tên (có dấu) ra kết
+      quả; gõ không dấu KHÔNG ra tên có dấu (phân biệt dấu — giới hạn đã
+      chốt); xóa ô tìm kiếm về lại toàn danh sách. Chọn từng Chip lọc đúng;
+      màn danh sách KHÔNG có menu đổi môn.
+- [ ] FR-09: bấm một dòng sang `/documents/[id]` hiện đúng tên/ngày/dung
+      lượng (B/KB/MB)/định dạng (PDF/DOCX/TXT)/môn (“Chưa phân loại” nếu chưa
+      gán)/trạng thái trích xuất tiếng Việt. PDF/TXT hiện “Chưa xử lý”;
+      DOCX hiện “Không hỗ trợ” + Banner gợi ý chuyển sang PDF.
+- [ ] FR-09 (mở tệp): bấm “Mở tài liệu” → file mở ra app ngoài (PDF/TXT/DOCX);
+      tắt mạng hoặc thiết bị không mở được thì báo lỗi tiếng Việt rõ ràng,
+      không treo loading.
+- [ ] FR-10: nhập tên rỗng/toàn khoảng trắng/quá 120 ký tự → lỗi nằm dưới ô
+      nhập, tên cũ giữ nguyên. Nhập tên đúng → Snackbar “Đã đổi tên.”, danh
+      sách hiện tên mới; object storage giữ nguyên UUID (kiểm tra qua Storage
+      Dashboard: path không đổi).
+- [ ] FR-12 (gán): ở chi tiết, bấm nút môn → chọn môn khác → Snackbar “Đã đổi
+      môn học.”; chọn “Chưa phân loại” → về “Chưa phân loại”.
+- [ ] FR-11: bấm “Xóa tài liệu” → dialog xác nhận; bấm Hủy → không mất gì.
+      Xác nhận → về danh sách, tài liệu biến mất cả DB lẫn Storage (Table
+      Editor + Storage Dashboard không còn). Mất mạng giữa chừng khi xóa →
+      báo lỗi + Snackbar “Thử lại”, không có bản ghi trỏ hư không.
+- [ ] FR-12 (môn): `/subjects` (Appbar documents icon thư mục) tạo môn trùng
+      tên (đúng hoa/thường) → lỗi dưới ô nhập; tên rỗng/quá 60 ký tự → bị
+      chặn. Tạo tới trần 30 môn → môn thứ 31 báo rõ giới hạn, không chèn thêm.
+- [ ] FR-12 (xóa môn): bấm xóa môn đang có N tài liệu → dialog ghi rõ “N tài
+      liệu sẽ chuyển thành Chưa phân loại”; xác nhận → môn mất, N tài liệu
+      còn nguyên trong `/documents` ở trạng thái “Chưa phân loại”. Xóa môn
+      không có tài liệu → dialog gọn, xóa ngay.
+- [ ] Đăng xuất rồi đăng nhập lại → tài liệu/môn học/tìm kiếm còn nguyên,
+      chỉ thấy dữ liệu của mình.
+- [ ] Mỗi màn (`/documents`, `/documents/[id]`, `/subjects`) ở cả light và
+      dark: skeleton/empty/error/Snackbar đúng DESIGN-SYSTEM, không hardcode
+      màu, không chữ trùng nền; icon hiện đủ (không ô trống).
+
+#### CN2-G3/polish — phần còn lại (chưa làm, giữ nguyên)
 
 - [ ] FR-06/FR-07: tải PDF/DOCX/TXT hợp lệ → lên được, danh sách có mới.
 - [ ] Tệp quá 10 MB → chặn trước khi đọc, báo rõ giới hạn, không tạo gì.

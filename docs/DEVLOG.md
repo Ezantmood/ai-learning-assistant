@@ -965,3 +965,86 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog. Sau m
 - Branch: `cn2-g1`
 - Tag: `cn2-g1-done` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
 - PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### CN2-G2 — Chi tiết, đổi tên, xóa, môn học, tìm kiếm/lọc (FR-09 → FR-12) — 2026-09-20
+
+**Đã làm gì**
+
+- Branch `cn2-g2` từ `main` (sau merge `cn2-g1`). `.env`/`.env.local` đã nằm
+  trong `.gitignore` từ trước nên không cần commit đầu sửa ignore.
+- Commit 1 (tầng dữ liệu): `storage.ts` thêm trần 30 môn, chuẩn hóa tên môn,
+  pattern `ilike` (thoát `%_\\`), so khớp phân biệt dấu, lọc client-side cho
+  test; `schemas.ts` thêm `subjectNameSchema` 1–60; `errors.ts` thêm
+  `DocumentDeletePartialError` + `toSubjectsErrorMessage` (map 23505) +
+  `toOpenDocumentErrorMessage`; `api.ts` thêm `getDocument`, `getDocumentUrl`
+  (TTL 3600s), `renameDocument` (chỉ `display_name`), `deleteDocument`
+  (storage-trước-DB-sau), `assignDocumentSubject`, CRUD subjects
+  (`countSubjects` guard trần 30, chặn trùng tên, `countDocumentsInSubject`
+  cho cảnh báo xóa), `listDocuments` thêm `ilike` + lọc môn; `queries.ts`
+  thêm 9 hook (`useDocument`, `useDocumentUrl` cache 55 phút, rename/assign/
+  delete document, subjects CRUD, đếm tài liệu/môn).
+- Commit 2 (màn hình): `/documents` thêm `Searchbar` debounce 300ms + Chip
+  lọc Tất cả/môn/Chưa phân loại, bấm dòng sang chi tiết, nhãn DOCX “AI không
+  đọc”; `/documents/[id]` mới (thông tin + nút Mở tệp signed URL + `canOpenURL`,
+  không WebView; đổi tên inline; đổi môn CHỈ ở đây qua Menu; xóa có Dialog);
+  `/subjects` mới (tạo/sửa validate 1–60 + chặn trùng, xóa cảnh báo rõ số tài
+  liệu về Chưa phân loại). Icon mới `folder-outline`, `open-in-new`, `pencil`,
+  `tag-outline` (Searchbar dùng icon `magnify` có sẵn) — Paper `settings.icon` giữ nguyên.
+- Commit 3 (docs): tick CN2-05→CN2-09; FR-TRACEABILITY FR-09→FR-12 trỏ file/
+  hàm thật, FR-13 ghi rõ CN2 chỉ hạ tầng; TEST-CHECKLIST thêm 10 case tay G2;
+  REPORT-NOTES thêm giới hạn dấu tiếng Việt + không viewer; ARCHITECTURE thêm
+  5 icon G2 vào bảng.
+- Không cài dependency nào: `Linking` nằm trong `react-native` core, debounce
+  viết tay bằng `setTimeout`, Menu/Dialog/Searchbar đã có trong Paper.
+
+**Quyết định và lý do**
+
+- Xóa storage trước, DB sau; DB fail sau storage → `DocumentDeletePartialError`
+  + Snackbar “Thử lại” (CẤM nuốt im lặng theo lệnh session). Bản ghi trỏ hư
+  không tệ hơn object mồ côi (UI bấm vào lỗi ngay), đúng ARCHITECTURE.
+- Đổi môn CHỈ ở chi tiết (Menu), danh sách chỉ Chip lọc — đúng CN2-4/SPEC;
+  `filterDocumentsLocal` chỉ phục vụ unit test, server là nguồn sự thật.
+- Tìm kiếm PHÂN BIỆT DẤU (`ilike`): `unaccent` không immutable nên không đánh
+  index trực tiếp; đã ghi vào REPORT-NOTES + khóa bằng unit test, không lặng
+  lẽ bỏ qua.
+- Sửa 2 lỗi lint `set-state-in-effect` bằng derive-trong-render (filter) và
+  tách `RenameDocumentForm` keyed theo `doc.id` (không effect đồng bộ).
+- Không viết `scripts/documents-rls-proof.ts` ở G2: RLS/policy đã chứng minh ở
+  CN1 + verify 14/14 sau apply 0002; proof A/B cho documents/subjects để phiên
+  polish gom một thể cùng test tay (ghi nợ bên dưới).
+
+**Cố tình không làm và lý do**
+
+- Không đổi bảng màu (task CN2-13 thuộc phiên polish `v2.0.0`, đổi sớm hỏng
+  ảnh báo cáo); không sửa file `.sql` (0002 đã apply, idempotent đã xác nhận
+  remote); không đụng `extracted_text` ngoài việc đọc (CN3 thực thi FR-13);
+  không làm viewer/WebView (CN2-1: đề không yêu cầu, WebView Android không
+  render PDF); không gọi Gemini (việc của CN3); không thêm dependency.
+
+**Đã kiểm thử**
+
+- Lệnh: `npx tsc --noEmit` → đạt (exit 0).
+- Lệnh: `npm run lint` → 0 errors, 2 warning `watch()` cũ (kế thừa G3–G7,
+  không từ code mới — 5 warning `import/first` trong test mới đã sửa bằng
+  cách đưa import lên trước `jest.mock`).
+- Lệnh: `npm test` → 16 suites, **174/174 PASS** (giữ nguyên 148 cũ, +26 mới
+  trong `documents-g2.test.ts`, không sửa test cũ, không gọi mạng).
+- Test tay Expo Go (10 case CN2-G2 trong TEST-CHECKLIST): chưa chạy (không có
+  thiết bị trong phiên); chủ dự án chạy.
+
+**Còn nợ / giới hạn đã biết**
+
+- Cần chủ dự án chạy checklist tay CN2-G2 trên Expo Go (10 case).
+- Proof RLS documents/subjects remote + regen `database.ts` bằng CLI (phiên polish).
+- Tìm kiếm phân biệt dấu tiếng Việt (giới hạn đã chốt, xem REPORT-NOTES).
+- Object mồ côi nếu xóa DB fail sau storage (báo rõ + cho thử lại; dọn rác
+  ngoài đề, không làm).
+
+**Mốc Git**
+
+- Commit cuối: (điền sau merge, xem dòng merge bên dưới)
+- Branch: `cn2-g2`
+- Tag: `cn2-g2-done` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
+- PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh

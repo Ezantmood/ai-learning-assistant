@@ -203,6 +203,13 @@ tên sai Paper sẽ render rỗng im lặng nên không tự ý đổi tên.
 | `weather-sunny` | Chủ đề “Sáng” (toggle + SegmentedButtons) |
 | `weather-night` | Chủ đề “Tối” (toggle + SegmentedButtons) |
 | `file-document-outline` | Thẻ CN2 trên dashboard |
+| `upload` | Nút tải tài liệu (CN2) — đã đối chiếu glyphmap |
+| `progress-clock` | Chip “Đang làm” thẻ CN2 |
+| `folder-outline` | Quản lý môn học (Appbar documents, màn subjects) |
+| `open-in-new` | Nút “Mở tài liệu” ra app ngoài (CN2-G2) |
+| `pencil` | Đổi tên tài liệu / môn học (CN2-G2) |
+| `tag-outline` | Nút chọn môn ở chi tiết tài liệu (CN2-G2) |
+| `magnify` | Ô tìm kiếm `Searchbar` màn documents (CN2-G2) |
 | `text-box-outline` | Thẻ CN3 trên dashboard |
 | `message-text-outline` | Thẻ CN4 trên dashboard |
 | `lightbulb-outline` | Thẻ CN6 trên dashboard |

@@ -14,6 +14,13 @@ export const DOCUMENT_MAX_BYTES = 10 * 1024 * 1024;
 export const MAX_DOCUMENTS_PER_USER = 100;
 export const MAX_SUBJECTS_PER_USER = 30;
 
+/** Tên môn học sau chuẩn hóa dài 1–60 ký tự (SPEC CN2). */
+export const MAX_SUBJECT_NAME_LENGTH = 60;
+
+/** Nhãn cảnh báo DOCX: AI không đọc được, gợi ý chuyển sang PDF. */
+export const DOCX_AI_NOTICE =
+  'Tệp DOCX: AI không đọc được nội dung. Hãy chuyển sang PDF để dùng tóm tắt và hỏi đáp (CN3 → CN6 chỉ nhận PDF/TXT).';
+
 /** TTL signed URL xem/tải: 3600s (dùng từ màn chi tiết G2). */
 export const DOCUMENT_SIGNED_URL_TTL_SECONDS = 3600;
 
@@ -125,6 +132,104 @@ export function validateDocumentCount(count: number): string | null {
     return `Bạn đã đạt giới hạn ${MAX_DOCUMENTS_PER_USER} tài liệu. Hãy xóa bớt trước khi tải thêm.`;
   }
   return null;
+}
+
+/** Chuẩn hóa tên môn học: trim + gộp khoảng trắng thừa (giữ hoa/thường). */
+export function normalizeSubjectName(raw: string): string {
+  return raw.trim().replace(/\s+/g, ' ');
+}
+
+/** Guard trần 30 môn: count trước khi insert, vượt thì chặn. */
+export function validateSubjectCount(count: number): string | null {
+  if (count >= MAX_SUBJECTS_PER_USER) {
+    return `Bạn đã đạt giới hạn ${MAX_SUBJECTS_PER_USER} môn học. Hãy xóa hoặc gộp bớt trước khi tạo thêm.`;
+  }
+  return null;
+}
+
+/** Nhãn loại tệp cho FR-09 (từ ext đã lowercase). */
+export function getFileTypeLabel(ext: string): string {
+  switch (ext) {
+    case 'pdf':
+      return 'PDF';
+    case 'docx':
+      return 'DOCX';
+    case 'txt':
+      return 'TXT';
+    default:
+      return ext.toUpperCase();
+  }
+}
+
+/**
+ * Thoát ký tự đặc biệt của LIKE (`\`, `%`, `_`) để ô tìm kiếm dùng `ilike`
+ * đúng nghĩa "chứa chuỗi người dùng gõ".
+ */
+export function escapeIlikePattern(part: string): string {
+  return part.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_');
+}
+
+/**
+ * Dựng pattern `ilike` `%từ-khóa%` từ ô tìm kiếm.
+ * Trả null khi query rỗng sau trim (nghĩa là không lọc).
+ */
+export function buildDocumentSearchPattern(query: string): string | null {
+  const trimmed = query.trim();
+  if (!trimmed) {
+    return null;
+  }
+  return `%${escapeIlikePattern(trimmed)}%`;
+}
+
+/**
+ * So khớp tên ở client, mirror hành vi `ilike` của server: không phân biệt
+ * hoa/thường NHƯNG phân biệt dấu tiếng Việt (giới hạn đã chốt — Postgres
+ * `unaccent` không immutable nên không đánh index trực tiếp được).
+ */
+export function matchesDocumentSearch(
+  displayName: string,
+  query: string,
+): boolean {
+  const trimmed = query.trim().toLowerCase();
+  if (!trimmed) {
+    return true;
+  }
+  return displayName.toLowerCase().includes(trimmed);
+}
+
+/**
+ * Giá trị bộ lọc môn ở màn danh sách:
+ * - `undefined` = “Tất cả”
+ * - `null` = “Chưa phân loại” (`subject_id IS NULL`)
+ * - `string` = id môn cụ thể
+ */
+export type SubjectFilterValue = string | null | undefined;
+
+export function matchesSubjectFilter(
+  docSubjectId: string | null,
+  filter: SubjectFilterValue,
+): boolean {
+  if (filter === undefined) {
+    return true;
+  }
+  if (filter === null) {
+    return docSubjectId === null;
+  }
+  return docSubjectId === filter;
+}
+
+/** Lọc client-side cho unit test (server dùng `ilike` + `eq`/`is`). */
+export function filterDocumentsLocal<
+  T extends { display_name: string; subject_id: string | null },
+>(
+  docs: readonly T[],
+  input: { query: string; subjectFilter: SubjectFilterValue },
+): T[] {
+  return docs.filter(
+    (doc) =>
+      matchesSubjectFilter(doc.subject_id, input.subjectFilter) &&
+      matchesDocumentSearch(doc.display_name, input.query),
+  );
 }
 
 /**
