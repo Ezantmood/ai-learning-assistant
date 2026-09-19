@@ -1,8 +1,8 @@
 import { Redirect, Stack } from 'expo-router';
 
-import { LoadingState } from '../../src/components/LoadingState';
+import { LoadingState } from '../../src/shared/components/LoadingState';
 import { useSession } from '../../src/features/auth/useSession';
-import { useThemeMode } from '../../src/theme/ThemeContext';
+import { useThemeMode } from '../../src/shared/theme/ThemeContext';
 
 export default function PrivateLayout() {
   const { isLoading, session } = useSession();

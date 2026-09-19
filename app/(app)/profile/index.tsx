@@ -4,10 +4,10 @@ import { useState } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
 import { Button, useTheme } from 'react-native-paper';
 
-import { ScreenContainer } from '../../../src/components/ScreenContainer';
-import { ScreenHeader } from '../../../src/components/ScreenHeader';
-import { ThemeSettingsCard } from '../../../src/components/ThemeSettingsCard';
-import { ThemeToggleAction } from '../../../src/components/ThemeToggleAction';
+import { ScreenContainer } from '../../../src/shared/components/ScreenContainer';
+import { ScreenHeader } from '../../../src/shared/components/ScreenHeader';
+import { ThemeSettingsCard } from '../../../src/shared/components/ThemeSettingsCard';
+import { ThemeToggleAction } from '../../../src/shared/components/ThemeToggleAction';
 import { signOut } from '../../../src/features/auth/api';
 import { toAuthErrorMessage } from '../../../src/features/auth/errors';
 import { useSession } from '../../../src/features/auth/useSession';
@@ -28,8 +28,8 @@ import {
   useUploadAvatar,
 } from '../../../src/features/profile/queries';
 import type { ProfileFormValues } from '../../../src/features/profile/schemas';
-import { spacing } from '../../../src/theme/spacing';
-import type { AppTheme } from '../../../src/theme/theme';
+import { spacing } from '../../../src/shared/theme/spacing';
+import type { AppTheme } from '../../../src/shared/theme/theme';
 
 /**
  * FR-04: xem/sửa hồ sơ + avatar, đăng xuất.

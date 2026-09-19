@@ -1,8 +1,8 @@
 import { Redirect, Stack, usePathname } from 'expo-router';
 
-import { LoadingState } from '../../src/components/LoadingState';
+import { LoadingState } from '../../src/shared/components/LoadingState';
 import { useSession } from '../../src/features/auth/useSession';
-import { useThemeMode } from '../../src/theme/ThemeContext';
+import { useThemeMode } from '../../src/shared/theme/ThemeContext';
 
 // verifyOtp type recovery tạo session ngay khi xác minh xong. Giữ session
 // đó ở lại hai màn hình recovery để kịp đặt mật khẩu mới (FR-03);

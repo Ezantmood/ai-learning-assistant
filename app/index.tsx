@@ -1,7 +1,7 @@
 import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
 
-import { LoadingState } from '../src/components/LoadingState';
+import { LoadingState } from '../src/shared/components/LoadingState';
 import { getPendingRecoveryEmail } from '../src/features/auth/recoveryStorage';
 import { useSession } from '../src/features/auth/useSession';
 

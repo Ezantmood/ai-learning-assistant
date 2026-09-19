@@ -1,8 +1,8 @@
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../../shared/lib/supabase';
 import type {
   StudyNoteInsert,
   StudyNoteRow,
-} from '../../types/database';
+} from '../../shared/types/database';
 import type { NoteFormValues } from './schemas';
 
 /**

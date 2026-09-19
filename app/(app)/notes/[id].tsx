@@ -11,10 +11,10 @@ import {
   useTheme,
 } from 'react-native-paper';
 
-import { FormTextInput } from '../../../src/components/FormTextInput';
-import { LoadingState } from '../../../src/components/LoadingState';
-import { ScreenContainer } from '../../../src/components/ScreenContainer';
-import { ScreenHeader } from '../../../src/components/ScreenHeader';
+import { FormTextInput } from '../../../src/shared/components/FormTextInput';
+import { LoadingState } from '../../../src/shared/components/LoadingState';
+import { ScreenContainer } from '../../../src/shared/components/ScreenContainer';
+import { ScreenHeader } from '../../../src/shared/components/ScreenHeader';
 import { useSession } from '../../../src/features/auth/useSession';
 import { toNotesErrorMessage } from '../../../src/features/notes/errors';
 import {
@@ -26,9 +26,9 @@ import {
   noteSchema,
   type NoteFormValues,
 } from '../../../src/features/notes/schemas';
-import { spacing } from '../../../src/theme/spacing';
-import type { AppTheme } from '../../../src/theme/theme';
-import type { StudyNoteRow } from '../../../src/types/database';
+import { spacing } from '../../../src/shared/theme/spacing';
+import type { AppTheme } from '../../../src/shared/theme/theme';
+import type { StudyNoteRow } from '../../../src/shared/types/database';
 
 export default function NoteDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

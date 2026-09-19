@@ -1,4 +1,4 @@
-import { isNetworkError } from '../../lib/network';
+import { isNetworkError } from '../../shared/lib/network';
 
 /**
  * Chuẩn hóa lỗi notes sang tiếng Việt trước khi hiển thị.

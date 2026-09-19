@@ -5,9 +5,9 @@ import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
 import { Banner, Button, ProgressBar, Text } from 'react-native-paper';
 
-import { FormTextInput } from '../../src/components/FormTextInput';
-import { PasswordInput } from '../../src/components/PasswordInput';
-import { ScreenContainer } from '../../src/components/ScreenContainer';
+import { FormTextInput } from '../../src/shared/components/FormTextInput';
+import { PasswordInput } from '../../src/shared/components/PasswordInput';
+import { ScreenContainer } from '../../src/shared/components/ScreenContainer';
 import { signUp } from '../../src/features/auth/api';
 import { toAuthErrorMessage } from '../../src/features/auth/errors';
 import {
@@ -15,8 +15,8 @@ import {
   signUpSchema,
   type SignUpFormValues,
 } from '../../src/features/auth/schemas';
-import { env } from '../../src/lib/env';
-import { spacing } from '../../src/theme/spacing';
+import { env } from '../../src/shared/lib/env';
+import { spacing } from '../../src/shared/theme/spacing';
 
 export default function SignUpScreen() {
   const [apiError, setApiError] = useState<string | null>(null);

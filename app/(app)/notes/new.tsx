@@ -3,9 +3,9 @@ import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Banner, Button, Text } from 'react-native-paper';
 
-import { FormTextInput } from '../../../src/components/FormTextInput';
-import { ScreenContainer } from '../../../src/components/ScreenContainer';
-import { ScreenHeader } from '../../../src/components/ScreenHeader';
+import { FormTextInput } from '../../../src/shared/components/FormTextInput';
+import { ScreenContainer } from '../../../src/shared/components/ScreenContainer';
+import { ScreenHeader } from '../../../src/shared/components/ScreenHeader';
 import { useSession } from '../../../src/features/auth/useSession';
 import { toNotesErrorMessage } from '../../../src/features/notes/errors';
 import { useCreateNote } from '../../../src/features/notes/queries';
