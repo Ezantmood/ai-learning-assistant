@@ -801,3 +801,38 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog. Sau m
 - Branch: `docs/cn2-decisions`
 - Tag: `docs-cn2.1` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
 - PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### Migration CN2 — File 0002 chạy được + verify 14 dòng — 2026-09-19
+
+**Đã làm gì**
+
+- Phát hiện lỗ hổng: SETUP 5b bảo paste DDL từ DATA-MODEL nhưng DATA-MODEL
+  chỉ có bảng markdown, không có SQL chạy được.
+- Tạo `supabase/migrations/0002_cn2_documents.sql` (253 dòng) bám khuôn 0001:
+  subjects trước, do-block bổ sung constraint/FK theo tên, index, RLS 4+4+4,
+  grants, tái dùng `set_updated_at()`, bucket `documents`
+  (`on conflict do update`, 10485760 byte khớp CHECK tuyệt đối). Không đụng CN1.
+- Tạo `scripts/cn2-schema-verify.sql` chỉ-đọc, `union all` một bảng 14 dòng
+  ĐẠT/KHÔNG ĐẠT.
+- SETUP 5b viết lại thao tác được (dán toàn bộ 0002 → verify → kết quả mong
+  đợi); 7b chỉ còn đối chiếu trực quan. DATA-MODEL trỏ 0002 là nguồn sự thật.
+
+**Đã kiểm thử**
+
+- Dựng Postgres 16 local + mock schema `auth`/`storage`/role/stub function
+  (mô phỏng 0001 đã apply): chạy 0002 hai lần liên tiếp → cả hai success,
+  không lỗi → idempotent thật.
+- Verify script trên DB đó → 14/14 ĐẠT.
+- `npx tsc --noEmit` → đạt; `npm test` → 14 suites, 110/110 PASS (giữ nguyên).
+
+**Còn nợ**
+
+- Chủ dự án dán 0002 + verify vào SQL Editor remote theo SETUP 5b, báo kết quả.
+
+**Mốc Git**
+
+- Branch: `chore/cn2-migration`
+- Tag: `cn2-migration` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
+- PR: không mở PR; tự merge vào `main` sau khi cổng chất lượng xanh

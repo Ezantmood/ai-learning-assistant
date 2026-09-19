@@ -62,16 +62,27 @@ DEVLOG G2). Thứ tự:
    được kiểm chứng bằng `scripts/storage-rls-proof.ts` thay vì SQL mới.
 3. Không chạy từng đoạn rời rạc (thiếu policy/grant sẽ hở bảo mật).
 
-## 5b. Apply DDL và RLS cho CN2 (SQL Editor, paste tay)
+## 5b. Apply migration CN2 (SQL Editor, paste tay)
 
-DDL tham chiếu nằm ở `docs/DATA-MODEL.md` (mục `subjects`, `documents`,
-bucket `documents`); đó là văn bản tham chiếu, khi áp thì paste từng khối
-lệnh vào SQL Editor theo thứ tự: bảng + constraints/index → RLS policies +
-grants → trigger `updated_at` (tái dùng function có sẵn) → tạo bucket
-`documents` ở Storage (private, 10 MB, whitelist 3 MIME) + 4 Storage policy.
-Không dùng `supabase link` / `db push` vì access token `sbp_` không đủ quyền
-trên project (lý do đã ghi ở DEVLOG G2, vẫn đúng tới nay).
-Mong đợi `Success. No rows returned` cho mỗi khối.
+1. Dán **TOÀN BỘ** file `supabase/migrations/0002_cn2_documents.sql` →
+   Run. Mong đợi `Success. No rows returned`. Migration idempotent: chạy lại
+   vẫn success (đã kiểm chứng chạy 2 lần liên tiếp trên Postgres 16 local).
+   File này tạo bảng `subjects`/`documents`, constraints, index, RLS đủ 4 lệnh
+   mỗi bảng, trigger `updated_at` (tái dùng function có sẵn), bucket private
+   `documents` (10485760 byte, đúng 3 MIME whitelist) và 4 Storage policy.
+   KHÔNG cần tạo bucket tay vì migration đã tạo (kể cả bucket đã có tay từ
+   trước, migration cũng cập nhật đúng cấu hình).
+2. Dán **TOÀN BỘ** file `scripts/cn2-schema-verify.sql` → Run để kiểm chứng.
+   File này chỉ đọc, gộp sẵn bằng `union all` nên hiện một bảng duy nhất.
+   Kết quả mong đợi — mọi dòng đều `DAT` (14 dòng):
+   bucket tồn tại/private/10485760; đúng 3 MIME; RLS bật cả 2 bảng; đủ 4+4
+   policy bảng; đủ 4 policy storage; FK `subject_id` SET NULL; FK `user_id`
+   CASCADE; đủ 2 index; đủ 3 check `file_ext`/`file_size`/`extraction_status`.
+   Dòng nào `KHÔNG DAT` thì migration chưa áp đúng — báo chủ dự án, không sửa
+   tay lẻ tẻ.
+3. Không dùng `supabase link` / `db push` vì access token `sbp_` không đủ quyền
+   trên project (lý do đã ghi ở DEVLOG G2, vẫn đúng tới nay).
+4. Không chạy từng đoạn rời rạc (thiếu policy/grant sẽ hở bảo mật).
 
 ## 6. Cấu hình Supabase Auth (Dashboard, làm tay)
 
@@ -95,12 +106,14 @@ Mong đợi `Success. No rows returned` cho mỗi khối.
    `(storage.foldername(name))[1] = auth.uid()::text`.
 3. Table Editor: `profiles` và `study_notes` hiện **RLS enabled**.
 
-## 7b. Kiểm tra bucket documents và keep-alive (làm tay)
+## 7b. Đối chiếu bucket documents và keep-alive (làm tay, chỉ nhìn)
 
-1. Storage → bucket `documents`: loại **private**, giới hạn 10 MB, đúng 3 MIME
-   whitelist (`application/pdf`, `...wordprocessingml.document`, `text/plain`).
-2. Storage → `documents` → Policies: đủ 4 policy giới hạn
-   `bucket_id = 'documents'` và `(storage.foldername(name))[1] = auth.uid()::text`.
+Sau khi mục 5b đã xanh (verify 14/14 `DAT`), phần này chỉ còn đối chiếu trực
+quan trên Dashboard, không phải bước tạo:
+
+1. Storage → bucket `documents`: loại **private**, giới hạn 10485760 byte,
+   đúng 3 MIME whitelist.
+2. Storage → `documents` → Policies: đủ 4 policy `documents_{select,insert,update,delete}_own`.
 3. Table Editor: `subjects` và `documents` hiện **RLS enabled**.
 4. GitHub repo → Actions → workflow **Supabase keep-alive**: hai secret
    `SUPABASE_URL` và `SUPABASE_ANON_KEY` đã được thêm ở
