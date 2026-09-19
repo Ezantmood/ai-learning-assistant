@@ -162,6 +162,24 @@ CN2 không có API key AI hay Edge Function nên chỉ làm hạ tầng: bảng
 nội dung rồi đổ vào hai cột đó. Tách như vậy CN2 làm được ngay mà FR-13
 không bị bỏ sót.
 
+**Vì sao tìm kiếm tài liệu PHÂN BIỆT DẤU tiếng Việt?**
+
+Giới hạn đã chốt ở CN2-G2 (không phải bug bỏ sót): ô tìm kiếm dùng `ilike`
+trên `display_name` nên “bai” không ra “bài”. Muốn tìm không dấu phải dùng
+hàm `unaccent` của Postgres, nhưng `unaccent` không immutable nên không đánh
+index trực tiếp được — bật extension + index expression ở giai đoạn này tốn
+chi phí demo mà lợi ít, nên SPEC chốt giữ `ilike` phân biệt dấu. Unit test
+`matchesDocumentSearch` khóa hành vi này (gõ không dấu → false).
+
+**Vì sao không có viewer xem tài liệu trong app?**
+
+Quyết định CN2-1 của chủ dự án: đề FR-06→FR-13 không yêu cầu xem nội dung;
+WebView trên Android không render được PDF (phải nhờ dịch vụ bên thứ ba).
+Nút “Mở tài liệu” chỉ tạo signed URL TTL 3600s rồi `Linking.openURL` ra app
+ngoài (tiện ích ngoài FR, mức tối thiểu, không thêm package). `Linking` nằm
+trong `react-native` core. Mở lỗi (không có app xử lý, hết hạn URL) thì báo
+tiếng Việt rõ ràng, có `canOpenURL` kiểm tra trước.
+
 **Vì sao icon Paper không hiện trên Expo Go và sửa thế nào?**
 
 `react-native-paper` resolve icon qua `react-native-vector-icons`, package
