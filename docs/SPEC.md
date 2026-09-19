@@ -1,4 +1,4 @@
-# Đặc tả Student Account Manager
+# Đặc tả AI Learning Assistant
 
 ## Bối cảnh
 

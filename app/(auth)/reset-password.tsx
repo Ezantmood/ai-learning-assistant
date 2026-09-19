@@ -5,9 +5,9 @@ import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
 import { Banner, Button, ProgressBar, Text } from 'react-native-paper';
 
-import { LoadingState } from '../../src/components/LoadingState';
-import { PasswordInput } from '../../src/components/PasswordInput';
-import { ScreenContainer } from '../../src/components/ScreenContainer';
+import { LoadingState } from '../../src/shared/components/LoadingState';
+import { PasswordInput } from '../../src/shared/components/PasswordInput';
+import { ScreenContainer } from '../../src/shared/components/ScreenContainer';
 import { signOut, updatePassword } from '../../src/features/auth/api';
 import { toAuthErrorMessage } from '../../src/features/auth/errors';
 import {
@@ -20,7 +20,7 @@ import {
   type ResetPasswordFormValues,
 } from '../../src/features/auth/schemas';
 import { useSession } from '../../src/features/auth/useSession';
-import { spacing } from '../../src/theme/spacing';
+import { spacing } from '../../src/shared/theme/spacing';
 
 /**
  * FR-03 bước 3: đã có recovery session từ verifyOtp thì updateUser

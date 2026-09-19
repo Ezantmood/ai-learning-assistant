@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Student Account Manager",
-    "slug": "student-account-manager",
+    "name": "AI Learning Assistant",
+    "slug": "ai-learning-assistant",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",

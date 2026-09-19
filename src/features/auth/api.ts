@@ -1,5 +1,5 @@
-import { queryClient } from '../../lib/queryClient';
-import { supabase } from '../../lib/supabase';
+import { queryClient } from '../../shared/lib/queryClient';
+import { supabase } from '../../shared/lib/supabase';
 import type {
   ChangePasswordFormValues,
   SignInFormValues,

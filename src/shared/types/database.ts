@@ -1,4 +1,4 @@
-// Database types cho Student Account Manager.
+// Database types cho AI Learning Assistant.
 // Sinh bằng CLI từ schema Supabase remote (2026-09-17):
 //   supabase gen types typescript --db-url "$SUPABASE_DB_URL" > src/types/database.ts
 // ($SUPABASE_DB_URL lấy từ .env.local, session pooler; không commit secret.)

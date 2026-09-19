@@ -1,4 +1,4 @@
-import { isNetworkError } from '../../lib/network';
+import { isNetworkError } from '../../shared/lib/network';
 
 type CodedError = {
   code?: string;

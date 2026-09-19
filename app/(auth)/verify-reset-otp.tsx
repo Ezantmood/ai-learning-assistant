@@ -5,9 +5,9 @@ import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet } from 'react-native';
 import { Banner, Button, Text } from 'react-native-paper';
 
-import { FormTextInput } from '../../src/components/FormTextInput';
-import { LoadingState } from '../../src/components/LoadingState';
-import { ScreenContainer } from '../../src/components/ScreenContainer';
+import { FormTextInput } from '../../src/shared/components/FormTextInput';
+import { LoadingState } from '../../src/shared/components/LoadingState';
+import { ScreenContainer } from '../../src/shared/components/ScreenContainer';
 import {
   requestPasswordReset,
   verifyRecoveryOtp,

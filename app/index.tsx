@@ -1,7 +1,7 @@
 import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
 
-import { LoadingState } from '../src/components/LoadingState';
+import { LoadingState } from '../src/shared/components/LoadingState';
 import { getPendingRecoveryEmail } from '../src/features/auth/recoveryStorage';
 import { useSession } from '../src/features/auth/useSession';
 
@@ -25,5 +25,5 @@ export default function IndexScreen() {
     return <Redirect href="/reset-password" />;
   }
 
-  return <Redirect href={session ? '/notes' : '/sign-in'} />;
+  return <Redirect href={session ? '/dashboard' : '/sign-in'} />;
 }

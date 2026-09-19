@@ -1,7 +1,7 @@
 import { decode } from 'base64-arraybuffer';
 
-import { supabase } from '../../lib/supabase';
-import type { ProfileRow } from '../../types/database';
+import { supabase } from '../../shared/lib/supabase';
+import type { ProfileRow } from '../../shared/types/database';
 import {
   AVATAR_BUCKET,
   AVATAR_SIGNED_URL_TTL_SECONDS,

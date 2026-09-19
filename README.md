@@ -1,10 +1,12 @@
-# Student Account Manager
+# AI Learning Assistant
 
-Bài 1 môn Lập trình di động: ứng dụng Expo quản lý tài khoản sinh viên —
-đăng ký, đăng nhập/đăng xuất, quên/đặt lại mật khẩu bằng OTP 6 số qua email,
-cập nhật hồ sơ/avatar và CRUD `study_notes` tối thiểu. Dữ liệu mỗi tài khoản
-được cách ly bằng Supabase Row Level Security. Bản `v1.0.0` (G5) hoàn thành
-cả 5 FR.
+Hệ thống học tập Expo duy nhất của môn Lập trình di động, gồm 6 chức năng lớn
+với 45 yêu cầu FR-01 → FR-45. Chức năng 1 (quản lý tài khoản, FR-01 → FR-05)
+đã hoàn thành (`v1.2.0`): đăng ký, đăng nhập/đăng xuất, quên/đặt lại mật khẩu
+bằng OTP 6 số qua email, cập nhật hồ sơ/avatar và CRUD `study_notes` tối
+thiểu. Dữ liệu mỗi tài khoản được cách ly bằng Supabase Row Level Security.
+5 chức năng còn lại (FR-06 → FR-45) chưa làm; màn hình tổng quan sau đăng nhập
+liệt kê cả 6, thẻ chưa làm hiển thị "Sắp có" và bị vô hiệu hóa.
 
 ## Stack
 
@@ -15,15 +17,16 @@ base64-arraybuffer. Chạy bằng Expo Go, không development build.
 
 ## FR coverage
 
-| FR | Nội dung | Chứng minh |
-|---|---|---|
-| FR-01 | Đăng ký email/mật khẩu/mã SV | Unit test schema/errors + test tay |
-| FR-02 | Đăng nhập/đăng xuất/session | Unit test + test tay restart/logout |
-| FR-03 | Quên/đặt lại mật khẩu OTP 6 số | Unit test 51 case + test tay Brevo |
-| FR-04 | Hồ sơ + avatar | Unit test 33 case + `storage-rls-proof` 5/5 |
-| FR-05 | study_notes cách ly A/B | `rls-proof` 7/7 + test tay 2 máy |
+| Chức năng | Dải FR | Nội dung | Trạng thái |
+|---|---|---|---|
+| 1. Quản lý tài khoản người dùng | FR-01 → FR-05 | Đăng ký/đăng nhập/OTP/hồ sơ/`study_notes` | Xong — unit test + `rls-proof` 7/7 + `storage-rls-proof` 5/5 |
+| 2. Quản lý tài liệu học tập | FR-06 → FR-13 | — | Chưa làm |
+| 3. AI tóm tắt tài liệu PDF | FR-14 → FR-22 | — | Chưa làm |
+| 4. AI hỏi đáp dựa trên tài liệu | FR-23 → FR-30 | — | Chưa làm |
+| 5. Quét hình ảnh đề bài bằng AI | FR-31 → FR-37 | — | Chưa làm |
+| 6. AI gợi ý lời giải | FR-38 → FR-45 | — | Chưa làm |
 
-Chi tiết file/hàm/test xem `docs/FR-TRACEABILITY.md`.
+Chi tiết file/hàm/test của FR-01 → FR-05 xem `docs/FR-TRACEABILITY.md`.
 
 ## Cách chạy
 
@@ -40,7 +43,7 @@ Dựng đầy đủ từ số 0 (SQL, Auth, Brevo SMTP, bucket private): `docs/S
 ```bash
 npx tsc --noEmit
 npm run lint
-npm test               # G5: 8 suites, 84/84 PASS — mock supabase, không gọi mạng
+npm test               # 14 suites, 110/110 PASS — mock supabase, không gọi mạng
 ```
 
 ## Cách chạy rls-proof (cần `.env` + `.env.local`, tự dọn user test)
@@ -61,7 +64,15 @@ NODE_PATH="$PWD/node_modules" node /tmp/storageproof-out/storage-rls-proof.js
 
 ## Giới hạn đã biết
 
-- Expo Go + Supabase free tier: project tự pause khi lâu không dùng (resume trên Dashboard).
+- Supabase free tier tự pause project sau ~7 ngày không hoạt động.
+  Workflow `.github/workflows/keep-alive.yml` ping Auth health mỗi 2 ngày để
+  giữ project thức. Người dùng phải tự làm đúng 2 bước (agent không làm thay
+  được vì cần quyền repo):
+  1. Vào GitHub repo → Settings → Secrets and variables → Actions → New
+     repository secret, tạo secret `SUPABASE_URL` với giá trị là Project URL
+     (Supabase Dashboard → Project Settings → Data API).
+  2. Tạo tiếp secret `SUPABASE_ANON_KEY` với giá trị anon/public key.
+  Xong có thể bấm Run workflow tay (workflow_dispatch) để kiểm tra ngay.
 - Không offline-first: mất mạng thì báo lỗi + retry, form giữ dữ liệu để thử lại.
 - Không social login, role/admin, realtime, push, E2E (out of scope theo `docs/SPEC.md`).
 - Migration đã apply thì không sửa file cũ; quy ước path avatar timestamp chỉ ghi

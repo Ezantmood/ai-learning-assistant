@@ -4,7 +4,7 @@ import { type PropsWithChildren, useEffect } from 'react';
 import { PaperProvider } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
 
-import { AuthProvider } from '../features/auth/AuthProvider';
+import { AuthProvider } from '../../features/auth/AuthProvider';
 import { queryClient } from '../lib/queryClient';
 import { subscribeToSupabaseAutoRefresh } from '../lib/supabase';
 import { useThemeMode } from '../theme/ThemeContext';

@@ -1,8 +1,8 @@
 import * as SplashScreen from 'expo-splash-screen';
 import { Stack, ThemeProvider } from 'expo-router';
 
-import { AppProviders } from '../src/providers/AppProviders';
-import { ThemeModeProvider, useThemeMode } from '../src/theme/ThemeContext';
+import { AppProviders } from '../src/shared/providers/AppProviders';
+import { ThemeModeProvider, useThemeMode } from '../src/shared/theme/ThemeContext';
 
 // Giữ splash cho tới khi AuthProvider khôi phục session xong (cổng khởi động G3).
 SplashScreen.preventAutoHideAsync().catch(() => undefined);

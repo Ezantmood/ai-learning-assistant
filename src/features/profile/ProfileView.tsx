@@ -11,11 +11,11 @@ import {
   useTheme,
 } from 'react-native-paper';
 
-import { EmptyState } from '../../components/EmptyState';
-import { FeedbackSnackbar } from '../../components/FeedbackSnackbar';
-import { FormTextInput } from '../../components/FormTextInput';
-import type { AppTheme } from '../../theme/theme';
-import { radius, spacing } from '../../theme/spacing';
+import { EmptyState } from '../../shared/components/EmptyState';
+import { FeedbackSnackbar } from '../../shared/components/FeedbackSnackbar';
+import { FormTextInput } from '../../shared/components/FormTextInput';
+import type { AppTheme } from '../../shared/theme/theme';
+import { radius, spacing } from '../../shared/theme/spacing';
 import { profileSchema, type ProfileFormValues } from './schemas';
 
 export type ProfileViewStatus = 'error' | 'loading' | 'ready';

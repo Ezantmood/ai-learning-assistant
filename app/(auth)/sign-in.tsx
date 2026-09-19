@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Banner, Button, Text } from 'react-native-paper';
 
-import { FormTextInput } from '../../src/components/FormTextInput';
-import { PasswordInput } from '../../src/components/PasswordInput';
-import { ScreenContainer } from '../../src/components/ScreenContainer';
+import { FormTextInput } from '../../src/shared/components/FormTextInput';
+import { PasswordInput } from '../../src/shared/components/PasswordInput';
+import { ScreenContainer } from '../../src/shared/components/ScreenContainer';
 import { signIn } from '../../src/features/auth/api';
 import { toAuthErrorMessage } from '../../src/features/auth/errors';
 import {
