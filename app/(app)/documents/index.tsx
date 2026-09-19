@@ -1,11 +1,19 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import {
   Appbar,
+  Chip,
   Divider,
   FAB,
   List,
+  Searchbar,
   useTheme,
 } from 'react-native-paper';
 
@@ -16,11 +24,25 @@ import { ScreenContainer } from '../../../src/shared/components/ScreenContainer'
 import { ThemeToggleAction } from '../../../src/shared/components/ThemeToggleAction';
 import { useSession } from '../../../src/features/auth/useSession';
 import { toDocumentsErrorMessage } from '../../../src/features/documents/errors';
-import { useDocuments } from '../../../src/features/documents/queries';
+import {
+  useDocuments,
+  useSubjects,
+} from '../../../src/features/documents/queries';
 import { formatFileSize } from '../../../src/features/documents/storage';
+import type { SubjectFilterValue } from '../../../src/features/documents/storage';
 import { spacing } from '../../../src/shared/theme/spacing';
 import type { AppTheme } from '../../../src/shared/theme/theme';
 import type { DocumentWithSubject } from '../../../src/features/documents/api';
+
+/** Debounce ô tìm kiếm 300ms để không bắn `ilike` mỗi phím bấm. */
+function useDebouncedValue(value: string, delayMs: number): string {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delayMs);
+    return () => clearTimeout(timer);
+  }, [value, delayMs]);
+  return debounced;
+}
 
 function formatUploadedAt(value: string): string {
   const date = new Date(value);
@@ -32,21 +54,55 @@ function formatUploadedAt(value: string): string {
 
 function describeDocument(item: DocumentWithSubject): string {
   const subject = item.subjectName ?? 'Chưa phân loại';
-  return `${subject} • ${formatFileSize(item.file_size)} • ${formatUploadedAt(item.created_at)}`;
+  const base = `${subject} • ${formatFileSize(item.file_size)} • ${formatUploadedAt(item.created_at)}`;
+  // DOCX: nhãn cho biết AI không đọc được (SPEC 2.7).
+  return item.file_ext === 'docx' ? `${base} • AI không đọc DOCX` : base;
+}
+
+function filterLabel(
+  filter: SubjectFilterValue,
+  subjects: { id: string; name: string }[],
+): string {
+  if (filter === undefined) {
+    return 'Tất cả';
+  }
+  if (filter === null) {
+    return 'Chưa phân loại';
+  }
+  return subjects.find((s) => s.id === filter)?.name ?? 'Tất cả';
 }
 
 export default function DocumentsScreen() {
   const theme = useTheme<AppTheme>();
   const { user } = useSession();
   const params = useLocalSearchParams<{ uploaded?: string }>();
-  const docsQuery = useDocuments(user?.id);
   const [showUploaded, setShowUploaded] = useState(params.uploaded === '1');
+  const [search, setSearch] = useState('');
+  const [subjectFilter, setSubjectFilter] =
+    useState<SubjectFilterValue>(undefined);
+  const debouncedSearch = useDebouncedValue(search, 300);
+  const subjectsQuery = useSubjects(user?.id);
+  const subjects = subjectsQuery.data ?? [];
+
+  // Lọc đang chọn trỏ vào môn vừa bị xóa → rớt về “Tất cả”.
+  // Derive trong render (không dùng effect + setState).
+  const effectiveFilter: SubjectFilterValue =
+    typeof subjectFilter === 'string' &&
+    subjectsQuery.data &&
+    !subjectsQuery.data.some((s) => s.id === subjectFilter)
+      ? undefined
+      : subjectFilter;
+
+  const docsQuery = useDocuments(user?.id, {
+    search: debouncedSearch,
+    subjectFilter: effectiveFilter,
+  });
 
   const renderItem = ({ item }: { item: DocumentWithSubject }) => (
     <List.Item
       accessibilityLabel={`Tài liệu: ${item.display_name}`}
       description={describeDocument(item)}
-      descriptionNumberOfLines={2}
+      descriptionNumberOfLines={3}
       left={(props) => (
         <List.Icon
           {...props}
@@ -54,12 +110,19 @@ export default function DocumentsScreen() {
           icon="file-document-outline"
         />
       )}
+      onPress={() => router.push(`/documents/${item.id}`)}
       title={item.display_name}
       titleNumberOfLines={2}
     />
   );
 
   const docs = docsQuery.data ?? [];
+  const isSearching = debouncedSearch.trim() !== '';
+  const emptyTitle = isSearching
+    ? 'Không tìm thấy tài liệu'
+    : effectiveFilter !== undefined
+      ? `Không có tài liệu ${filterLabel(effectiveFilter, subjects).toLowerCase()}`
+      : 'Chưa có tài liệu nào';
 
   return (
     <ScreenContainer contentStyle={styles.plain} scrollable={false}>
@@ -69,8 +132,58 @@ export default function DocumentsScreen() {
           onPress={() => router.back()}
         />
         <Appbar.Content title="Tài liệu học tập" />
+        <Appbar.Action
+          accessibilityLabel="Quản lý môn học"
+          icon="folder-outline"
+          onPress={() => router.push('/subjects')}
+        />
         <ThemeToggleAction />
       </Appbar.Header>
+
+      <View style={styles.tools}>
+        <Searchbar
+          accessibilityLabel="Tìm tài liệu theo tên"
+          onChangeText={setSearch}
+          placeholder="Tìm theo tên tài liệu…"
+          testID="documents-search"
+          value={search}
+        />
+        <ScrollView
+          accessibilityLabel="Lọc theo môn học"
+          horizontal
+          showsHorizontalScrollIndicator={false}
+        >
+          <View style={styles.chips}>
+            <Chip
+              accessibilityLabel="Lọc: tất cả môn"
+              onPress={() => setSubjectFilter(undefined)}
+              selected={effectiveFilter === undefined}
+              showSelectedCheck={false}
+            >
+              Tất cả
+            </Chip>
+            {subjects.map((subject) => (
+              <Chip
+                accessibilityLabel={`Lọc môn: ${subject.name}`}
+                key={subject.id}
+                onPress={() => setSubjectFilter(subject.id)}
+                selected={effectiveFilter === subject.id}
+                showSelectedCheck={false}
+              >
+                {subject.name}
+              </Chip>
+            ))}
+            <Chip
+              accessibilityLabel="Lọc: chưa phân loại"
+              onPress={() => setSubjectFilter(null)}
+              selected={effectiveFilter === null}
+              showSelectedCheck={false}
+            >
+              Chưa phân loại
+            </Chip>
+          </View>
+        </ScrollView>
+      </View>
 
       {docsQuery.isPending ? (
         <ListSkeleton rows={3} />
@@ -89,10 +202,14 @@ export default function DocumentsScreen() {
         <EmptyState
           actionLabel="Tải tài liệu lên"
           actionTestID="documents-empty-upload"
-          description="Tải lên tệp PDF, DOCX hoặc TXT (tối đa 10 MB) để bắt đầu."
+          description={
+            isSearching || effectiveFilter !== undefined
+              ? 'Thử từ khóa khác hoặc chọn bộ lọc khác.'
+              : 'Tải lên tệp PDF, DOCX hoặc TXT (tối đa 10 MB) để bắt đầu.'
+          }
           icon="file-document-outline"
           onAction={() => router.push('/documents/upload')}
-          title="Chưa có tài liệu nào"
+          title={emptyTitle}
         />
       ) : (
         <FlatList
@@ -132,6 +249,11 @@ export default function DocumentsScreen() {
 }
 
 const styles = StyleSheet.create({
+  chips: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.sm,
+  },
   fab: {
     bottom: spacing.xl,
     position: 'absolute',
@@ -142,5 +264,9 @@ const styles = StyleSheet.create({
   },
   plain: {
     padding: 0,
+  },
+  tools: {
+    gap: spacing.sm,
+    padding: spacing.sm,
   },
 });
