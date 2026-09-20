@@ -1118,8 +1118,28 @@ https://supabase.com/docs/guides/platform/access-control`
   không auth → 401 thì sang PROXY ([7]: xóa đường key trực tiếp); không đạt
   thì giữ key trực tiếp ([8]). Không thử lần ba.
 
-**Mốc Git (tạm — cập nhật sau [6])**
+**[6] Kết quả sau deploy (2026-09-20, cùng phiên)**
+
+- User dán-deploy xong; đối chiếu `GET .../functions` → 200, `gemini-proxy`
+  ACTIVE, **version 2** (đã tăng — deploy ăn source mới, không còn nghi
+  bundle cũ).
+- Probe bằng user mới (signup 200): SIGNIN_OK; REST_PROFILES **200** (đúng
+  JWT đó đọc được `profiles`); WITH_AUTH **401**
+  `{"error":"JWT không hợp lệ hoặc đã hết hạn."}` y hệt; WITHOUT_AUTH
+  **401** gateway. → **KHÔNG đạt** (thiếu 200 + "OK").
+- Theo time-box ([6] + lệnh DỪNG): hết 3 giả thuyết code + 1 lượt deploy sạch
+  mà vẫn 401 → DỪNG, **giữ nguyên key trực tiếp**, không thử lần ba, không
+  làm [7] (không chuyển transport, không gỡ key, không xóa mục “Giới hạn đã
+  biết”). Nguyên nhân gốc sâu hơn (vượt 3 nghi phạm: có thể `getUser` lỗi
+  mạng/runtime bị map chung vào cùng message 401 — code hiện map MỌI
+  userError vào một câu) để cho phiên sau có Logs Dashboard mới đào tiếp;
+  đào mù lúc này vi phạm time-box.
+
+**Mốc Git**
 
 - Commit fix: `cd7dcb5` (probe + function + cổng, đã push branch)
+- Commit docs chờ: `8bce052` (đã push branch)
+- Commit merge: `TBD` (merge --no-ff)
 - Branch: `fix/cn3-proxy-auth`
-- Tag: chưa tạo (chờ [6])
+- Tag: `cn3-g1b-done` (tạo + push cùng lệnh với push main)
+- PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh

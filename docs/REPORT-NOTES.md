@@ -347,3 +347,13 @@ temperature/top_p/top_k (deprecated trên Gemini 3.x), cấm bản -preview.
 Hướng khắc phục khi có thời gian/quyền: owner redeploy `gemini-proxy` qua
 Dashboard từ source mới (SETUP 5d mục 7) tới khi probe kèm JWT trả 200, lúc
 đó G-xóa nhánh trực tiếp và code đúng MỘT nhánh proxy — không giữ cả hai.
+
+### CN3-G1b — deploy sạch version 2 vẫn 401, giữ key trực tiếp (2026-09-20)
+
+- Chẩn đoán: REST 200 với đúng JWT (token tốt) → 401 nằm trong hàm; 3 nghi
+  phạm auth sạch trong repo (cắt Bearer, không tự verify, có forward header);
+  cổng `check:functions` mới bắt được lỗi thiếu `}` có sẵn trong file repo —
+  bằng chứng bundle đang chạy ≠ source repo.
+- User deploy tay source đã fix → version **2** (đã tăng). Probe lại: kèm
+  JWT vẫn **401** y hệt, không auth **401**, REST 200. Hết time-box → DỪNG,
+  giữ nhánh trực tiếp, không đào tiếp. Chi tiết xem DEVLOG cn3-g1b.

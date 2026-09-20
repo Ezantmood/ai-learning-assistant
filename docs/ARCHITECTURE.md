@@ -408,10 +408,10 @@ thứ hai thấy `processing` thì dừng); `UNIQUE(document_id)` chặn ghi đ�
 + WITHOUT_AUTH 401 → NHÁNH KEY TRỰC TIẾP, model `gemini-3.5-flash`
 (`src/lib/ai/models.ts`). Xem DEVLOG cn3-g1.**
 
-**CN3-G1b (đang chẩn đoán, chưa đổi chốt): REST 200 với đúng JWT → token tốt,
-401 nằm trong hàm; 3 nghi phạm auth sạch trong repo → bundle deploy cũ
-(`getUser()` không đối số). Đã fix + `check:functions`, CHỜ deploy tay
-(SETUP 5d mục 8) rồi probe lại. Xem DEVLOG cn3-g1b.**
+**CN3-G1b (xong, giữ chốt trực tiếp): REST 200 với đúng JWT → token tốt,
+401 nằm trong hàm; 3 nghi phạm auth sạch trong repo → bundle deploy cũ.
+Deploy tay source đã fix → version 2 nhưng probe lại vẫn 401 y hệt → hết
+time-box, DỪNG, giữ nhánh trực tiếp. Xem DEVLOG cn3-g1b.**
 
 ```text
 Đường đúng (proxy, chờ deploy — key KHÔNG BAO GIỜ rời server):

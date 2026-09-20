@@ -190,6 +190,13 @@ Probe (`chore/gemini-probe-2`, endpoint thật đã tồn tại):
       JWT → **200** body chứa `"OK"` + `"model":"gemini-3.5-flash"`; POST
       không auth → **401**. Đạt cả hai → chuyển nhánh proxy; không đạt →
       giữ key trực tiếp, không thử lần ba.
+9. Kết quả CN3-G1b (2026-09-20): user deploy xong, `GET .../functions` →
+   200, `gemini-proxy` ACTIVE **version 2** (đã tăng). Probe lại bằng user
+   mới: SIGNIN_OK, REST 200, WITH_AUTH **401** y hệt, WITHOUT_AUTH **401**.
+   Hết time-box → giữ nhánh key trực tiếp, không đào tiếp (chi tiết DEVLOG
+   cn3-g1b). Quy trình dán tay Via Editor hoạt động (version tăng được);
+   lần redeploy trước không tăng version là do thao tác chưa ăn, không phải
+   lỗi nền tảng.
 
 ## 6. Cấu hình Supabase Auth (Dashboard, làm tay)
 
