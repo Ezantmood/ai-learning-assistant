@@ -833,3 +833,67 @@ https://supabase.com/docs/guides/platform/access-control`
 - Branch: `chore/cn3-proxy-verify`
 - Tag: không tạo `cn3-proxy-verified` (200 chưa đạt, lý do trên)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### Tag audit — đối chiếu local/remote + khôi phục g1-done — 2026-09-20
+
+**Bối cảnh**
+
+- Lệnh session báo `git tag` local có 15 tag và thiếu `g1-done`,
+  `v1.1.1`, `v1.2.0`, `v1.3.0`, `edge-probe`, `edge-fn-fixed`.
+  Thực tế đếm lại: local có 19 tag (không phải 15), bối cảnh đã lỗi thời.
+
+**Chẩn đoán (làm trước, sửa sau)**
+
+- So local với remote (`git ls-remote --tags origin`): remote cũng đúng
+  19 tag, tập tên TRÙNG KHÍT 100% — không có tag nào chỉ ở một bên.
+- `v1.1.1`, `v1.2.0`, `v1.3.0` KHÔNG thiếu: tồn tại cả hai bên và trỏ đúng
+  merge commit theo nội dung (`v1.1.1`→`0679341` fix/g6-1,
+  `v1.2.0`→`5302c00` feat/g7, `v1.3.0`→`68d1645` rebrand). Giữ nguyên,
+  không di chuyển.
+- Ba tag vắng cả hai bên, tra `git log --all`, `git reflog`, DEVLOG và
+  `git for-each-ref` đều không thấy dấu vết từng tồn tại — tức chưa từng
+  được tạo, không phải bị xóa:
+  - `g1-done` (`docs/TASKS.md:8` yêu cầu sau merge PR #1): commit đúng xác
+    định chắc chắn là `455c368` (Merge PR #1 `feat/g1-setup`).
+  - `edge-probe`: DEVLOG mục docs-CN3 và probe đã ghi rõ “tag không tồn
+    tại local/remote nên probe làm lại từ đầu”, thay bằng `gemini-wired`.
+  - `edge-fn-fixed`: nhánh `fix/edge-fn-syntax` chưa từng tồn tại (không
+    có trong `branch -a`, `for-each-ref`, log); DEVLOG không nhắc tên tag
+    này lần nào. Nội dung fix tương đương (`e0f6d8e` truyền JWT tường minh
+    vào `getUser`) ĐÃ nằm trong `main` qua merge `08a4803` — gốc vấn đề là
+    milestone chưa từng được lập, không phải tag bị mất.
+
+**Đã làm gì**
+
+- Branch `chore/tag-audit` từ `main` (đã `pull --ff-only`, up to date).
+- Tạo lại `g1-done` lightweight tại `455c368` (cùng kiểu với `g2-done` →
+  `g5-done` đang là lightweight) rồi `git push origin g1-done` ngay;
+  `ls-remote` xác nhận remote đã có. Đây là tag duy nhất đủ bằng chứng để
+  khôi phục.
+- KHÔNG tạo `edge-probe` / `edge-fn-fixed`: không xác định chắc chắn được
+  commit đúng, tạo bừa (ép cho đủ bộ) tệ hơn không tag. Ghi ở đây là hai
+  mốc đó chưa từng tồn tại; commit gần nhất tương ứng là `a1b9f04`
+  (probe, tag `gemini-wired`) và `08a4803` (merge fix `getUser(token)`).
+- `AGENTS.md` mục Merge và tag thêm một dòng: sau khi tạo tag phải push
+  tag lên remote ngay (`git push origin <tag>`), tag chỉ nằm local coi
+  như chưa có.
+- Không sửa code, không rebase, không di chuyển tag đã push nào.
+
+**Đã kiểm thử**
+
+- Lệnh: `npx tsc --noEmit` → exit 0.
+- Lệnh: `npm run lint` → 0 errors, 2 warning `watch()` cũ (kế thừa).
+- Lệnh: `npm test` → 18 suites, **187/187 PASS** (giữ nguyên).
+- `git tag` local 20 tag, `ls-remote` remote 20 tag (`g1-done` đã có cả
+  hai bên sau push).
+
+**Mốc Git**
+
+- Commit merge: (điền ở commit bổ sung sau merge, theo tiền lệ
+  `docs/*-hash`)
+- Branch: `chore/tag-audit`
+- Tag: `tag-audit` (tạo ngay sau tự merge theo quyết định chủ dự án, push
+  ngay theo quy tắc mới)
+- PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
