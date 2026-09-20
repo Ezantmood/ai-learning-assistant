@@ -1,7 +1,9 @@
-// Probe CN3-G1: cua chan kien truc truoc moi dong code khac.
+// Probe CN3-G1/G1b: cua chan kien truc truoc moi dong code khac.
 // Chay bang: PROBE_EMAIL=... PROBE_PASSWORD=... node scripts/probe-gemini-proxy.mjs
 //   a. Dang nhap lay JWT that (signInWithPassword). KHONG co bien thi DUNG.
 //      Cam tu tao user moi trong script nay.
+//   a2. [G1b] Cung JWT do, GET /rest/v1/profiles?select=id&limit=1 kem apikey:
+//       200 → token tot, loi nam trong ham; 401 → token hong, loi o probe.
 //   b. POST endpoint KEM Authorization. In status + body nguyen van.
 //   c. POST endpoint KHONG kem Authorization. In status + body.
 // Luat chon (xem lenh session):
@@ -50,6 +52,25 @@ if (error || !data.session?.access_token) {
 const jwt = data.session.access_token;
 console.log('SIGNIN_OK');
 
+// [2] cn3-g1b: tach bien — cung Bearer JWT do, goi REST profiles.
+// 200 → token hop le, loi nam trong ham. 401 → token hong, loi o probe.
+async function restProof() {
+  const res = await fetch(
+    `${supabaseUrl.replace(/\/$/, '')}/rest/v1/profiles?select=id&limit=1`,
+    {
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+        apikey: publishableKey,
+      },
+    },
+  );
+  const text = await res.text();
+  console.log(`REST_PROFILES status=${res.status} body=${text.slice(0, 200)}`);
+  return res.status;
+}
+
+const restStatus = await restProof();
+
 async function postProbe(label, withAuth) {
   const headers = { 'Content-Type': 'application/json' };
   if (withAuth) headers.Authorization = `Bearer ${jwt}`;
@@ -65,4 +86,4 @@ const statusWithoutAuth = await postProbe('WITHOUT_AUTH', false);
 let verdict = 'KEY_TRUC_TIEP';
 if (statusWithAuth === 200 && statusWithoutAuth === 401) verdict = 'PROXY';
 else if (statusWithAuth === 200 && statusWithoutAuth === 200) verdict = 'CONG_FAIL_VERIFY_JWT_TAT';
-console.log(`VERDICT=${verdict}`);
+console.log(`VERDICT=${verdict} REST_PROFILES=${restStatus}`);

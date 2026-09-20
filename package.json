@@ -56,7 +56,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test": "jest"
+    "test": "jest",
+    "check:functions": "tsc --project tsconfig.functions.json --noEmit"
   },
   "private": true
 }
