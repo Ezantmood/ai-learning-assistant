@@ -828,6 +828,8 @@ https://supabase.com/docs/guides/platform/access-control`
 
 **Mốc Git**
 
+- Commit verify: `ec83ee3055249afd239662701d7b9bf31e05fcf6`
+- Commit merge: `aef07a909d47c20a062fdfe950b4b7b4b38d8bd9` (merge --no-ff)
 - Branch: `chore/cn3-proxy-verify`
 - Tag: không tạo `cn3-proxy-verified` (200 chưa đạt, lý do trên)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
