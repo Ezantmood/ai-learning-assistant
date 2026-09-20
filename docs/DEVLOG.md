@@ -517,7 +517,7 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog, secre
 
 **Mốc Git**
 
-- Commit merge: `<điền full hash sau merge>` (merge --no-ff)
+- Commit merge: `3740a948952ab32a24ebbd8265e82f748ab7555a` (merge --no-ff)
 - Branch: `fix/app-shell`
 - Tag: `app-shell` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
