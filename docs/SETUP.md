@@ -115,11 +115,29 @@ DEVLOG G2). Thứ tự:
 
 ## 5d. Đường proxy Gemini (chủ dự án làm tay khi có token đủ quyền)
 
-Probe 2026-09-20 (`chore/gemini-secret`, tag `gemini-wired`): `supabase
-secrets set` và `supabase functions deploy` đều 403 thiếu quyền với access
-token hiện tại (cùng họ với G2: token chỉ đọc được), nên secret CHƯA nạp và
-function CHƯA deploy — bằng chứng trong `docs/REPORT-NOTES.md`. Khi có token
-đủ quyền (Owner/Admin hoặc token đủ scope), làm theo thứ tự:
+Retry 2026-09-20 (`chore/gemini-wired`) với access token MỚI tạo lại: cả ba
+đường vẫn 403 thiếu quyền, nguyên văn message:
+`Your account does not have the necessary privileges to access this endpoint.
+For more details, refer to our documentation
+https://supabase.com/docs/guides/platform/access-control`.
+
+- `supabase secrets set` (CLI, đọc key từ `.env` trong shell, file tạm ngoài
+  repo xóa ngay) → `LegacySecretsSetUnexpectedStatusError`, 403.
+- `supabase functions deploy gemini-proxy` (CLI) → `FunctionsApiStatusError`,
+  `unexpected deploy status 403`.
+- Management API `POST /v1/projects/{ref}/functions/deploy` (Bearer access
+  token) → HTTP 403, cùng message.
+- Đối chiếu: `GET /v1/projects/{ref}/functions` → HTTP 200, body `[]` (chưa
+  có function nào được deploy); gọi thử endpoint không auth →
+  HTTP 404 `{"code":"NOT_FOUND","message":"Requested function was not found"}`.
+
+Kết luận: token hiện tại chỉ đọc được (list secrets/functions), không ghi/
+deploy được. Secret CHƯA nạp, function CHƯA deploy — lúc này mới cần người:
+Owner cấp token đủ scope (hoặc deploy tay + nạp secret trong Dashboard →
+Edge Functions → Secrets), rồi curl lại theo bước 3 dưới đây. Bằng chứng đầy
+đủ trong `docs/DEVLOG.md` (entry retry 2026-09-20) và `docs/REPORT-NOTES.md`.
+
+Khi có token đủ quyền (Owner/Admin hoặc token đủ scope), làm theo thứ tự:
 
 1. Dashboard → Edge Functions → Secrets (hoặc CLI):
    `supabase secrets set GEMINI_API_KEY=<key> --project-ref <ref>` —

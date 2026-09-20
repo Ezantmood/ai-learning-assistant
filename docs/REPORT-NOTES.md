@@ -298,3 +298,19 @@ deploy `supabase/functions/gemini-proxy/index.ts` — source đã nằm sẵn tr
 repo, không chứa secret, đọc key duy nhất qua `Deno.env.get`. Chi tiết xem
 `docs/SETUP.md` mục 5d. Khi proxy deploy xong, CN3-03 code đúng MỘT nhánh
 proxy và gỡ nhánh fallback; không code cả hai.
+
+### Retry 2026-09-20 (`chore/gemini-wired`): proxy vẫn là đường chốt kiến trúc, nhưng chưa deploy được
+
+Lệnh session yêu cầu “chốt CN3 dùng proxy, không dùng
+`EXPO_PUBLIC_GEMINI_API_KEY`” — điều này chỉ viết được thành sự thật sau khi
+deploy + curl 200. Thực tế retry với access token MỚI: `secrets set` (CLI),
+`functions deploy` (CLI) và Management API `POST .../functions/deploy` đều
+403 cùng message thiếu quyền (nguyên văn trong DEVLOG + SETUP 5d); đối chiếu
+`GET .../functions` → `[]` và endpoint → 404 NOT_FOUND. Secret CHƯA nạp,
+function CHƯA deploy, bước curl JWT trong lệnh không chạy được vì chưa có
+endpoint để gọi (cố tình không tạo user test cho một endpoint không tồn tại).
+
+Vì vậy: proxy giữ nguyên là đường ĐÚNG và là chốt kiến trúc (source probe đã
+sẵn, key không bao giờ rời server), nhưng nhánh demo `EXPO_PUBLIC_...` của
+phiên trước GIỮ NGUYÊN HIỆU LỰC cho tới khi owner deploy + nạp secret xong
+(SETUP 5d). Viết “đã chốt proxy” ngay lúc này là nói dối tiến độ — không làm.

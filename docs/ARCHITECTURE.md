@@ -408,6 +408,11 @@ app (key trong bundle, giải nén ra được) → Gemini 2.5 Flash trực ti�
   (cùng họ với G2: token hiện tại chỉ đọc được), `secrets list` xác nhận chưa
   có `GEMINI_API_KEY` — bằng chứng trong REPORT-NOTES, cách mở lại trong
   SETUP mục 5d.
+- Retry cùng ngày với access token MỚI (`chore/gemini-wired`): cả CLI lẫn
+  Management API `POST .../functions/deploy` vẫn 403 cùng message; đối chiếu
+  `GET .../functions` → `[]`, endpoint → 404 NOT_FOUND. Proxy vẫn là đường
+  chốt kiến trúc nhưng CHƯA deploy được — nhánh demo `EXPO_PUBLIC_...` giữ
+  nguyên hiệu lực tới khi owner deploy xong.
 
 ## Lý do chọn công nghệ
 - **Expo SDK 57 + TypeScript strict:** một codebase React Native, vòng lặp phát triển nhanh và lỗi kiểu được phát hiện sớm.
