@@ -146,6 +146,44 @@ export type Database = {
           },
         ]
       }
+      document_summaries: {
+        Row: {
+          created_at: string
+          document_id: string
+          id: string
+          model: string
+          summary_text: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          id?: string
+          model?: string
+          summary_text: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          id?: string
+          model?: string
+          summary_text?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'document_summaries_document_id_fkey'
+            columns: ['document_id']
+            isOneToOne: true
+            referencedRelation: 'documents'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -288,6 +326,8 @@ export const Constants = {
 // Alias tiện ích của project (giữ từ bản mirror G2 để code feature ngắn gọn).
 // Hai bảng CN2 (`subjects`, `documents`) đồng bộ tay theo
 // `supabase/migrations/0002_cn2_documents.sql` (chờ regen bằng CLI).
+// Bảng CN3 (`document_summaries`) đồng bộ tay theo
+// `supabase/migrations/0004_cn3_summaries.sql` (chờ regen bằng CLI).
 export type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 export type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
 export type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
@@ -306,3 +346,9 @@ export type DocumentInsert =
   Database['public']['Tables']['documents']['Insert'];
 export type DocumentUpdate =
   Database['public']['Tables']['documents']['Update'];
+export type DocumentSummaryRow =
+  Database['public']['Tables']['document_summaries']['Row'];
+export type DocumentSummaryInsert =
+  Database['public']['Tables']['document_summaries']['Insert'];
+export type DocumentSummaryUpdate =
+  Database['public']['Tables']['document_summaries']['Update'];
