@@ -1,6 +1,9 @@
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Appbar, Avatar, Card, Chip, Text, useTheme } from 'react-native-paper';
+
+import { FeedbackSnackbar } from '../../src/shared/components/FeedbackSnackbar';
 
 import { ScreenContainer } from '../../src/shared/components/ScreenContainer';
 import { ThemeToggleAction } from '../../src/shared/components/ThemeToggleAction';
@@ -72,13 +75,13 @@ const FEATURES: FeatureCard[] = [
 ];
 
 /**
- * Màn chính sau đăng nhập: liệt kê 6 chức năng lớn của hệ thống
- * AI Learning Assistant. Chỉ Chức năng 1 bấm được; 5 thẻ còn lại
- * hiển thị "Sắp có" và không điều hướng (chưa có route).
+ * Tab Trang chủ: lưới 6 thẻ CN1→CN6, chỗ cắm các CN sau.
+ * CN3→CN6 chưa khả dụng: bấm báo "đang phát triển", không điều hướng.
  */
 export default function DashboardScreen() {
   const theme = useTheme<AppTheme>();
   const { user } = useSession();
+  const [notice, setNotice] = useState<string | null>(null);
 
   return (
     <ScreenContainer
@@ -116,11 +119,17 @@ export default function DashboardScreen() {
         return (
           <Card
             accessibilityLabel={`Chức năng ${feature.id}: ${feature.title}`}
-            accessibilityRole={enabled ? 'button' : undefined}
+            accessibilityRole="button"
             accessibilityState={{ disabled: !enabled }}
             key={feature.id}
             mode="outlined"
-            onPress={target ? () => router.push(target) : undefined}
+            onPress={() => {
+              if (target) {
+                router.push(target);
+              } else {
+                setNotice('Tính năng đang phát triển.');
+              }
+            }}
             style={
               enabled
                 ? undefined
@@ -181,6 +190,12 @@ export default function DashboardScreen() {
           </Card>
         );
       })}
+      <FeedbackSnackbar
+        message={notice ?? ''}
+        onDismiss={() => setNotice(null)}
+        variant="info"
+        visible={notice !== null}
+      />
     </ScreenContainer>
   );
 }

@@ -23,6 +23,7 @@ import { FormTextInput } from '../../../src/shared/components/FormTextInput';
 import { ListSkeleton } from '../../../src/shared/components/LoadingState';
 import { ScreenContainer } from '../../../src/shared/components/ScreenContainer';
 import { ScreenHeader } from '../../../src/shared/components/ScreenHeader';
+import { goBackOrReplace } from '../../../src/shared/lib/navigation';
 import { useSession } from '../../../src/features/auth/useSession';
 import {
   toDocumentsErrorMessage,
@@ -179,8 +180,8 @@ export default function DocumentDetailScreen() {
       <ScreenContainer
         header={
           <ScreenHeader
-            onBack={() => router.back()}
-            showBack={router.canGoBack()}
+            onBack={() => goBackOrReplace(router, '/documents')}
+            showBack
             title="Chi tiết tài liệu"
           />
         }
@@ -195,8 +196,8 @@ export default function DocumentDetailScreen() {
       <ScreenContainer
         header={
           <ScreenHeader
-            onBack={() => router.back()}
-            showBack={router.canGoBack()}
+            onBack={() => goBackOrReplace(router, '/documents')}
+            showBack
             title="Chi tiết tài liệu"
           />
         }

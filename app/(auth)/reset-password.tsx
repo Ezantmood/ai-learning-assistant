@@ -8,6 +8,8 @@ import { Banner, Button, ProgressBar, Text } from 'react-native-paper';
 import { LoadingState } from '../../src/shared/components/LoadingState';
 import { PasswordInput } from '../../src/shared/components/PasswordInput';
 import { ScreenContainer } from '../../src/shared/components/ScreenContainer';
+import { ScreenHeader } from '../../src/shared/components/ScreenHeader';
+import { goBackOrReplace } from '../../src/shared/lib/navigation';
 import { signOut, updatePassword } from '../../src/features/auth/api';
 import { toAuthErrorMessage } from '../../src/features/auth/errors';
 import {
@@ -100,11 +102,19 @@ export default function ResetPasswordScreen() {
 
   // Đã login thường nhưng không đi từ luồng quên mật khẩu: về ghi chú.
   if (!pendingEmail) {
-    return <Redirect href="/notes" />;
+    return <Redirect href="/dashboard" />;
   }
 
   return (
-    <ScreenContainer>
+    <ScreenContainer
+      header={
+        <ScreenHeader
+          onBack={() => goBackOrReplace(router, '/sign-in')}
+          showBack
+          title="Đặt mật khẩu mới"
+        />
+      }
+    >
       <Text variant="headlineSmall">Đặt mật khẩu mới</Text>
       <Text variant="bodyMedium">
         Email {pendingEmail} đã xác minh. Nhập mật khẩu mới từ 8 ký tự, có cả
@@ -176,11 +186,11 @@ export default function ResetPasswordScreen() {
         accessibilityRole="button"
         disabled={mutation.isPending}
         mode="text"
-        onPress={() => {
-          void clearPendingRecovery().finally(() => {
-            router.replace('/notes');
-          });
-        }}
+          onPress={() => {
+            void clearPendingRecovery().finally(() => {
+              router.replace('/dashboard');
+            });
+          }}
       >
         Để sau, về ghi chú
       </Button>

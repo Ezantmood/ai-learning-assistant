@@ -7,6 +7,7 @@ import { Banner, Button, Text } from 'react-native-paper';
 import { PasswordInput } from '../../../src/shared/components/PasswordInput';
 import { ScreenContainer } from '../../../src/shared/components/ScreenContainer';
 import { ScreenHeader } from '../../../src/shared/components/ScreenHeader';
+import { goBackOrReplace } from '../../../src/shared/lib/navigation';
 import { changePassword } from '../../../src/features/auth/api';
 import { toAuthErrorMessage } from '../../../src/features/auth/errors';
 import {
@@ -68,8 +69,8 @@ export default function ChangePasswordScreen() {
     <ScreenContainer
       header={
         <ScreenHeader
-          onBack={() => router.back()}
-          showBack={router.canGoBack()}
+          onBack={() => goBackOrReplace(router, '/profile')}
+          showBack
           title="Đổi mật khẩu"
         />
       }

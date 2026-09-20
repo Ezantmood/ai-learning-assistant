@@ -131,8 +131,6 @@ export default function ProfileScreen() {
       header={
         <ScreenHeader
           actions={<ThemeToggleAction />}
-          onBack={() => router.back()}
-          showBack={router.canGoBack()}
           title="Thông tin cá nhân"
         />
       }
@@ -167,6 +165,17 @@ export default function ProfileScreen() {
             mode="outlined"
           >
             Đổi mật khẩu
+          </Button>
+        </Link>
+
+        <Link asChild href="/notes">
+          <Button
+            accessibilityLabel="Mở ghi chú học tập"
+            accessibilityRole="button"
+            icon="note-text-outline"
+            mode="outlined"
+          >
+            Ghi chú học tập
           </Button>
         </Link>
 

@@ -127,10 +127,6 @@ export default function DocumentsScreen() {
   return (
     <ScreenContainer contentStyle={styles.plain} scrollable={false}>
       <Appbar.Header>
-        <Appbar.BackAction
-          accessibilityLabel="Quay lại"
-          onPress={() => router.back()}
-        />
         <Appbar.Content title="Tài liệu học tập" />
         <Appbar.Action
           accessibilityLabel="Quản lý môn học"

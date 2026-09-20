@@ -6,6 +6,8 @@ import { Banner, Button, Text } from 'react-native-paper';
 
 import { FormTextInput } from '../../src/shared/components/FormTextInput';
 import { ScreenContainer } from '../../src/shared/components/ScreenContainer';
+import { ScreenHeader } from '../../src/shared/components/ScreenHeader';
+import { goBackOrReplace } from '../../src/shared/lib/navigation';
 import { requestPasswordReset } from '../../src/features/auth/api';
 import { toAuthErrorMessage } from '../../src/features/auth/errors';
 import {
@@ -78,7 +80,15 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <ScreenContainer>
+    <ScreenContainer
+      header={
+        <ScreenHeader
+          onBack={() => goBackOrReplace(router, '/sign-in')}
+          showBack
+          title="Quên mật khẩu"
+        />
+      }
+    >
       <Text variant="headlineSmall">Quên mật khẩu</Text>
       <Text variant="bodyMedium">
         Nhập email đã đăng ký, chúng tôi sẽ gửi mã OTP 6 số để đặt lại mật khẩu.
@@ -101,7 +111,8 @@ export default function ForgotPasswordScreen() {
             icon="numeric"
             mode="contained"
             onPress={() =>
-              router.replace({
+              // push để Back quay lại sửa email được.
+              router.push({
                 params: { email: sentEmail },
                 pathname: '/verify-reset-otp',
               })

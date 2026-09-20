@@ -457,3 +457,67 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog, secre
 - Branch: `docs/cn3`
 - Tag: `docs-cn3` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### App shell — bottom tabs + lối lùi mọi màn con — 2026-09-20
+
+**Nguyên nhân gốc (chẩn đoán trước khi sửa)**
+
+- `(app)/_layout.tsx` là Stack phẳng duy nhất cho mọi màn sau đăng nhập;
+  repo vốn là bài 1 đơn lẻ nên điều hướng thiết kế quanh `/notes` như “home”.
+- Đăng nhập/đăng ký `router.replace('/notes')` xóa sạch lịch sử auth, trong
+  khi màn gốc CN1 (`/notes`, `/dashboard`) không có Appbar.BackAction và
+  `/profile` chỉ hiện back khi `canGoBack()` — vừa login xong thì không có gì
+  để back nên kẹt. Trên web không thấy vì nút Back trình duyệt che lấp.
+- `documents/index` có BackAction vô điều kiện gọi `router.back()` — deep link
+  vào là bấm chết. Wizard OTP dùng `replace` giữa các bước nên không sửa lại
+  được email/mã.
+
+**Đã làm gì**
+
+- Branch `fix/app-shell` từ `main`. Không thêm dependency (Tabs có sẵn trong
+  `expo-router`, icon dùng MaterialCommunityIcons đã có).
+- Mới `src/shared/lib/navigation.ts`: `decideRouteTarget` (loading/recovery/
+  app/auth theo session + cờ recovery), `TAB_ROOTS`, `goBackOrReplace`
+  (còn lịch sử thì back, hết thì replace về gốc tab) + unit test 10 case.
+- `(app)/_layout.tsx`: Stack → bottom Tabs (Trang chủ `home` / Tài liệu
+  `file-document-outline` / Tài khoản `account`, đã đối chiếu glyphmap);
+  `headerShown: false`, tab bar ăn `theme.colors`; màn con `href: null` +
+  ẩn tab bar. CN1 nằm trong tab Tài khoản (thêm nút “Ghi chú học tập” ở
+  `/profile`); dashboard thành lưới 6 thẻ, CN3→CN6 bấm báo “đang phát triển”.
+- Mọi màn con có BackAction luôn hiện, `onPress` qua `goBackOrReplace`;
+  gốc tab bỏ back thừa. Vào màn con dùng push; `replace` chỉ ở biên
+  `(auth)`↔`(app)` (landing login/signup về `/dashboard`, đăng xuất về
+  `/sign-in`). Wizard OTP forgot→verify→reset chuyển sang push.
+- `app/index.tsx` refactor dùng `decideRouteTarget`, hành vi giữ nguyên.
+
+**Cố tình không làm và lý do**
+
+- Không sửa logic nghiệp vụ CN1/CN2, schema, theme/bảng màu (v2.0.0), tính
+  năng CN2 mới — ngoài phạm vi lệnh.
+- Giữ `replace` khi thoát màn sau khi xong việc (đổi pass xong, upload xong,
+  reset pass xong): đó là lối ra chứ không phải lối vào, giữ history gọn.
+- Không test nút Back cứng Android bằng thiết bị thật trong phiên; đã ghi
+  10 case tay mục 15 TEST-CHECKLIST để chủ dự án chạy.
+
+**Đã kiểm thử**
+
+- Trước: 17 suites, 177/177 PASS. Sau: 18 suites, **187/187 PASS**
+  (+10 mới, không sửa test cũ).
+- `npx tsc --noEmit` → exit 0; `npm run lint` → 0 errors, 2 warning `watch()`
+  cũ (kế thừa).
+- `npx expo export --platform web` → success, toàn bộ 17 route bundle được,
+  không error (xóa `dist/` sau khi verify).
+
+**Còn nợ**
+
+- Chủ dự án chạy checklist tay mục 15 trên Expo Go (tabs, back cứng, đăng
+  xuất, mở lại app còn phiên).
+
+**Mốc Git**
+
+- Commit merge: `<điền full hash sau merge>` (merge --no-ff)
+- Branch: `fix/app-shell`
+- Tag: `app-shell` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
+- PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh

@@ -103,25 +103,40 @@ Auth event → useSession → route guard trong layout → (auth) hoặc (app)
 
 ## Luồng màn hình
 
-### Sơ đồ điều hướng
+### Sơ đồ điều hướng (vỏ app-shell: tabs + lối lùi)
 
 ```text
-Khởi động `/`
-├─ đang khôi phục session → splash/loading
-├─ chưa login → `/sign-in`
-│  ├─ `/sign-up` → vào app khi dev / xác nhận email khi demo
-│  └─ `/forgot-password` → email → `/verify-reset-otp` → `/reset-password`
-└─ đã login → `/dashboard` (màn chính: 6 thẻ chức năng)
-   ├─ thẻ Chức năng 1 → `/notes`
-   │  ├─ `/notes/new` → tạo → `/notes`
-   │  ├─ `/notes/[id]` → sửa/xóa → `/notes`
-   │  └─ `/profile` → cập nhật / đăng xuất → `/sign-in`
-   └─ thẻ Chức năng 2 → 6: "Sắp có", bị vô hiệu hóa, không điều hướng
-   (từ CN2-G1: thẻ Chức năng 2 chip “Đang làm”, bấm tới `/documents`;
-   thẻ CN3–6 vẫn "Sắp có")
+Khởi động `/` (decideRouteTarget trong src/shared/lib/navigation.ts)
+├─ loading → splash/loading (chống nháy lúc hydrate session + cờ recovery)
+├─ recovery → `/reset-password` (mở lại app giữa luồng OTP thì làm tiếp)
+├─ auth → `/sign-in` [Stack (auth)]
+│  ├─ `/sign-up` (push, back về sign-in)
+│  └─ `/forgot-password` → (push) `/verify-reset-otp` → (push) `/reset-password`
+└─ app → tab Trang chủ `/dashboard` [Tabs (app): Trang chủ/Tài liệu/Tài khoản]
+   ├─ tab Trang chủ `/dashboard`: lưới 6 thẻ CN
+   │  ├─ CN1 → (push) `/notes` → `/notes/new`, `/notes/[id]`
+   │  ├─ CN2 → tab Tài liệu (chuyển tab, giữ lịch sử để back)
+   │  └─ CN3→CN6 "Sắp có", bấm báo "đang phát triển" (chỗ cắm CN sau)
+   ├─ tab Tài liệu `/documents` (+ `/documents/upload`, `/documents/[id]`,
+   │  `/subjects` push đè lên, back về tab, tab bar ẩn ở màn con)
+   └─ tab Tài khoản `/profile` (CN1 nằm trong tab này: nút “Ghi chú học tập”
+      push `/notes`; `/profile/change-password` push; đăng xuất replace về
+      `/sign-in`)
 ```
 
-Route group `(auth)` và `(app)` không xuất hiện trong URL. Layout mỗi group thực hiện guard; redirect chỉ sau khi `useSession` hoàn tất loading.
+Quy tắc (nguyên nhân gốc: `(app)` từng là Stack phẳng quanh `/notes`,
+đăng nhập `replace` xóa lịch sử mà màn gốc CN1 không có back nên kẹt):
+
+- Vào màn con dùng `router.push`, KHÔNG `replace`. Chỉ `replace` ở biên
+  `(auth)` ↔ `(app)` (đăng nhập/đăng xuất) và khi thoát wizard sau khi xong việc.
+- Mọi màn không phải gốc tab đều có `Appbar.BackAction`; gốc tab
+  (Trang chủ, Tài liệu, Tài khoản) không có back — tab bar là lối thoát.
+- `onPress` của BackAction: `goBackOrReplace(router, fallback)` —
+  `canGoBack()` thì `back()`, ngược lại `replace` về gốc tab tương ứng
+  (hết lịch sử do deep link/restart). Nút Back cứng Android ăn cùng lịch
+  sử stack nên cũng đúng theo.
+- Route group `(auth)` và `(app)` không xuất hiện trong URL. Layout mỗi group
+  thực hiện guard; redirect chỉ sau khi `useSession` hoàn tất loading.
 
 ### Màn hình và trạng thái (G6)
 
@@ -133,25 +148,31 @@ ScrollView theo token `src/shared/theme`); tiêu đề `headlineSmall`, phụ đ
 
 ### Quy ước header (G6.1)
 
-- Header duy nhất là Paper `Appbar`; **toàn bộ Stack để
-  `headerShown: false`** (root, `(app)`, `(auth)`) kèm `contentStyle` nền
-  theo theme để hết dải trắng/flash trắng khi chuyển màn.
+- Header duy nhất là Paper `Appbar`; **toàn bộ navigator để
+  `headerShown: false`** (root Stack, `(app)` Tabs, `(auth)` Stack) kèm
+  `contentStyle` nền theo theme để hết dải trắng/flash trắng khi chuyển màn.
+  Tab bar `(app)` ăn `theme.colors` (primary/onSurfaceVariant/surface) nên
+  đúng cả light lẫn dark; icon tab là MaterialCommunityIcons đã đối chiếu
+  (`home`, `file-document-outline`, `account`).
 - Navigation theme (`ThemeProvider` từ `expo-router`) suy ra từ theme MD3
   G6 qua `adaptNavigationTheme` (`src/shared/theme/navigation.ts`) — một nguồn
   theme duy nhất, gọi ở module scope, không gọi trong render.
-- Màn con trong `(app)` (profile, đổi mật khẩu, tạo/sửa note) dùng
-  `ScreenHeader` qua prop `header` của `ScreenContainer` (trong SafeArea,
-  ngoài ScrollView): `Appbar.BackAction` (label “Quay lại”) chỉ render khi
-  `router.canGoBack()`, `Appbar.Content` title tiếng Việt (“Thông tin cá
-  nhân”, “Đổi mật khẩu”, “Ghi chú mới”, “Sửa ghi chú”). Màn Notes và
-  Dashboard giữ `Appbar` sẵn có làm header duy nhất.
+- Màn con (ghi chú tạo/sửa, tài liệu upload/chi tiết, môn học, đổi mật khẩu,
+  các màn `(auth)` trừ sign-in) dùng `ScreenHeader` qua prop `header` của
+  `ScreenContainer` (trong SafeArea, ngoài ScrollView): `Appbar.BackAction`
+  (label “Quay lại”) LUÔN render (không còn điều kiện `canGoBack`), `onPress`
+  gọi `goBackOrReplace(router, fallback)` — hết lịch sử thì về gốc tab chứ
+  không kẹt. `Appbar.Content` title tiếng Việt (“Thông tin cá
+  nhân”, “Đổi mật khẩu”, “Ghi chú mới”, “Sửa ghi chú”, “Đăng ký”,
+  “Quên mật khẩu”, “Xác minh OTP”, “Đặt mật khẩu mới”). Ba gốc tab
+  (Trang chủ, Tài liệu, Tài khoản) giữ `Appbar` sẵn có, không back.
 - `StatusBar` đặt một chỗ duy nhất ở root provider theo theme
   (sáng chữ tối / tối chữ sáng).
 
 | Route | Mục đích | Component chính | Loading / empty / error / success |
 |---|---|---|---|
 | `/` | Chọn nhánh theo session | `LoadingState` | Loading khi khôi phục session; lỗi cấu hình hiển thị rõ; thành công redirect |
-| `/dashboard` | Màn chính sau login: 6 thẻ CN | `Card` + `Chip` (testID `dashboard-card-<id>`) | Không loading (không fetch); thẻ CN1 bấm tới `/notes`; thẻ CN2–6 "Sắp có", disabled |
+| `/dashboard` | Tab Trang chủ sau login: lưới 6 thẻ CN | `Card` + `Chip` (testID `dashboard-card-<id>`) | Không loading (không fetch); CN1 bấm tới `/notes`; CN2 tới tab Tài liệu; CN3–6 "Sắp có", bấm báo "đang phát triển" |
 | `/sign-in` | FR-02 đăng nhập | `FormTextInput` (email `email-outline`), `PasswordInput`, `Button` icon `login` (testID `login-submit`), link đăng ký/quên mật khẩu | Button spinner; không có empty; lỗi field/API; thành công về `/dashboard` |
 | `/sign-up` | FR-01 đăng ký | Full name (`account`)/student code (`badge-account-horizontal-outline`)/email (`email-outline`) + 2 `PasswordInput` (testID `password-toggle`, `password-confirm-toggle`), nút icon `account-plus` (testID `register-submit`) | Spinner; lỗi Zod/email hoặc student code trùng; dev vào app ngay, demo yêu cầu kiểm tra email theo env |
 | `/forgot-password` | FR-03 gửi email reset | Email form icon `email-outline`, nút icon `send` (testID `forgot-submit`) | Spinner; luôn dùng thông báo success trung tính; offline cho retry |
@@ -214,6 +235,8 @@ tên sai Paper sẽ render rỗng im lặng nên không tự ý đổi tên.
 | `message-text-outline` | Thẻ CN4 trên dashboard |
 | `lightbulb-outline` | Thẻ CN6 trên dashboard |
 | `clock-outline` | Chip “Sắp có” trên dashboard |
+| `home` | Tab Trang chủ (vỏ app-shell) |
+| `account` | Tab Tài khoản (vỏ app-shell; dùng chung với ô họ tên) |
 
 Mọi control chỉ có icon đều có `accessibilityLabel` và vùng bấm tối thiểu
 44x44 (avatar `Pressable` dùng `hitSlop` + `minHeight/minWidth`).

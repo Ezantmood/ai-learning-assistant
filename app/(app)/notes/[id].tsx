@@ -15,6 +15,7 @@ import { FormTextInput } from '../../../src/shared/components/FormTextInput';
 import { LoadingState } from '../../../src/shared/components/LoadingState';
 import { ScreenContainer } from '../../../src/shared/components/ScreenContainer';
 import { ScreenHeader } from '../../../src/shared/components/ScreenHeader';
+import { goBackOrReplace } from '../../../src/shared/lib/navigation';
 import { useSession } from '../../../src/features/auth/useSession';
 import { toNotesErrorMessage } from '../../../src/features/notes/errors';
 import {
@@ -49,7 +50,7 @@ export default function NoteDetailScreen() {
           accessibilityLabel="Quay lại danh sách"
           accessibilityRole="button"
           mode="contained"
-          onPress={() => router.back()}
+          onPress={() => goBackOrReplace(router, '/notes')}
         >
           Quay lại
         </Button>
@@ -119,8 +120,8 @@ function NoteEditor({ note }: { note: StudyNoteRow }) {
     <ScreenContainer
       header={
         <ScreenHeader
-          onBack={() => router.back()}
-          showBack={router.canGoBack()}
+          onBack={() => goBackOrReplace(router, '/notes')}
+          showBack
           title="Sửa ghi chú"
         />
       }
