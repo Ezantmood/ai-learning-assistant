@@ -599,3 +599,81 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog, secre
 - Branch: `chore/gemini-secret`
 - Tag: `gemini-wired` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### Retry probe gemini-proxy với token mới (CN3-01 tiếp) — 2026-09-20
+
+**Đã làm gì**
+
+- [0] Đọc AGENTS.md, SETUP mục 5d, entry DEVLOG probe trước và
+  `supabase/functions/gemini-proxy/index.ts` (giữ nguyên, không sửa — code
+  probe đã đúng yêu cầu). `.env` dòng 1 `.gitignore` đã có `.env`; kiểm trước
+  khi làm gì khác. Ghi nhận lệch tên biến so với lệnh session: `.env` KHÔNG
+  có `SUPABASE_URL` / `SUPABASE_ANON_KEY`, chỉ có `EXPO_PUBLIC_SUPABASE_URL` /
+  `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (cùng giá trị) — shell suy ra từ hai
+  biến này, không sửa `.env`.
+- [1] Branch `chore/gemini-wired` từ `main` (đã `pull --ff-only`, up to date).
+- [2] Nạp secret: đọc `GEMINI_API_KEY` từ `.env` HOÀN TOÀN trong shell (không
+  qua chuỗi lệnh, không vào repo), qua file tạm ngoài repo (`chmod 600`, xóa
+  ngay): `supabase secrets set --env-file` → lỗi nguyên văn
+  `LegacySecretsSetUnexpectedStatusError`, message 403 thiếu quyền (xem dưới).
+  `secrets list` → vẫn 5 secret mặc định, chưa có `GEMINI_API_KEY`.
+- [3] Deploy CLI `supabase functions deploy gemini-proxy` → lỗi nguyên văn
+  `FunctionsApiStatusError`, `unexpected deploy status 403` cùng message.
+  Không dừng ở fail đầu: thử tiếp Management API
+  `POST /v1/projects/{ref}/functions/deploy` (Bearer access token) → HTTP 403
+  cùng message. Đối chiếu: `GET .../functions` → HTTP 200 body `[]`; POST
+  endpoint không auth → HTTP 404
+  `{"code":"NOT_FOUND","message":"Requested function was not found"}`.
+- [4] KHÔNG chạy được bước curl JWT: chưa có endpoint để gọi (function chưa
+  deploy, secret chưa nạp). Cố tình không tạo user test cho một endpoint không
+  tồn tại — tạo xong cũng chỉ gọi vào 404.
+- [5] SETUP 5d viết lại khớp thực tế (3 đường 403 + đối chiếu + việc cần
+  người); REPORT-NOTES thêm mục retry (proxy là chốt kiến trúc nhưng chưa
+  deploy được, nhánh demo giữ hiệu lực — viết “đã chốt proxy” lúc này là nói
+  dối); ARCHITECTURE + TASKS CN3-01 cập nhật trạng thái retry.
+
+Nguyên văn message 403 (cả ba đường, không chứa secret nên ghi được):
+`Your account does not have the necessary privileges to access this endpoint.
+For more details, refer to our documentation
+https://supabase.com/docs/guides/platform/access-control`
+
+**Quyết định và lý do**
+
+- Token MỚI vẫn chỉ đọc được (list secrets/functions) — đây là RBAC phía
+  project, không phải lỗi thao tác; retry thêm lần nữa không đổi kết quả nên
+  dừng và báo người theo đúng lệnh [3].
+- Không tạo tag `gemini-wired` mới: tag đã tồn tại và đã push từ phiên trước
+  (trỏ đúng dòng probe); Quy tắc Git cấm di chuyển tag đã push.
+
+**Cố tình không làm và lý do**
+
+- Không curl JWT / không signup user test — chưa có endpoint (404 đã chứng
+  minh), tạo user lúc này là rác remote vô ích.
+- Không “chốt proxy” trong REPORT-NOTES — deploy chưa qua, viết vậy là nói
+  dối tiến độ; giữ chốt kiến trúc + nhánh demo hiệu lực.
+- Không sửa code probe, migration, app, test; không cài package.
+
+**Đã kiểm thử**
+
+- Lệnh: `npx tsc --noEmit` → exit 0.
+- Lệnh: `npm run lint` → 0 errors, 2 warning `watch()` cũ (kế thừa).
+- Lệnh: `npm test` → 18 suites, **187/187 PASS** (giữ nguyên, không sửa test).
+- Bằng chứng remote (credential trong `.env`, chỉ đọc theo tên): secrets set
+  → 403; deploy CLI → 403; deploy API → 403; functions list → `[]`; endpoint
+  → 404 NOT_FOUND.
+
+**Còn nợ (cần người)**
+
+- Owner cấp token đủ scope (hoặc deploy tay + nạp secret qua Dashboard theo
+  SETUP 5d), rồi curl lại: 401 thiếu JWT / 200 `text: OK` / 500 thiếu secret.
+- Khi proxy deploy xong: CN3-03 code đúng MỘT nhánh proxy, gỡ
+  `EXPO_PUBLIC_GEMINI_API_KEY`.
+
+**Mốc Git**
+
+- (điền full hash merge sau khi merge theo Quy tắc Git; tag `gemini-wired` đã
+  tồn tại từ phiên trước — giữ nguyên, không tạo lại)
+- Branch: `chore/gemini-wired`
+- PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh

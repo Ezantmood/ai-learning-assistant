@@ -187,7 +187,10 @@ Tag `edge-probe` được lệnh nhắc tới nhưng không tồn tại nên pro
   (2026-09-20, probe `gemini-proxy` — tên function theo lệnh session: `secrets
   set` + `functions deploy` đều 403 thiếu quyền, `secrets list` xác nhận chưa
   có key → chốt nhánh `EXPO_PUBLIC_GEMINI_API_KEY`, giới hạn đã biết ghi ở
-  REPORT-NOTES; source probe giữ trong repo chờ deploy, tag `gemini-wired`.)
+  REPORT-NOTES; source probe giữ trong repo chờ deploy, tag `gemini-wired`.
+  Retry cùng ngày với token MỚI (`chore/gemini-wired`): CLI + Management API
+  vẫn 403, `GET .../functions` → `[]`, endpoint 404 — proxy vẫn là chốt kiến
+  trúc nhưng chưa deploy được, nhánh demo giữ hiệu lực.)
 - [ ] CN3-02: Viết `src/features/summary/{api.ts,schemas.ts,queries.ts,errors.ts}`
   (upsert `document_summaries` ghi đè theo `UNIQUE(document_id)`, máy
   `pending → processing → done/failed`, `reclaimStaleProcessing` 15 phút theo
