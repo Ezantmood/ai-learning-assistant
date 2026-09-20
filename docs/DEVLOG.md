@@ -1232,6 +1232,8 @@ https://supabase.com/docs/guides/platform/access-control`
 
 **Mốc Git**
 
+- Commit tính năng: `f631a24` (branch `feat/cn3g2-cn4`, đã push)
+- Commit merge: `8cd6719744ee1fda5591d45cc0c699545de21301` (merge --no-ff)
 - Branch: `feat/cn3g2-cn4`
 - Tag: `cn3-cn4-done` (tạo + push cùng lệnh với push main)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
