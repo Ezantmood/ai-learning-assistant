@@ -163,10 +163,20 @@ Probe (`chore/gemini-probe-2`, endpoint thật đã tồn tại):
    code cũ (`getUser()` không đối số), redeploy chưa ăn source mới trong
    repo (bản đã sửa `getUser(token)`). Gọi không auth → **401** gateway như
    cũ. Kết luận: CHƯA đạt 200, giữ nguyên hai nhánh, không viết chốt.
-   Việc cần người: dán lại source
-   `supabase/functions/gemini-proxy/index.ts` HIỆN TẠI trong repo qua
-   Dashboard → redeploy → kiểm tra `version` tăng → curl lại 3 bước trên,
-   kỳ vọng 200 `{"ok":true,"model":"gemini-2.5-flash","text":"OK"}`.
+    Việc cần người: dán lại source
+    `supabase/functions/gemini-proxy/index.ts` HIỆN TẠI trong repo qua
+    Dashboard → redeploy → kiểm tra `version` tăng → curl lại 3 bước trên,
+    kỳ vọng 200 `{"ok":true,"model":"gemini-2.5-flash","text":"OK"}`.
+7. Probe lại ở CN3-G1 (2026-09-20, branch `feat/cn3-g1-summary`) bằng script
+   đã commit `scripts/probe-gemini-proxy.mjs` (chạy bằng node, đọc
+   `PROBE_EMAIL`/`PROBE_PASSWORD` từ env — hai biến này chỉ sống trong shell
+   lúc chạy, không commit; thiếu thì script dừng, cấm tự tạo user trong
+   script): signin → SIGNIN_OK; POST kèm JWT → **401**
+   `{"error":"JWT không hợp lệ hoặc đã hết hạn."}`; POST không auth →
+   **401** gateway. Theo luật chọn: còn lại → NHÁNH KEY TRỰC TIẾP (xem
+   DEVLOG cn3-g1 + REPORT-NOTES “Giới hạn đã biết”). Verify 0004 cùng phiên
+   bằng `scripts/cn3-schema-verify.mjs`: VERIFY_PASS rows=0 (bảng + cột tồn
+   tại, RLS cho đọc).
 
 ## 6. Cấu hình Supabase Auth (Dashboard, làm tay)
 
@@ -212,7 +222,7 @@ quan trên Dashboard, không phải bước tạo:
 ```bash
 npx tsc --noEmit
 npm run lint
-npm test               # 18 suites, 187/187 PASS — mock supabase, không gọi mạng
+npm test               # 20 suites, 212/212 PASS — mock supabase, không gọi mạng
 ```
 
 `npm test` bao gồm: schema/validate CN1, 64 test tầng dữ liệu documents

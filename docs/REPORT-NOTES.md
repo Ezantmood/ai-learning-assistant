@@ -230,8 +230,8 @@ cần bước xóa riêng.
 **Vì sao không cần thư viện trích xuất PDF mà FR-15 vẫn thỏa?**
 
 Không có lib PDF nào chạy trên Expo Go (đều cần native module → development
-build, trái quyết định đã chốt). Gemini 2.5 Flash đọc PDF trực tiếp bằng
-native vision: app gửi nguyên file base64 inline là xong, FR-15 thỏa mà stack
+build, trái quyết định đã chốt). Gemini đọc PDF trực tiếp bằng
+native vision (từ CN3-G1 dùng `gemini-3.5-flash`): app gửi nguyên file base64 inline là xong, FR-15 thỏa mà stack
 không thêm package nào.
 
 **Ngưỡng file gửi Gemini là bao nhiêu, vượt thì sao?**
@@ -314,3 +314,36 @@ Vì vậy: proxy giữ nguyên là đường ĐÚNG và là chốt kiến trúc 
 sẵn, key không bao giờ rời server), nhưng nhánh demo `EXPO_PUBLIC_...` của
 phiên trước GIỮ NGUYÊN HIỆU LỰC cho tới khi owner deploy + nạp secret xong
 (SETUP 5d). Viết “đã chốt proxy” ngay lúc này là nói dối tiến độ — không làm.
+
+### Giới hạn đã biết — CN3-G1 code nhánh key trực tiếp (bản demo)
+
+Kết quả probe thật ngày 2026-09-20 bằng `scripts/probe-gemini-proxy.mjs`
+(signin tài khoản probe mới tạo theo yêu cầu của chủ dự án → SIGNIN_OK):
+
+- POST kèm JWT thật → **401**
+  `{"error":"JWT không hợp lệ hoặc đã hết hạn."}`
+- POST không kèm `Authorization` → **401**
+  `{"code":"UNAUTHORIZED_NO_AUTH_HEADER","message":"Missing authorization header"}`
+- Theo luật chọn của session (hai 200 mới proxy, còn lại trực tiếp):
+  **NHÁNH KEY TRỰC TIẾP** — app gọi Gemini REST bằng
+  `EXPO_PUBLIC_GEMINI_API_KEY`, model `gemini-3.5-flash`.
+
+Vì sao đây chỉ là giới hạn của bản demo, không dùng cho bản thật:
+
+- Key đóng trong JS bundle của app: giải nén bundle là đọc được, ai có key
+  cũng gọi được Gemini tính vào quota của project (~1.500 request/ngày,
+  reset nửa đêm giờ Thái Bình Dương).
+- Lộ key đồng nghĩa người khác đốt quota của mình; chạm trần thì cả lớp demo
+  cùng đứng. Key demo phải restrict riêng Gemini API trong Google Cloud
+  Console; nghi lộ thì rotate ngay, key cũ coi như đã lộ.
+- Không bao giờ ghi key vào repo/DEVLOG/báo cáo/ảnh chụp; key chỉ nằm trong
+  `.env` local (đã gitignore). `git diff --cached` trước mọi commit đã soát.
+
+Lý do đổi model sang `gemini-3.5-flash` (thay vì `2.5-flash` trong đặc tả cũ):
+model 2.5-flash có lịch shutdown sớm nhất 16/10/2026 nên G1 chốt 3.5-flash
+ngay từ đầu; hằng số duy nhất ở `src/lib/ai/models.ts`, cấm set
+temperature/top_p/top_k (deprecated trên Gemini 3.x), cấm bản -preview.
+
+Hướng khắc phục khi có thời gian/quyền: owner redeploy `gemini-proxy` qua
+Dashboard từ source mới (SETUP 5d mục 7) tới khi probe kèm JWT trả 200, lúc
+đó G-xóa nhánh trực tiếp và code đúng MỘT nhánh proxy — không giữ cả hai.

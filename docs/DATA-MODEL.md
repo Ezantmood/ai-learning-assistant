@@ -223,7 +223,7 @@ RLS độc lập theo `user_id`, xóa document cascade xóa summary theo.
 | `document_id` | `uuid not null unique`, FK về `documents(id) on delete cascade` (`document_summaries_document_id_fkey`, `document_summaries_document_unique`) | Tài liệu được tóm tắt; UNIQUE = mỗi tài liệu tối đa một bản đang dùng, tóm tắt lại là ghi đè |
 | `user_id` | `uuid not null references auth.users(id) on delete cascade` | Chủ sở hữu; denormalized từ `documents.user_id` để policy RLS viết trực tiếp `auth.uid() = user_id`, không join |
 | `summary_text` | `text not null`, `check (char_length(summary_text) between 1 and 20000)` (`document_summaries_summary_rules`) | Bản tóm tắt tiếng Việt |
-| `model` | `text not null default 'gemini-2.5-flash'`, `check (char_length(model) between 1 and 100)` (`document_summaries_model_rules`) | Model đã sinh bản này; để sau này đổi model không lẫn |
+| `model` | `text not null default 'gemini-2.5-flash'`, `check (char_length(model) between 1 and 100)` (`document_summaries_model_rules`) | Model đã sinh bản này; để sau này đổi model không lẫn. Default giữ nguyên theo migration đã apply; app CN3-G1 luôn ghi tường minh `gemini-3.5-flash` (2.5-flash có lịch shutdown sớm nhất 16/10/2026) |
 | `created_at` | `timestamptz not null default now()` | Lần tóm tắt đầu |
 | `updated_at` | `timestamptz not null default now()` | Lần ghi đè cuối (trigger `set_updated_at()` tái dùng, không tạo function mới) |
 

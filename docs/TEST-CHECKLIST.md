@@ -128,6 +128,15 @@ Phải mock (không gọi mạng thật): supabase client (Postgres + Storage),
 `expo-document-picker` (asset giả gồm uri/name/size/mimeType),
 `expo-file-system` API mới (`File`). Test không được chạm network.
 
+CN3-G1 (đã khóa bằng unit, 25 test mới trong tổng 20 suites 212/212):
+transport `summarizeWithGemini` (mock `fetch`: PDF base64 inline + prompt
+tiếng Việt, TXT text trực tiếp, cấm temperature/top_p/top_k, map 429/5xx/
+mất mạng/thiếu key/trả rỗng); `requestSummary` (mock supabase + transport:
+PDF thành công đúng một request, DOCX → `unsupported` không gọi Gemini,
+document người khác → từ chối không chạm DB, Gemini 429 → `failed` + câu
+hạn mức, `processing` còn hạn → chặn, treo > 15 phút → thu hồi rồi chạy
+tiếp, TXT lưu `extracted_text`, quá 20.000 ký tự → báo rõ).
+
 ## Kịch bản rls-proof cho documents và subjects (chưa có script — ghi nợ)
 
 Theo đúng khuôn `scripts/rls-proof.ts` của FR-05 (2 user test A/B, tự dọn):
@@ -140,7 +149,12 @@ Theo đúng khuôn `scripts/rls-proof.ts` của FR-05 (2 user test A/B, tự d�
   signed URL được object trong `{B}/`; anon không đọc/không list.
 - Thoát criteria: script exit 0, log số check pass đầy đủ.
 
-## 14. Tóm tắt AI (`/documents/[id]` vùng tóm tắt — CN3, code ở phiên sau, checklist viết trước)
+## 14. Tóm tắt AI (`/documents/[id]` vùng tóm tắt — CN3-G1 xong tầng logic + unit, UI ở G2)
+
+> G1 (2026-09-20): logic `requestSummary`/transport/model đã khóa bằng unit
+> test (mock, không gọi mạng): PDF thành công, DOCX → `unsupported` không gọi
+> Gemini, document người khác → từ chối, Gemini lỗi → `failed`. Các case tay
+> dưới đây thuộc G2 (vùng UI) — chủ dự án chạy khi G2 xong.
 
 - [ ] PDF của mình bấm “Tóm tắt bằng AI” → spinner, nút disabled → hiện bản
   tóm tắt tiếng Việt; bấm dồn lúc đang chạy không sinh request thứ hai.

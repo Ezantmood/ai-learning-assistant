@@ -53,7 +53,7 @@ Dựng đầy đủ từ số 0 (SQL, Auth, Brevo SMTP, bucket private): `docs/S
 ```bash
 npx tsc --noEmit
 npm run lint
-npm test               # 18 suites, 187/187 PASS — mock supabase, không gọi mạng
+npm test               # 20 suites, 212/212 PASS — mock supabase, không gọi mạng
 ```
 
 ## Cách chạy rls-proof (cần `.env` + `.env.local`, tự dọn user test)

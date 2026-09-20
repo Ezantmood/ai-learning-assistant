@@ -54,18 +54,31 @@ Kiến trúc theo feature, ít tầng và đủ rõ để sinh viên giải thí
 │   │   ├── notes/{api.ts,schemas.ts,queries.ts,errors.ts}
 │   │   ├── documents/{api.ts,storage.ts,schemas.ts,queries.ts,errors.ts} (CN2, FR-06 → FR-13)
 │   │   ├── documents/__tests__/
-│   │   ├── summary/.gitkeep (FR-14 → FR-22, chưa code)
+│   │   ├── summary/{api.ts,schemas.ts,queries.ts,errors.ts} (CN3-G1, FR-14 → FR-22:
+│   │   │   requestSummary + upsert ghi đè + máy trạng thái + retry/thu hồi treo)
+│   │   │   ├── summary/__tests__/summary.test.ts (mock transport/supabase, không gọi mạng)
 │   │   ├── chat/.gitkeep (FR-23 → FR-30, chưa code)
 │   │   ├── scan/.gitkeep (FR-31 → FR-37, chưa code)
 │   │   └── solver/.gitkeep (FR-38 → FR-45, chưa code)
+│   ├── lib/ai/{models.ts,transport.ts} (CN3-G1, theo lệnh session — ngoại lệ
+│   │   có chủ đích so với quy ước "dùng chung lên shared": hằng số
+│   │   SUMMARY_MODEL duy nhất `gemini-3.5-flash` + một hàm transport
+│   │   `summarizeWithGemini` nhánh key trực tiếp; cấm viết sẵn nhánh proxy
+│   │   bật/tắt bằng cờ)
+│   │   └── lib/ai/__tests__/transport.test.ts (mock fetch, không gọi mạng)
 ├── supabase/migrations/
-│   └── 0001_account_manager.sql
+│   ├── 0001_account_manager.sql
+│   ├── 0002_cn2_documents.sql
+│   └── 0004_cn3_summaries.sql (0003 không tồn tại)
 ├── supabase/functions/
 │   └── gemini-proxy/index.ts (mũi thăm dò CN3-01: JWT → secret → Gemini 2.5
 │       Flash prompt cố định; CHƯA deploy được — xem REPORT-NOTES + SETUP 5d)
 ├── scripts/
 │   ├── rls-proof.ts (FR-05, chạy tay với credential .env.local)
-│   └── storage-rls-proof.ts (FR-04, tương tự)
+│   ├── storage-rls-proof.ts (FR-04, tương tự)
+│   ├── cn3-schema-verify.sql (CN3, chỉ-đọc, 10 dòng ĐẠT/KHÔNG ĐẠT)
+│   ├── probe-gemini-proxy.mjs (CN3-G1: bằng chứng chốt nhánh, chạy bằng node)
+│   └── cn3-schema-verify.mjs (CN3-G1: verify 0004 qua PostgREST, thiếu cột → 42703)
 ├── docs/
 ├── .env.example
 ├── app.json
@@ -366,9 +379,9 @@ Repository `src/features/summary/` (không import chéo sang `documents`;
 - `getSummary(documentId)` / `retrySummary()` (= `requestSummary` khi
   `failed`) / `reclaimStaleProcessing()` (thu hồi `processing` treo về
   `failed` khi `updated_at` quá 15 phút).
-- `summarizeWithGemini()` — tầng gọi model, triển khai theo đúng MỘT nhánh
-  probe CN3-01: nhánh proxy (fetch Edge Function + JWT Supabase tự gắn) hoặc
-  nhánh trực tiếp (fetch REST Gemini + `EXPO_PUBLIC_GEMINI_API_KEY`). PDF gửi
+- `summarizeWithGemini()` — tầng gọi model (`src/lib/ai/transport.ts`), CHỈ
+  triển khai MỘT nhánh probe CN3-G1 đã chốt: nhánh trực tiếp (fetch REST
+  Gemini + `EXPO_PUBLIC_GEMINI_API_KEY`, model `gemini-3.5-flash`). PDF gửi
   base64 inline nguyên file (≤ 10 MB < ngưỡng 50 MB, quyết định CN3-SIZE);
   TXT gửi text trực tiếp. Không lib trích xuất PDF (quyết định CN3-NOLIB).
   Kết quả probe 2026-09-20: deploy + nạp secret đều 403 thiếu quyền nên chốt
@@ -390,6 +403,10 @@ thứ hai thấy `processing` thì dừng); `UNIQUE(document_id)` chặn ghi đ�
 
 ### Đường đi của key (proxy là đường đúng — chưa deploy được)
 
+**Chốt CN3-G1 (2026-09-20, `scripts/probe-gemini-proxy.mjs`): WITH_AUTH 401
++ WITHOUT_AUTH 401 → NHÁNH KEY TRỰC TIẾP, model `gemini-3.5-flash`
+(`src/lib/ai/models.ts`). Xem DEVLOG cn3-g1.**
+
 ```text
 Đường đúng (proxy, chờ deploy — key KHÔNG BAO GIỜ rời server):
 app (JWT Supabase) → Edge Function gemini-proxy → Gemini 2.5 Flash
@@ -397,8 +414,9 @@ app (JWT Supabase) → Edge Function gemini-proxy → Gemini 2.5 Flash
                       ├─ 500 nếu thiếu secret GEMINI_API_KEY
                       └─ Deno.env.get('GEMINI_API_KEY') chỉ sống trong server
 
-Đường demo đang dùng (fallback sau probe 2026-09-20 — GIỚI HẠN ĐÃ BIẾT):
-app (key trong bundle, giải nén ra được) → Gemini 2.5 Flash trực tiếp
+Đường demo đang dùng (fallback sau probe 2026-09-20 — GIỚI HẠN ĐÃ BIẾT,
+CN3-G1 chốt code theo đường này, model gemini-3.5-flash):
+app (key trong bundle, giải nén ra được) → Gemini 3.5 Flash trực tiếp
 ```
 
 - Source probe `supabase/functions/gemini-proxy/index.ts` đã nằm trong repo
