@@ -71,8 +71,9 @@ Kiến trúc theo feature, ít tầng và đủ rõ để sinh viên giải thí
 │   ├── 0002_cn2_documents.sql
 │   └── 0004_cn3_summaries.sql (0003 không tồn tại)
 ├── supabase/functions/
-│   └── gemini-proxy/index.ts (mũi thăm dò CN3-01: JWT → secret → Gemini 2.5
-│       Flash prompt cố định; CHƯA deploy được — xem REPORT-NOTES + SETUP 5d)
+│   └── gemini-proxy/index.ts (CN3-G1b đã fix auth + model 3.5-flash, CHỜ
+│       deploy tay qua Via Editor — bundle đang chạy là bản cũ `getUser()`
+│       không đối số; xem DEVLOG cn3-g1b + SETUP 5d mục 8)
 ├── scripts/
 │   ├── rls-proof.ts (FR-05, chạy tay với credential .env.local)
 │   ├── storage-rls-proof.ts (FR-04, tương tự)
@@ -406,6 +407,11 @@ thứ hai thấy `processing` thì dừng); `UNIQUE(document_id)` chặn ghi đ�
 **Chốt CN3-G1 (2026-09-20, `scripts/probe-gemini-proxy.mjs`): WITH_AUTH 401
 + WITHOUT_AUTH 401 → NHÁNH KEY TRỰC TIẾP, model `gemini-3.5-flash`
 (`src/lib/ai/models.ts`). Xem DEVLOG cn3-g1.**
+
+**CN3-G1b (đang chẩn đoán, chưa đổi chốt): REST 200 với đúng JWT → token tốt,
+401 nằm trong hàm; 3 nghi phạm auth sạch trong repo → bundle deploy cũ
+(`getUser()` không đối số). Đã fix + `check:functions`, CHỜ deploy tay
+(SETUP 5d mục 8) rồi probe lại. Xem DEVLOG cn3-g1b.**
 
 ```text
 Đường đúng (proxy, chờ deploy — key KHÔNG BAO GIỜ rời server):

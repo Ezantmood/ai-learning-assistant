@@ -177,6 +177,19 @@ Probe (`chore/gemini-probe-2`, endpoint thật đã tồn tại):
    DEVLOG cn3-g1 + REPORT-NOTES “Giới hạn đã biết”). Verify 0004 cùng phiên
    bằng `scripts/cn3-schema-verify.mjs`: VERIFY_PASS rows=0 (bảng + cột tồn
    tại, RLS cho đọc).
+8. Deploy lại `gemini-proxy` bản fix CN3-G1b (làm tay, MỘT lần duy nhất —
+   cấm `supabase functions deploy`, PAT 403):
+   1. Mở file `supabase/functions/gemini-proxy/index.ts` trong repo (bản đã
+      fix auth + model `gemini-3.5-flash`), copy TOÀN BỘ nội dung.
+   2. Dashboard → Edge Functions → `gemini-proxy` → Via Editor (hoặc Edit) →
+      dán đè toàn bộ → Deploy/Save and deploy.
+   3. Kiểm tra `version` TĂNG (> 1 — lần trước redeploy không tăng version
+      nên bundle cũ vẫn chạy). Secret `GEMINI_API_KEY` phải còn (nạp tay từ
+      trước; thiếu thì probe trả 500 chứ không phải 401).
+   4. Báo lại cho agent (kèm version mới) để probe lại: kỳ vọng POST kèm
+      JWT → **200** body chứa `"OK"` + `"model":"gemini-3.5-flash"`; POST
+      không auth → **401**. Đạt cả hai → chuyển nhánh proxy; không đạt →
+      giữ key trực tiếp, không thử lần ba.
 
 ## 6. Cấu hình Supabase Auth (Dashboard, làm tay)
 

@@ -1060,3 +1060,66 @@ https://supabase.com/docs/guides/platform/access-control`
 - Branch: `feat/cn3-g1-summary`
 - Tag: `cn3-g1-done` (tạo + push cùng lệnh với push main)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### CN3-G1b — Chẩn đoán 401 gemini-proxy, có time-box (chưa xong — chờ deploy tay) — 2026-09-20
+
+**Đã làm gì**
+
+- [1] Branch `fix/cn3-proxy-auth` từ `main` (đã `pull --ff-only`, up to date).
+- [2] Tách biến bằng `scripts/probe-gemini-proxy.mjs` (mở rộng: cùng Bearer
+  JWT gọi `GET /rest/v1/profiles?select=id&limit=1` kèm apikey). Kết quả thật
+  (user probe mới, signup 200): SIGNIN_OK; REST_PROFILES **200**
+  `[{"id":"..."}]`; WITH_AUTH **401** tiếng Việt; WITHOUT_AUTH **401**
+  gateway. → Token tốt, lỗi nằm trong hàm. Giả thuyết session (“hàm đã chạy
+  và tự từ chối”) ĐÚNG.
+- [3] a. Grep toàn repo (trừ node_modules/dist): chuỗi 401 **CÓ** trong
+  `supabase/functions/gemini-proxy/index.ts:43` → không drift ở dòng này.
+  b. Đối chiếu 3 nghi phạm trên source repo: (1) tiền tố Bearer ĐÃ cắt
+  (`replace(/^Bearer\s+/i, "")`) + truyền tường minh `getUser(token)`;
+  (2) không tự verify chữ ký ở đâu (dùng supabase-js); (3) CÓ forward header
+  (`global.headers.Authorization`). → Cả 3 sạch trong repo. Đối chiếu lịch sử:
+  `176e97d` (bản đầu, `getUser()` không đối số — luôn fail) nhiều khả năng
+  chính là bundle version 1 đang chạy (redeploy trước không tăng version);
+  `e0f6d8e` mới là source repo hiện tại. Kết luận: thủ phạm là bundle deploy
+  cũ, không phải logic repo. Không đào thêm (đúng time-box).
+- [4] Gom một lượt deploy trong `supabase/functions/gemini-proxy/index.ts`:
+  cắt tiền tố + trim + chặn token rỗng; 500 rõ khi thiếu
+  SUPABASE_URL/ANON_KEY (phân biệt với 401); forward header đã chuẩn hóa +
+  `getUser(token)` + `persistSession: false`; model → `gemini-3.5-flash`
+  (đồng bộ app, không temperature); contract probe giữ nguyên (200 chứa
+  "OK"). CẤM `functions deploy` (PAT 403) — xuất file, user dán tay theo
+  SETUP 5d mục 8.
+- [5] Cổng gác đã mất: `git log -S "check:functions" --all` chỉ ra 2 commit
+  DEVLOG nhắc nó như thứ “không tồn tại” — kết luận: script **chưa bao giờ
+  tồn tại**, bàn giao g1 ghi “package.json có script” là sai (ghi lại ở đây
+  để khỏi truy tiếp). Đã tạo thật: `npm run check:functions` = tsc với
+  `tsconfig.functions.json` + `supabase/functions/check-shim.d.ts` (Deno +
+  `https://esm.sh/*` → any; Via Editor chỉ dán index.ts nên shim không lọt
+  vào bundle). Deno không có trên máy nên dùng tsc thay — tương đương cho
+  mục đích bắt lỗi parse/type. Tự kiểm: cổng bắt được lỗi thiếu `}` CÓ SẴN
+  trong file repo từ commit đầu (bằng chứng bundle deploy ≠ source repo —
+  Deno không parse nổi file này); cố tình bỏ thêm một `]` → exit 2 + TS1005;
+  trả lại → exit 0. Không fail được thì vô dụng — đã chứng minh fail được.
+
+**Đã kiểm thử (số thật)**
+
+- `npx tsc --noEmit` → exit 0; `npm run lint` → 0 errors, 2 warning cũ;
+  `npm test` → 20 suites, **212/212 PASS** (giữ nguyên, không sửa test);
+  `npm run check:functions` → exit 0 (broken → exit 2, restored → exit 0).
+- Probe/verify số thật ở [2] trên.
+
+**⏳ CHỜ (việc của chủ dự án, SETUP 5d mục 8)**
+
+- Dán toàn bộ `supabase/functions/gemini-proxy/index.ts` qua Dashboard →
+  Edge Functions → gemini-proxy → Via Editor → Deploy → kiểm tra version
+  TĂNG (> 1) → báo lại. Sau đó agent probe lại [6]: có JWT → 200 + "OK" và
+  không auth → 401 thì sang PROXY ([7]: xóa đường key trực tiếp); không đạt
+  thì giữ key trực tiếp ([8]). Không thử lần ba.
+
+**Mốc Git (tạm — cập nhật sau [6])**
+
+- Commit fix: `cd7dcb5` (probe + function + cổng, đã push branch)
+- Branch: `fix/cn3-proxy-auth`
+- Tag: chưa tạo (chờ [6])
