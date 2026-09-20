@@ -160,7 +160,9 @@ Mỗi checkbox là một commit độc lập và phải để app chạy đượ
 `npx tsc --noEmit`, `npm run lint`, `npm test` và test tay phần liên quan;
 staged diff phải không có secret. Push ngay sau commit.
 
-Đặc tả đã chốt ở session `docs/cn3` (tag `docs-cn3`): model `gemini-2.5-flash`,
+Đặc tả đã chốt ở session `docs/cn3` (tag `docs-cn3`): model `gemini-2.5-flash`
+(từ CN3-G1 đổi sang `gemini-3.5-flash` vì 2.5-flash shutdown sớm nhất
+16/10/2026, xem DEVLOG cn3-g1),
 đọc PDF bằng native vision (không lib), bấm nút (không auto), bảng riêng
 `document_summaries` (migration `0004` đã apply + verify 10/10 ở session docs).
 Tag `edge-probe` được lệnh nhắc tới nhưng không tồn tại nên probe làm lại từ
@@ -200,12 +202,15 @@ Tag `edge-probe` được lệnh nhắc tới nhưng không tồn tại nên pro
    kèm JWT vẫn 401 y hệt — nghi bundle chạy vẫn là code cũ, cần dán lại
    source hiện tại qua Dashboard. CN3-01 giữ tick (probe đã làm đủ bằng chứng),
    việc còn lại là redeploy đúng source rồi verify 200 ở phiên sau.)
-- [ ] CN3-02: Viết `src/features/summary/{api.ts,schemas.ts,queries.ts,errors.ts}`
+- [x] CN3-02: Viết `src/features/summary/{api.ts,schemas.ts,queries.ts,errors.ts}`
   (upsert `document_summaries` ghi đè theo `UNIQUE(document_id)`, máy
   `pending → processing → done/failed`, `reclaimStaleProcessing` 15 phút theo
   `updated_at`, guard DOCX/`unsupported`/vượt ngưỡng) + unit test mock
   supabase/Gemini (không gọi mạng). Xong khi test xanh và app mở không crash
   dù chưa gọi AI thật. FR: FR-17, FR-20 (logic), FR-22 (nền).
+  (2026-09-20, CN3-G1: xong + thêm `src/lib/ai/{models.ts,transport.ts}`
+  nhánh trực tiếp theo lệnh session; 25 test mới, tổng 20 suites 212/212;
+  `expo export --platform web` bundle đủ route; chưa màn hình — G2.)
 
 ## CN3-2 — Gọi AI và UI (phiên 2)
 

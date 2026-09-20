@@ -944,3 +944,119 @@ https://supabase.com/docs/guides/platform/access-control`
 - Branch: `docs/shell-contrast`
 - Tag: không tạo (không có mốc version mới)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### CN3-G1 — Probe + hạ tầng + tầng dữ liệu tóm tắt (FR-14 → FR-22, nhánh trực tiếp) — 2026-09-20
+
+**Đã làm gì**
+
+- [0] Đọc AGENTS.md, SPEC (FR-14→FR-22), ARCHITECTURE, DATA-MODEL, SETUP mục
+  5d, `supabase/migrations/0004_cn3_summaries.sql`,
+  `supabase/functions/gemini-proxy/index.ts` và entry DEVLOG gần nhất
+  (shell-contrast). Không đọc toàn bộ DEVLOG.
+- [1] Branch `feat/cn3-g1-summary` từ `main` (đã `pull --ff-only`, up to date).
+- [2] Probe — cửa chặn, làm trước mọi dòng code: mới
+  `scripts/probe-gemini-proxy.mjs` (node + `@supabase/supabase-js`):
+  signIn lấy JWT thật, POST kèm/không kèm `Authorization`, in status + body
+  nguyên văn, tự kết luận theo luật session. `PROBE_EMAIL`/`PROBE_PASSWORD`
+  không có trong env → DỪNG và hỏi user theo luật; user phê duyệt tường minh
+  “tự tạo user mới” (lệch luật session nhưng có lệnh trực tiếp của chủ dự án,
+  ghi lại ở đây) → tạo đúng 1 user probe qua signup API (kèm
+  `data.full_name`/`student_code` do trigger đòi). Kết quả thật:
+  SIGNIN_OK; WITH_AUTH **401**
+  `{"error":"JWT không hợp lệ hoặc đã hết hạn."}`; WITHOUT_AUTH **401**
+  `{"code":"UNAUTHORIZED_NO_AUTH_HEADER","message":"Missing authorization header"}`
+  → VERDICT=KEY_TRUC_TIEP. Commit script này làm bằng chứng.
+- [3] Migration 0004: ĐÃ apply từ session `docs/cn3` (remote verify 10/10)
+  nên G1 KHÔNG soạn lại/chạy lại SQL remote (cấm `link`/`db push`/chạy SQL
+  remote — deploy/apply là việc Dashboard của user). Viết
+  `scripts/cn3-schema-verify.mjs`: đăng nhập probe rồi `.select()` đúng 7
+  cột mới của 0004, limit 1. Kết quả thật: SIGNIN_OK, VERIFY_PASS rows=0
+  (bảng + cột tồn tại, RLS cho đọc; user mới nên 0 row — thiếu cột thì
+  PostgREST đã trả 42703).
+- [4b] Nhánh KEY TRỰC TIẾP: mới `src/lib/ai/models.ts` (hằng số duy nhất
+  `SUMMARY_MODEL = 'gemini-3.5-flash'`) + `src/lib/ai/transport.ts` (một hàm
+  `summarizeWithGemini` duy nhất được export — cấm viết sẵn nhánh proxy bật/
+  tắt bằng cờ). PDF base64 inline + prompt tiếng Việt; TXT text trực tiếp;
+  map lỗi 429/quota và 5xx riêng, không nuốt; CẤM log key; không
+  temperature/top_p/top_k; không bản -preview.
+- [5] Tầng client: mới `src/features/summary/{api.ts,schemas.ts,queries.ts,
+  errors.ts}` — `requestSummary` (guard quyền sở hữu → DOCX/`unsupported`
+  gắn trạng thái cuối không gọi Gemini → ngưỡng PDF 50 MB → `processing`
+  còn hạn chặn gọi lặp / treo > 15 phút thu hồi rồi làm tiếp → upsert ghi đè
+  theo `UNIQUE(document_id)` → `done`, lỗi → `failed`), `getSummary`,
+  `retrySummary` (chỉ khi `failed`), `reclaimStaleProcessing`,
+  `summaryTextSchema` 1–20.000 (vượt báo rõ, không cắt), `useSummary` +
+  `useRequestSummary` (invalidate `['summary', docId]` + `['document', docId]`
+  + `['documents', userId]`), lỗi chuẩn hóa tiếng Việt ở `errors.ts`.
+  `src/shared/types/database.ts` thêm bảng `document_summaries` + alias
+  (đồng bộ tay theo 0004, chờ regen CLI — theo tiền lệ CN2). Chưa màn hình.
+- `npx expo export --platform web` bundle đủ route (xóa `dist` sau verify).
+- Docs: SPEC (FR-14 + CN3-MODEL + out-of-scope → 3.5-flash),
+  ARCHITECTURE (chốt 1 dòng + cây `src/lib/ai`/`summary`/scripts + transport
+  1 nhánh), DATA-MODEL (note default DB giữ nguyên, app ghi 3.5 tường minh),
+  FR-TRACEABILITY (FR-14→FR-22 rõ G1/G2/G3), TEST-CHECKLIST (mục 14 + unit
+  G1), SETUP 5d (mục 7: script probe/verify) + số test 20/212, REPORT-NOTES
+  (mục “Giới hạn đã biết” CN3-G1 + NOLIB → 3.5), README số test, TASKS tick
+  CN3-02. AGENTS.md giữ nguyên (luật push tag ngay đã có từ tag-audit).
+
+**Quyết định và lý do**
+
+- 401/401 → trực tiếp: áp đúng luật chọn, không diễn giải thêm (JWT vừa
+  mint qua signup+signin nên lỗi nằm ở bundle proxy cũ, nhưng luật session
+  chỉ quan tâm 3 con số).
+- Model `gemini-3.5-flash`: 2.5-flash có lịch shutdown sớm nhất 16/10/2026
+  nên chốt 3.5 ngay từ đầu, khỏi migrate giữa chừng (lý do ghi theo yêu cầu
+  [7]). Default `gemini-2.5-flash` trong 0004 giữ nguyên vì migration đã
+  apply — app luôn ghi `model` tường minh nên default không bao giờ dùng.
+- `requestSummary` nhận `source` đã tải (G2 tải tệp rồi truyền) thay vì
+  download trong api: tránh import chéo sang feature documents (cấm) và
+  tránh đoán mò API download chưa kiểm chứng trên máy thật; đây là seam cho
+  G2, không phải code chết.
+- TXT lưu luôn nội dung gốc vào `extracted_text` cho CN4 hỏi đáp; PDF giữ
+  NULL vì Gemini đọc native vision, không có text trích — không bịa text.
+- `src/lib/ai/` là ngoại lệ có chủ đích so với quy ước “dùng chung lên
+  shared” (lệnh session ghi thẳng đường dẫn này); đã chú thích trong cây
+  ARCHITECTURE. Map `extraction_status` → tiếng Việt DÙNG LẠI
+  `getExtractionStatusLabel` của documents (G2 import từ đó), không viết mới.
+- Không sửa `supabase/functions/gemini-proxy/index.ts` (vẫn model/probe cũ):
+  đụng vào là phải `check:functions` + redeploy tay mà G1 không deploy được
+  gì — sửa lúc này chỉ tạo drift giữa repo và bundle đang chạy.
+
+**Cố tình không làm và lý do**
+
+- Màn hình/UI tóm tắt (G2); trích xuất DOCX (ngoài đề); CN4 hỏi đáp; CN5
+  OCR; deploy Edge Function; chạy SQL remote; đổi bảng màu; `check:functions`
+  (không đụng `supabase/functions/**` nên không cần — script này cũng chưa
+  tồn tại trong `package.json` từ trước); sửa/xoá/skip test cũ (187 cũ giữ
+  nguyên, +25 mới).
+
+**Đã kiểm thử (số thật, lệnh thật)**
+
+- `npx tsc --noEmit` → exit 0.
+- `npm run lint` → 0 errors, 2 warning `watch()` cũ (kế thừa G3–G7; 13
+  warning `array-type`/`no-duplicates` của code mới đã sửa hết trước commit).
+- `npm test` → 20 suites, **212/212 PASS** (giữ nguyên 187 cũ, +25 mới:
+  transport 9 + summary 16, mock fetch/supabase, không gọi mạng).
+- `npx expo export --platform web` → success, đủ route, không error.
+- Probe/verify remote (credential chỉ trong shell, không ghi repo):
+  SIGNIN_OK → WITH_AUTH 401 thiếu-sai JWT → WITHOUT_AUTH 401 gateway;
+  `cn3-schema-verify.mjs` → VERIFY_PASS rows=0.
+
+**Còn nợ**
+
+- G2: vùng UI trong `/documents/[id]` + test tay Expo Go mục 14 (thuộc chủ
+  dự án).
+- G3: `scripts/summaries-rls-proof.ts` A/B + đóng gói CN3.
+- Owner redeploy `gemini-proxy` qua Dashboard (SETUP 5d mục 7) nếu muốn quay
+  lại nhánh proxy — lúc đó xóa nhánh trực tiếp, không giữ cả hai.
+
+**Mốc Git**
+
+- Commit probe+verify: `148bf15` (2 script, đã push branch)
+- Commit tầng client: `4a694fb` (9 file, đã push branch)
+- Commit merge: `TBD` (merge --no-ff)
+- Branch: `feat/cn3-g1-summary`
+- Tag: `cn3-g1-done` (tạo + push cùng lệnh với push main)
+- PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh

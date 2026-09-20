@@ -93,7 +93,7 @@ Thùng rác/khôi phục, đánh dấu yêu thích, thống kê, dọn file mồ
 
 | FR | Yêu cầu | Acceptance criteria (Given / When / Then) |
 |----|---------|-------------------------------------------|
-| FR-14 | Tóm tắt tài liệu PDF/TXT của mình bằng Gemini 2.5 Flash | **Given** đã đăng nhập và đang ở chi tiết một tài liệu PDF/TXT của mình, **When** bấm “Tóm tắt bằng AI”, **Then** app gửi tệp cho model `gemini-2.5-flash` và lưu bản tóm tắt tiếng Việt vào `document_summaries`. **Given** mất mạng hoặc Gemini lỗi, **When** gọi, **Then** báo lỗi tiếng Việt rõ ràng, cho thử lại, không tạo bản tóm tắt nửa vời. |
+| FR-14 | Tóm tắt tài liệu PDF/TXT của mình bằng Gemini 3.5 Flash | **Given** đã đăng nhập và đang ở chi tiết một tài liệu PDF/TXT của mình, **When** bấm “Tóm tắt bằng AI”, **Then** app gửi tệp cho model `gemini-3.5-flash` và lưu bản tóm tắt tiếng Việt vào `document_summaries`. **Given** mất mạng hoặc Gemini lỗi, **When** gọi, **Then** báo lỗi tiếng Việt rõ ràng, cho thử lại, không tạo bản tóm tắt nửa vời. |
 | FR-15 | Trích xuất nội dung PDF không cần thư viện ngoài | **Given** tài liệu PDF hợp lệ (≤ 10 MB theo luật CN2), **When** tóm tắt, **Then** PDF được gửi nguyên file (base64 inline) cho Gemini đọc bằng native vision, không cài thêm lib trích xuất PDF nào. FR-15 thỏa mà không cần lib. |
 | FR-16 | DOCX không gọi AI | **Given** tài liệu DOCX (`extraction_status = 'unsupported'` từ CN2), **When** mở chi tiết, **Then** nút tóm tắt bị ẩn/vô hiệu hóa, UI gợi ý chuyển sang PDF, không có request nào gửi đi. |
 | FR-17 | Mỗi tài liệu tối đa một bản tóm tắt đang dùng | **Given** tài liệu đã có bản tóm tắt, **When** bấm tóm tắt lại, **Then** bản cũ bị ghi đè (UPDATE cùng row, `UNIQUE(document_id)`), không tạo row thứ hai. Xóa tài liệu thì bản tóm tắt mất theo (`ON DELETE CASCADE`). |
@@ -129,7 +129,9 @@ Thùng rác/khôi phục, đánh dấu yêu thích, thống kê, dọn file mồ
 - `document_summaries`: `id`, `document_id` (UNIQUE, FK về `documents(id)`
   `ON DELETE CASCADE`), `user_id` (denormalized từ `documents.user_id` để RLS
   viết trực tiếp `auth.uid() = user_id`, FK về `auth.users(id)` CASCADE),
-  `summary_text` (1–20.000 ký tự), `model` (mặc định `gemini-2.5-flash`),
+  `summary_text` (1–20.000 ký tự), `model` (app CN3-G1 luôn ghi tường minh
+  `gemini-3.5-flash`; default `gemini-2.5-flash` trong migration 0004 giữ
+  nguyên vì migration đã apply — xem DEVLOG cn3-g1),
   timestamp. Chi tiết xem `docs/DATA-MODEL.md`; DDL thật ở
   `supabase/migrations/0004_cn3_summaries.sql`.
 - Máy trạng thái `documents.extraction_status` trong CN3: `pending` →
@@ -146,11 +148,14 @@ Tóm tắt hàng loạt nhiều tài liệu, streaming từng đoạn, chọn đ
 tóm tắt, lịch sử nhiều bản tóm tắt, xuất file/share bản tóm tắt, đánh giá chất
 lượng tóm tắt, cache tóm tắt chung giữa các user, cron dọn `processing` treo
 phía server, File API upload (không cần vì mọi tệp ≤ 10 MB < ngưỡng 50 MB),
-hỏi đáp trên tài liệu (việc của CN4), model khác ngoài `gemini-2.5-flash`.
+hỏi đáp trên tài liệu (việc của CN4), model khác ngoài `gemini-3.5-flash`.
 
 ### Quyết định CN3 đã chốt (mỗi cái kèm lý do)
 
-- CN3-MODEL: Model `gemini-2.5-flash`; free tier khoảng 1.500 request/ngày
+- CN3-MODEL: Model `gemini-3.5-flash` (từ CN3-G1; trước đó đặc tả ghi
+  `gemini-2.5-flash` nhưng model này có lịch shutdown sớm nhất 16/10/2026
+  nên chốt 3.5-flash ngay từ đầu, khỏi migrate giữa chừng); free tier khoảng
+  1.500 request/ngày
   (reset nửa đêm giờ Thái Bình Dương) nên phải có cơ chế chặn gọi lặp và thông
   báo hạn mức (FR-19). Lý do: demo dùng chung một project/quota; không chặn
   thì một buổi bấm thử vô tội vạ là hết quota cả lớp, không còn gì để demo.
