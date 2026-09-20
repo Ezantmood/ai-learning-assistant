@@ -748,6 +748,9 @@ https://supabase.com/docs/guides/platform/access-control`
 
 **Mốc Git**
 
-- (điền full hash merge sau khi merge theo Quy tắc Git)
+- Commit probe-2: `e0f6d8e137933c478661ce35fefdd635c7961764`
+- Commit merge: `08a4803769232c008a9e84edce63a7791174a922` (merge --no-ff)
 - Branch: `chore/gemini-probe-2`
+- Tag: không tạo `cn3-proxy-verified` (200 chưa đạt, tạo là nói dối mốc);
+  `gemini-wired` giữ nguyên
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
