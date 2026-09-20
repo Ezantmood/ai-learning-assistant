@@ -8,6 +8,8 @@ import { Banner, Button, ProgressBar, Text } from 'react-native-paper';
 import { FormTextInput } from '../../src/shared/components/FormTextInput';
 import { PasswordInput } from '../../src/shared/components/PasswordInput';
 import { ScreenContainer } from '../../src/shared/components/ScreenContainer';
+import { ScreenHeader } from '../../src/shared/components/ScreenHeader';
+import { goBackOrReplace } from '../../src/shared/lib/navigation';
 import { signUp } from '../../src/features/auth/api';
 import { toAuthErrorMessage } from '../../src/features/auth/errors';
 import {
@@ -47,7 +49,7 @@ export default function SignUpScreen() {
         setNeedsConfirm(true);
         return;
       }
-      router.replace('/notes');
+      router.replace('/dashboard');
     },
   });
 
@@ -78,7 +80,15 @@ export default function SignUpScreen() {
   const strength = getPasswordStrength(watch('password') ?? '');
 
   return (
-    <ScreenContainer>
+    <ScreenContainer
+      header={
+        <ScreenHeader
+          onBack={() => goBackOrReplace(router, '/sign-in')}
+          showBack
+          title="Đăng ký"
+        />
+      }
+    >
       <Text variant="headlineSmall">Tạo tài khoản</Text>
       <Text variant="bodyMedium">
         Email, mã sinh viên và mật khẩu từ 8 ký tự có cả chữ và số.

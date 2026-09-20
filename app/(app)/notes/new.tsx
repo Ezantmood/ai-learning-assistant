@@ -6,6 +6,7 @@ import { Banner, Button, Text } from 'react-native-paper';
 import { FormTextInput } from '../../../src/shared/components/FormTextInput';
 import { ScreenContainer } from '../../../src/shared/components/ScreenContainer';
 import { ScreenHeader } from '../../../src/shared/components/ScreenHeader';
+import { goBackOrReplace } from '../../../src/shared/lib/navigation';
 import { useSession } from '../../../src/features/auth/useSession';
 import { toNotesErrorMessage } from '../../../src/features/notes/errors';
 import { useCreateNote } from '../../../src/features/notes/queries';
@@ -54,8 +55,8 @@ export default function NewNoteScreen() {
     <ScreenContainer
       header={
         <ScreenHeader
-          onBack={() => router.back()}
-          showBack={router.canGoBack()}
+          onBack={() => goBackOrReplace(router, '/notes')}
+          showBack
           title="Ghi chú mới"
         />
       }

@@ -5,6 +5,7 @@ import { Banner, Button, Card, List, Text } from 'react-native-paper';
 
 import { ScreenContainer } from '../../../src/shared/components/ScreenContainer';
 import { ScreenHeader } from '../../../src/shared/components/ScreenHeader';
+import { goBackOrReplace } from '../../../src/shared/lib/navigation';
 import { useSession } from '../../../src/features/auth/useSession';
 import {
   pickDocument,
@@ -66,8 +67,8 @@ export default function UploadDocumentScreen() {
     <ScreenContainer
       header={
         <ScreenHeader
-          onBack={() => router.back()}
-          showBack={router.canGoBack()}
+          onBack={() => goBackOrReplace(router, '/documents')}
+          showBack
           title="Tải tài liệu lên"
         />
       }

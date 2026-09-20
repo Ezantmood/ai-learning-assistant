@@ -31,8 +31,8 @@ export default function SignInScreen() {
       setApiError(null);
     },
     onSuccess: () => {
-      // replace để nút Back không quay về sign-in sau khi login.
-      router.replace('/notes');
+      // replace qua biên (auth) → (app) để nút Back không quay về sign-in.
+      router.replace('/dashboard');
     },
   });
 

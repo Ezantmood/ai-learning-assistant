@@ -8,6 +8,8 @@ import { Banner, Button, Text } from 'react-native-paper';
 import { FormTextInput } from '../../src/shared/components/FormTextInput';
 import { LoadingState } from '../../src/shared/components/LoadingState';
 import { ScreenContainer } from '../../src/shared/components/ScreenContainer';
+import { ScreenHeader } from '../../src/shared/components/ScreenHeader';
+import { goBackOrReplace } from '../../src/shared/lib/navigation';
 import {
   requestPasswordReset,
   verifyRecoveryOtp,
@@ -110,7 +112,7 @@ export default function VerifyResetOtpScreen() {
       setInfo(null);
     },
     onSuccess: () => {
-      router.replace('/reset-password');
+      router.push('/reset-password');
     },
   });
 
@@ -154,7 +156,15 @@ export default function VerifyResetOtpScreen() {
 
   if (!email) {
     return (
-      <ScreenContainer>
+      <ScreenContainer
+        header={
+          <ScreenHeader
+            onBack={() => goBackOrReplace(router, '/sign-in')}
+            showBack
+            title="Xác minh OTP"
+          />
+        }
+      >
         <Text variant="headlineSmall">Xác minh mã OTP</Text>
         <Banner icon="alert-circle" visible>
           Không tìm thấy email cần xác minh. Có thể bạn đã thoát app trước khi

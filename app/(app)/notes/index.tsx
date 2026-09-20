@@ -12,6 +12,7 @@ import { EmptyState } from '../../../src/shared/components/EmptyState';
 import { ListSkeleton } from '../../../src/shared/components/LoadingState';
 import { ScreenContainer } from '../../../src/shared/components/ScreenContainer';
 import { ThemeToggleAction } from '../../../src/shared/components/ThemeToggleAction';
+import { goBackOrReplace } from '../../../src/shared/lib/navigation';
 import { useSession } from '../../../src/features/auth/useSession';
 import { toNotesErrorMessage } from '../../../src/features/notes/errors';
 import { useNotes } from '../../../src/features/notes/queries';
@@ -53,6 +54,10 @@ export default function NotesScreen() {
   return (
     <ScreenContainer contentStyle={styles.plain} scrollable={false}>
       <Appbar.Header>
+        <Appbar.BackAction
+          accessibilityLabel="Quay lại"
+          onPress={() => goBackOrReplace(router, '/profile')}
+        />
         <Appbar.Content title="Ghi chú học tập" />
         <ThemeToggleAction />
         <Appbar.Action
