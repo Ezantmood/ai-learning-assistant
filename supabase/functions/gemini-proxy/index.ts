@@ -23,19 +23,22 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  // 1. JWT từ header Authorization, thiếu hoặc sai thì 401.
+  // 1. JWT từ header Authorization, thiếu hoặc sai thì 401. Token phải
+  // truyền tường minh vào getUser: client trong Edge Function không giữ
+  // session nên gọi getUser() không đối số luôn fail (probe 2026-09-20).
   const auth = req.headers.get("Authorization");
   if (auth === null || !auth.startsWith("Bearer ")) {
     return json(401, {
       error: "Thiếu JWT: gửi header Authorization: Bearer <token>.",
     });
   }
+  const token = auth.replace(/^Bearer\s+/i, "");
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_ANON_KEY") ?? "",
     { global: { headers: { Authorization: auth } } },
   );
-  const { error: userError } = await supabase.auth.getUser();
+  const { error: userError } = await supabase.auth.getUser(token);
   if (userError) {
     return json(401, { error: "JWT không hợp lệ hoặc đã hết hạn." });
   }

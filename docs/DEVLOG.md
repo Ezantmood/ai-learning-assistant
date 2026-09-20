@@ -679,3 +679,75 @@ https://supabase.com/docs/guides/platform/access-control`
 - Tag: `gemini-wired` đã tồn tại từ phiên trước (`d592f1f`, đã push) — giữ
   nguyên, không tạo lại/di chuyển theo Quy tắc Git
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### Probe-2 gemini-proxy trên endpoint deploy tay (CN3-01 tiếp) — 2026-09-20
+
+**Đã làm gì**
+
+- [0] Đọc AGENTS.md, SETUP 5d, entry retry và source probe (xác nhận qua git:
+  source chưa đổi từ phiên trước). Bỏ qua `secrets set` + `functions deploy`
+  CLI theo bối cảnh mới (secret + deploy đã làm tay qua Dashboard vì PAT bị
+  RBAC tầng organization chặn ghi). Biến `.env` dùng đúng tên
+  `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+- [1] Branch `chore/gemini-probe-2` từ `main` (đã `pull --ff-only`, up to date).
+- [2] Xác nhận endpoint tồn tại: `GET /v1/projects/{ref}/functions` → 200,
+  `gemini-proxy` có trong danh sách (`status: ACTIVE`, `version: 1`,
+  `verify_jwt: true`) — không rỗng nên đi tiếp, không đoán.
+- [3] Probe bằng curl thật:
+  - Signup `/auth/v1/signup` lần 1 thiếu metadata → lỗi `student_code is
+    required` (trigger server); lần 2 kèm
+    `data: {full_name, student_code}` → tạo user nhưng KHÔNG trả session.
+    Signin `/auth/v1/token?grant_type=password` → 200, có `access_token`
+    (JWT thật, mật khẩu random trong shell, file tạm shred/xóa ngay).
+  - POST `/functions/v1/gemini-proxy` kèm `Bearer <jwt>` → **401**
+    `{"error":"JWT không hợp lệ hoặc đã hết hạn."}`. JWT vừa mint nên lỗi
+    nằm trong tầm sửa: `supabase.auth.getUser()` không đối số — client Edge
+    Function không giữ session nên luôn fail. Đã sửa trong
+    `supabase/functions/gemini-proxy/index.ts`: tách token khỏi header và
+    truyền tường minh `getUser(token)` kèm comment lý do.
+  - POST cùng endpoint KHÔNG kèm `Authorization` → **401**
+    `{"code":"UNAUTHORIZED_NO_AUTH_HEADER","message":"Missing authorization
+    header"}` (gateway chặn) — bằng chứng hàm không mở cho người lạ.
+- [4] CHƯA ra 200 nên KHÔNG viết chốt vào REPORT-NOTES: hai nhánh giữ nguyên
+  như hiện tại; không gỡ `EXPO_PUBLIC_GEMINI_API_KEY`.
+- [5] SETUP 5d viết lại khớp thực tế (deploy tay + vì sao + kết quả probe +
+  email test tái dùng); ARCHITECTURE + TASKS CN3-01 cập nhật trạng thái.
+
+**Quyết định và lý do**
+
+- Không tạo tag `cn3-proxy-verified`: tên tag khẳng định đã verify mà 200
+  chưa đạt — tạo lúc này là nói dối mốc Git. Tag `gemini-wired` giữ nguyên.
+- Mật khẩu tài khoản test không ghi vào repo/SETUP (chỉ ghi email tái dùng);
+  phiên sau đặt lại qua Dashboard hoặc signup email mới.
+
+**Cố tình không làm và lý do**
+
+- Không deploy lại bằng CLI sau khi sửa code — bối cảnh đã chốt PAT bị chặn
+  ghi ở tầng organization, retry CLI là vô ích; redeploy là việc tay của chủ
+  dự án qua Dashboard.
+- Không viết chốt proxy / không gỡ nhánh demo — chưa 200, viết sớm là nói
+  dối tiến độ (đúng lệnh [4]).
+- Không sửa app, test, migration, theme; không cài package.
+
+**Đã kiểm thử**
+
+- Lệnh: `npx tsc --noEmit` → exit 0.
+- Lệnh: `npm run lint` → 0 errors, 2 warning `watch()` cũ (kế thừa).
+- Lệnh: `npm test` → 18 suites, **187/187 PASS** (giữ nguyên, không sửa test).
+- Bằng chứng remote (status + body thật): functions list → 200 có
+  `gemini-proxy` ACTIVE; probe kèm JWT → 401 thiếu-sai JWT (bug đã fix trong
+  repo, chờ redeploy); probe không auth → 401 gateway.
+
+**Còn nợ (cần người)**
+
+- Chủ dự án redeploy `gemini-proxy` qua Dashboard từ source mới rồi curl lại
+  theo SETUP 5d (kỳ vọng 200 `text: OK`); đạt 200 mới viết chốt + tag
+  `cn3-proxy-verified` ở phiên sau.
+
+**Mốc Git**
+
+- (điền full hash merge sau khi merge theo Quy tắc Git)
+- Branch: `chore/gemini-probe-2`
+- PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh

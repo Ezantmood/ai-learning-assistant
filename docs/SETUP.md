@@ -113,45 +113,44 @@ DEVLOG G2). Thứ tự:
    Dòng nào `KHÔNG DAT` thì migration chưa áp đúng — báo chủ dự án, không sửa
    tay lẻ tẻ.
 
-## 5d. Đường proxy Gemini (chủ dự án làm tay khi có token đủ quyền)
+## 5d. Đường proxy Gemini (secret + deploy LÀM TAY qua Dashboard)
 
-Retry 2026-09-20 (`chore/gemini-wired`) với access token MỚI tạo lại: cả ba
-đường vẫn 403 thiếu quyền, nguyên văn message:
-`Your account does not have the necessary privileges to access this endpoint.
-For more details, refer to our documentation
-https://supabase.com/docs/guides/platform/access-control`.
+Nguyên nhân phải làm tay: token PAT bị RBAC tầng organization chặn ghi —
+`GET /v1/projects/{ref}/functions` trả 200 (đường đọc hoạt động) nhưng `POST
+.../functions/deploy` trả 403; scope token không vượt được role tài khoản.
+CLI không thử lại (vô ích với cùng token). Secret `GEMINI_API_KEY` và deploy
+`gemini-proxy` do chủ dự án làm tay qua Dashboard (Edge Functions → Secrets +
+Deploy). Đối chiếu sau deploy tay (`chore/gemini-probe-2`):
+`GET .../functions` → 200, `gemini-proxy` `status: ACTIVE`, `version: 1`,
+`verify_jwt: true`.
 
-- `supabase secrets set` (CLI, đọc key từ `.env` trong shell, file tạm ngoài
-  repo xóa ngay) → `LegacySecretsSetUnexpectedStatusError`, 403.
-- `supabase functions deploy gemini-proxy` (CLI) → `FunctionsApiStatusError`,
-  `unexpected deploy status 403`.
-- Management API `POST /v1/projects/{ref}/functions/deploy` (Bearer access
-  token) → HTTP 403, cùng message.
-- Đối chiếu: `GET /v1/projects/{ref}/functions` → HTTP 200, body `[]` (chưa
-  có function nào được deploy); gọi thử endpoint không auth →
-  HTTP 404 `{"code":"NOT_FOUND","message":"Requested function was not found"}`.
+Probe (`chore/gemini-probe-2`, endpoint thật đã tồn tại):
 
-Kết luận: token hiện tại chỉ đọc được (list secrets/functions), không ghi/
-deploy được. Secret CHƯA nạp, function CHƯA deploy — lúc này mới cần người:
-Owner cấp token đủ scope (hoặc deploy tay + nạp secret trong Dashboard →
-Edge Functions → Secrets), rồi curl lại theo bước 3 dưới đây. Bằng chứng đầy
-đủ trong `docs/DEVLOG.md` (entry retry 2026-09-20) và `docs/REPORT-NOTES.md`.
-
-Khi có token đủ quyền (Owner/Admin hoặc token đủ scope), làm theo thứ tự:
-
-1. Dashboard → Edge Functions → Secrets (hoặc CLI):
-   `supabase secrets set GEMINI_API_KEY=<key> --project-ref <ref>` —
-   giá trị key chỉ nằm trong Dashboard/secret, không vào repo/DEVLOG/ảnh.
-2. Deploy mũi thăm dò có sẵn trong repo (không chứa secret):
-   `supabase functions deploy gemini-proxy --project-ref <ref>`.
-3. Gọi thử bằng JWT thật của một user đã đăng nhập:
-   - Không gửi `Authorization` → mong đợi **401** thiếu JWT.
-   - Gửi `Authorization: Bearer <jwt-hợp-lệ>` → mong đợi **200**
-     `{"ok":true,"model":"gemini-2.5-flash","text":"OK"}` (model có thể trả
-     kèm xuống dòng, đối chiếu sau khi trim).
-   - JWT sai/hết hạn → **401**; thiếu secret → **500** kèm thông báo rõ.
-4. Probe đạt thì CN3-03 code đúng MỘT nhánh proxy và gỡ
-   `EXPO_PUBLIC_GEMINI_API_KEY`; probe vẫn lỗi thì giữ nhánh demo và ghi rõ.
+1. Tài khoản test tái dùng: `gemini-probe-20260920@example.com`
+   (`full_name: Gemini Probe`, `student_code: PROBE001`). Lưu ý: signup yêu
+   cầu `data.student_code` (trigger phía server, thiếu báo
+   `student_code is required`); mật khẩu chỉ dùng trong phiên probe, KHÔNG
+   ghi vào repo — phiên sau muốn tái dùng email này thì đặt lại mật khẩu qua
+   Dashboard, hoặc signup email mới.
+2. JWT: `POST {EXPO_PUBLIC_SUPABASE_URL}/auth/v1/token?grant_type=password`
+   (header `apikey = EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, body
+   email + password) → 200, có `access_token`.
+3. Gọi probe kèm JWT:
+   `POST {EXPO_PUBLIC_SUPABASE_URL}/functions/v1/gemini-proxy`
+   (header `Authorization: Bearer <access_token>`) → **401**
+   `{"error":"JWT không hợp lệ hoặc đã hết hạn."}` — JWT vừa mint nên lỗi
+   nằm ở code probe: `getUser()` không đối số (client Edge Function không giữ
+   session). Đã sửa trong repo: truyền token tường minh
+   `getUser(token)`. CHƯA verify 200 vì deploy lại phải làm tay qua
+   Dashboard — chủ dự án redeploy rồi curl lại, kỳ vọng **200**
+   `{"ok":true,"model":"gemini-2.5-flash","text":"OK"}` (trim trước khi đối
+   chiếu).
+4. Gọi probe KHÔNG kèm `Authorization` → **401**
+   `{"code":"UNAUTHORIZED_NO_AUTH_HEADER","message":"Missing authorization
+   header"}` (gateway chặn) — bằng chứng hàm không mở cho người lạ.
+5. Probe đạt 200 thì CN3-03 code đúng MỘT nhánh proxy và gỡ
+   `EXPO_PUBLIC_GEMINI_API_KEY`; tới lúc đó hai nhánh vẫn giữ nguyên, không
+   viết chốt sớm.
 
 ## 6. Cấu hình Supabase Auth (Dashboard, làm tay)
 
