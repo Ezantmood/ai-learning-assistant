@@ -21,6 +21,8 @@ import {
 } from '../../../src/shared/components/FeedbackSnackbar';
 import { FormTextInput } from '../../../src/shared/components/FormTextInput';
 import { ListSkeleton } from '../../../src/shared/components/LoadingState';
+import { QaSection } from './qa-section';
+import { SummarySection } from './summary-section';
 import { ScreenContainer } from '../../../src/shared/components/ScreenContainer';
 import { ScreenHeader } from '../../../src/shared/components/ScreenHeader';
 import { goBackOrReplace } from '../../../src/shared/lib/navigation';
@@ -266,6 +268,10 @@ export default function DocumentDetailScreen() {
       >
         Mở tài liệu
       </Button>
+
+      <SummarySection doc={doc} userId={userId ?? ''} />
+
+      <QaSection doc={doc} userId={userId ?? ''} />
 
       <RenameDocumentForm
         documentId={doc.id}

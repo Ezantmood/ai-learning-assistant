@@ -1143,3 +1143,95 @@ https://supabase.com/docs/guides/platform/access-control`
 - Branch: `fix/cn3-proxy-auth`
 - Tag: `cn3-g1b-done` (tạo + push cùng lệnh với push main)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### CN3-G2 + CN4 — Vùng tóm tắt + hỏi đáp trong màn chi tiết (FR-14→30) — 2026-09-20
+
+**Đã làm gì**
+
+- [1] Branch `feat/cn3g2-cn4` từ `main` (`pull --ff-only`, up to date).
+- [2] CN3-G2 vùng tóm tắt (`app/(app)/documents/summary-section.tsx`, render
+  trong `[id].tsx` sau nút “Mở tài liệu”): nút “Tóm tắt bằng AI”
+  (testID `summary-run`, icon `text-box-outline`), đang chạy/tải tệp/
+  `processing` → nút disabled + spinner, xong → văn bản + “Tóm tắt lại”,
+  chưa có → empty dẫn bấm nút, `failed`/lỗi tải → câu lỗi + “Thử lại”
+  (testID `summary-retry`), 429/quota → Banner hạn mức không retry
+  (`isSummaryQuotaError`, mới), fetch summary lỗi → empty + “Thử lại”
+  riêng. DOCX trả null (Banner gợi ý PDF của CN2 vẫn hiện), KHÔNG request.
+  `extraction_status` hiện nhãn Việt (`getExtractionStatusLabel`) ở
+  subtitle. `processing` treo thu hồi bằng effect + ref chống lặp
+  (setState đồng bộ trong effect bị lint chặn nên ref giữ key
+  `doc.id:updated_at`). `useRequestSummary` thêm invalidate cả khi lỗi để
+  cache hết kẹt spinner.
+- [3] Loader `src/features/summary/source.ts`: signed URL TTL 3600s →
+  `File.downloadFileAsync` về `Paths.cache` (`idempotent: true`) → PDF
+  `.base64()`, TXT `.text()` (trim); chỉ API mới, cấm legacy; DOCX ném
+  trước khi chạm mạng; file tạm dọn best-effort. Bucket literal khai tại
+  chỗ (cấm import chéo feature documents).
+- [4] CN4 hỏi đáp cùng màn (`qa-section.tsx` + `src/features/chat/` mới:
+  `api/schemas/queries/errors`): ô nhập multiline + nút “Hỏi” (icon
+  `send`, testID `qa-input`/`qa-submit`); `answerWithGemini` nhồi toàn văn
+  `extracted_text` vào prompt một request (header bắt chỉ trả lời theo tài
+  liệu, cấm RAG/chunking); chưa có text → `EmptyState` chặn + câu dẫn tóm
+  tắt trước (PDF sau tóm tắt vẫn null vì Gemini đọc native vision — ghi
+  rõ trong UI); lịch sử append-only mới nhất trước, skeleton/empty/error +
+  “Thử lại”, field lỗi dưới ô nhập, giữ câu hỏi khi lỗi; 429 → banner
+  không retry, 5xx/mạng → thử lại. Key `['questions', documentId]`.
+- [5] Migration `supabase/migrations/0005_cn4_questions.sql` (paste-ready,
+  idempotent, RLS 4 lệnh + CASCADE + CHECK câu hỏi 1–500/đáp án 1–20000/
+  model default `gemini-3.5-flash`) + `scripts/cn4-schema-verify.mjs`
+  (khuôn cn3, thiếu cột → 42703) + types tay `document_questions` trong
+  `database.ts`. CẤM tự chạy SQL remote — apply + verify thuộc chủ dự án.
+- [6] Refactor `transport.ts`: trích `postGenerate(parts, emptyMessage)`
+  dùng chung cho tóm tắt/hỏi đáp (URL/body/mapping lỗi giữ nguyên nên
+  test cũ không đổi).
+
+**Quyết định và lý do**
+
+- SPEC gốc không có FR-23→FR-30 (grep toàn repo 0 kết quả) → lệnh session
+  là spec tạm, đã ghi cảnh báo trong FR-TRACEABILITY CN4 (đề gốc khác thì
+  sửa bảng trước, không sửa code).
+- PDF Q&A bị chặn sau tóm tắt là hệ quả đúng của CN3-NOLIB (không có text
+  trích trên thiết bị) + lệnh “chưa có text → chặn”; không lách bằng cách
+  gửi lại PDF inline (trái lệnh) — ghi thành giới hạn đã biết ở
+  TEST-CHECKLIST mục 16.
+- Không route mới, không sửa dashboard (“Sắp có” giữ nguyên — ngoài lệnh);
+  không đụng `supabase/functions/**` (giữ nhánh key trực tiếp); màu chỉ từ
+  `theme.colors`, spacing token, icon toàn tên đã đối chiếu
+  (`text-box-outline`, `message-text-outline`, `send`, `refresh`,
+  `alert-circle`); `headerShown: false` giữ nguyên, hai section là Card
+  trong ScrollView sẵn có.
+
+**Đã kiểm thử (số thật)**
+
+- `npx tsc --noEmit` → exit 0 (2 lỗi `never` ở test mới đã sửa bằng
+  `jest.fn<(...args: unknown[]) => Promise<unknown>>()`).
+- `npm run lint` → 0 errors, 2 warning cũ (`watch()` ở sign-up).
+- `npm test` → 23 suites, **240/240 PASS** (giữ nguyên 20/212 cũ, không
+  sửa/skip test nào; mới 3 suites 28 tests: `source.test.ts` 7 —
+  PDF/TXT OK, DOCX chặn trước mạng, signed URL lỗi, offline, TXT rỗng,
+  dọn cache fail không hỏng kết quả; `askTransport.test.ts` 6 — prompt
+  chứa context + câu hỏi, 429/5xx/mạng/trả rỗng, cấm temperature/key lộ;
+  `chat.test.ts` 15 — hỏi OK đúng 1 request + insert, chặn chưa-có-text/
+  DOCX/sai-chủ/rỗng/quá-500, quota không insert, đáp quá 20.000 không
+  insert, lịch sử desc, map lỗi). Mock transport/storage/File, không gọi mạng.
+- `npm run check:functions` → exit 0 (không đụng functions).
+- `git diff --cached` soát tay: không key/secret; không
+  `expo-file-system/legacy`, không `crypto.randomUUID` (ngoài comment cấm).
+
+**⏳ CÒN NỢ (việc của chủ dự án)**
+
+- Dán 0005 vào SQL Editor → Run, rồi
+  `PROBE_EMAIL=... PROBE_PASSWORD=... node scripts/cn4-schema-verify.mjs`
+  (kỳ vọng `VERIFY_PASS`; `42703` = chưa apply).
+- Test tay Expo Go light/dark theo TEST-CHECKLIST mục 14 (6 case còn lại)
+  và mục 16 (9 case) — gồm quota thật, kill app giữa tóm tắt, CASCADE xóa.
+- Proof RLS A/B cho `document_summaries` (CN3-05) + `document_questions`
+  (FR-29) ở phiên sau.
+
+**Mốc Git**
+
+- Branch: `feat/cn3g2-cn4`
+- Tag: `cn3-cn4-done` (tạo + push cùng lệnh với push main)
+- PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh

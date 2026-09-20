@@ -104,11 +104,16 @@ function extractText(data: GeminiGenerateResponse): string {
 }
 
 /**
- * Gọi Gemini REST trực tiếp từ client, trả về bản tóm tắt tiếng Việt.
- * Key lấy từ EXPO_PUBLIC_GEMINI_API_KEY, CẤM log key (không bao giờ đưa
- * key vào message lỗi). Không set temperature/top_p/top_k (deprecated).
+ * Gọi Gemini REST trực tiếp từ client với parts đã dựng sẵn.
+ * `emptyMessage` riêng cho từng nghiệp vụ (tóm tắt / hỏi đáp) để câu
+ * báo "trả rỗng" đúng ngữ cảnh. Key lấy từ EXPO_PUBLIC_GEMINI_API_KEY,
+ * CẤM log key (không bao giờ đưa key vào message lỗi).
+ * Không set temperature/top_p/top_k (deprecated trên Gemini 3.x).
  */
-export async function summarizeWithGemini(source: SummarySource): Promise<string> {
+async function postGenerate(
+  parts: GeminiPart[],
+  emptyMessage: string,
+): Promise<string> {
   const apiKey = readApiKey();
 
   let res: Response;
@@ -116,7 +121,7 @@ export async function summarizeWithGemini(source: SummarySource): Promise<string
     res = await fetch(
       `${GEMINI_GENERATE_URL}?key=${encodeURIComponent(apiKey)}`,
       {
-        body: JSON.stringify({ contents: [{ parts: buildParts(source) }] }),
+        body: JSON.stringify({ contents: [{ parts }] }),
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
       },
@@ -140,9 +145,60 @@ export async function summarizeWithGemini(source: SummarySource): Promise<string
   const data = (await res.json()) as GeminiGenerateResponse;
   const text = extractText(data);
   if (!text) {
-    throw new GeminiError(
-      'Gemini không trả về nội dung tóm tắt. Hãy thử lại.',
-    );
+    throw new GeminiError(emptyMessage);
   }
   return text;
+}
+
+/**
+ * Gọi Gemini REST trực tiếp từ client, trả về bản tóm tắt tiếng Việt.
+ * Key lấy từ EXPO_PUBLIC_GEMINI_API_KEY, CẤM log key (không bao giờ đưa
+ * key vào message lỗi). Không set temperature/top_p/top_k (deprecated).
+ */
+export async function summarizeWithGemini(source: SummarySource): Promise<string> {
+  return postGenerate(
+    buildParts(source),
+    'Gemini không trả về nội dung tóm tắt. Hãy thử lại.',
+  );
+}
+
+/** Đầu vào hỏi đáp CN4: câu hỏi + toàn văn `extracted_text` nhồi vào prompt. */
+export type QuestionSource = {
+  contextText: string;
+  question: string;
+};
+
+/**
+ * Prompt hỏi đáp tiếng Việt cố định cho mọi request CN4: model CHỈ được
+ * trả lời dựa trên nội dung tài liệu đính kèm, không bịa ngoài tài liệu.
+ */
+export const QA_PROMPT_HEADER =
+  'Bạn là trợ lý học tập cho sinh viên. Hãy trả lời câu hỏi bên dưới ' +
+  'bằng tiếng Việt, CHỈ dựa trên nội dung tài liệu đính kèm. Nếu tài liệu ' +
+  'không chứa thông tin để trả lời, hãy nói rõ là tài liệu không đề cập, ' +
+  'không bịa thêm. Trình bày ngắn gọn, giữ đúng thuật ngữ chuyên môn.';
+
+function buildQuestionParts(source: QuestionSource): GeminiPart[] {
+  return [
+    {
+      text:
+        `${QA_PROMPT_HEADER}\n\n--- NỘI DUNG TÀI LIỆU ---\n` +
+        `${source.contextText}\n\n--- CÂU HỎI ---\n${source.question}`,
+    },
+  ];
+}
+
+/**
+ * Gọi Gemini REST trực tiếp từ client, trả về câu trả lời tiếng Việt.
+ * CẤM vector DB/RAG/chunking: toàn văn `extracted_text` (TXT ≤ 10 MB
+ * theo luật CN2) nhồi thẳng vào prompt trong MỘT request duy nhất.
+ * Không retry tự động; mỗi lần gọi tối đa một request.
+ */
+export async function answerWithGemini(
+  source: QuestionSource,
+): Promise<string> {
+  return postGenerate(
+    buildQuestionParts(source),
+    'Gemini không trả về câu trả lời. Hãy thử lại.',
+  );
 }

@@ -214,16 +214,20 @@ Tag `edge-probe` được lệnh nhắc tới nhưng không tồn tại nên pro
 
 ## CN3-2 — Gọi AI và UI (phiên 2)
 
-- [ ] CN3-03: `summarizeWithGemini` theo đúng MỘT nhánh CN3-01 (PDF base64
+- [x] CN3-03: `summarizeWithGemini` theo đúng MỘT nhánh CN3-01 (PDF base64
   inline nguyên file, TXT text trực tiếp; map lỗi 429/quota/5xx/mạng/vượt
   20.000 ký tự sang tiếng Việt) + `requestSummary` end-to-end
   (guard → `processing` → upsert → `done`, lỗi → `failed`). Không retry tự
   động, mỗi lần bấm tối đa một request. FR: FR-14, FR-15, FR-16, FR-21.
-- [ ] CN3-04: Vùng tóm tắt trong `/documents/[id]`: nút “Tóm tắt bằng AI”
+  (2026-09-20, session `cn3g2-cn4`: G1 đã xong transport/request; phiên này
+  thêm loader `source.ts` signed URL → cache → base64/text + 8 unit test.)
+- [x] CN3-04: Vùng tóm tắt trong `/documents/[id]`: nút “Tóm tắt bằng AI”
   (DOCX ẩn nút + Banner gợi ý PDF), spinner + disabled khi chạy, empty/lỗi +
   “Thử lại” (chỉ khi `failed`), banner hạn mức khi 429 (không retry), tự thu
   hồi `processing` treo. Xong khi 4 trạng thái chạy tay ở light/dark. FR:
   FR-18, FR-19, FR-20.
+  (2026-09-20, session `cn3g2-cn4`: xong `summary-section.tsx`; test tay
+  light/dark thuộc chủ dự án theo TEST-CHECKLIST mục 14.)
 
 ## CN3-3 — Cách ly và đóng gói (phiên 3)
 
@@ -233,6 +237,31 @@ Tag `edge-probe` được lệnh nhắc tới nhưng không tồn tại nên pro
 - [ ] CN3-06: Unit test full tầng summary, cập nhật traceability (FR-14→FR-22
   “đạt”), checklist tay CN3, devlog, nguyên liệu báo cáo theo code cuối; rà
   `git diff --cached` không có key. FR: FR-14..FR-22.
+
+## CN4 — AI hỏi đáp trên tài liệu (FR-23 → FR-30, gộp cùng branch/tag với CN3-G2 theo lệnh session)
+
+SPEC gốc không có nội dung FR-23 → FR-30 (grep toàn repo không thấy);
+hành vi theo lệnh session `cn3g2-cn4`: cùng màn chi tiết, nhồi
+`extracted_text` vào prompt, cấm vector DB/RAG/chunking, chưa có text thì
+chặn + bảo tóm tắt trước. Branch `feat/cn3g2-cn4`, tag `cn3-cn4-done`.
+
+- [x] CN4-01: `answerWithGemini` trong `src/lib/ai/transport.ts` (MỘT nhánh
+  key trực tiếp như CN3, header bắt trả lời theo tài liệu) +
+  `src/features/chat/{api.ts,schemas.ts,queries.ts,errors.ts}` (`askQuestion`
+  guard → 1 request → validate → insert; `listQuestions` mới nhất trước;
+  câu hỏi 1–500, đáp án 1–20.000). FR: FR-23, FR-24, FR-28 (logic).
+  (2026-09-20: xong + 20 unit test mới, mock không gọi mạng.)
+- [x] CN4-02: Vùng hỏi đáp trong `/documents/[id]` (`qa-section.tsx`): ô
+  nhập + nút “Hỏi”, chặn khi chưa có text, lịch sử skeleton/empty/error +
+  “Thử lại”, banner hạn mức khi 429 (không retry), field lỗi dưới ô nhập.
+  FR: FR-25, FR-27, FR-28 (UI).
+  (2026-09-20: xong; test tay light/dark thuộc chủ dự án theo
+  TEST-CHECKLIST mục 16.)
+- [x] CN4-03: Migration `0005_cn4_questions.sql` (bảng `document_questions`
+  append-only, RLS 4 lệnh, CASCADE theo tài liệu) + khối SQL dán tay +
+  `scripts/cn4-schema-verify.mjs` (thiếu cột → 42703) + types tay trong
+  `database.ts`. CẤM tự chạy SQL remote. FR: FR-26, FR-29, FR-30.
+  (2026-09-20: xong file; apply + verify thuộc chủ dự án.)
 
 ## App shell — vỏ tabs + lối lùi (fix/app-shell)
 
