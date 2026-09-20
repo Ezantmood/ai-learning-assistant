@@ -594,4 +594,8 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog, secre
 
 **Mốc Git**
 
-- (điền full hash merge + tag sau khi merge theo Quy tắc Git)
+- Commit probe: `176e97d1201d63fa350d1a1546b1e4fb9c74ce46`
+- Commit merge: `a1b9f044768c3b238816431781ea0481edffe9ea` (merge --no-ff)
+- Branch: `chore/gemini-secret`
+- Tag: `gemini-wired` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
+- PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
