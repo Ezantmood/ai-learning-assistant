@@ -8,21 +8,21 @@ import {
 } from '../../lib/ai/transport';
 
 /**
- * Lỗi guard CN3 (quyền sở hữu, DOCX, vượt ngưỡng, gọi lặp, input rỗng)
- * đã là tiếng Việt nên hiển thị trực tiếp; lỗi hạ tầng (mạng, Gemini,
- * Supabase) được chuẩn hóa trước khi hiển thị, không lộ chi tiết kỹ thuật
- * và không bao giờ lộ API key.
+ * Lỗi guard CN4 (quyền sở hữu, DOCX, chưa có extracted_text, câu hỏi
+ * sai) đã là tiếng Việt nên hiển thị trực tiếp; lỗi hạ tầng (mạng,
+ * Gemini, Supabase) được chuẩn hóa trước khi hiển thị, không lộ chi
+ * tiết kỹ thuật và không bao giờ lộ API key.
  */
-export class SummaryGuardError extends Error {
+export class ChatGuardError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'SummaryGuardError';
+    this.name = 'ChatGuardError';
   }
 }
 
-/** Chuẩn hóa mọi lỗi tóm tắt sang tiếng Việt trước khi hiển thị ở G2. */
-export function toSummaryErrorMessage(error: unknown): string {
-  if (error instanceof SummaryGuardError) {
+/** Chuẩn hóa mọi lỗi hỏi đáp sang tiếng Việt trước khi hiển thị. */
+export function toChatErrorMessage(error: unknown): string {
+  if (error instanceof ChatGuardError) {
     return error.message;
   }
 
@@ -46,13 +46,13 @@ export function toSummaryErrorMessage(error: unknown): string {
     return error.message;
   }
 
-  return 'Không tạo được bản tóm tắt. Hãy thử lại.';
+  return 'Không trả lời được câu hỏi. Hãy thử lại.';
 }
 
 /**
  * UI dùng để quyết định hiện banner hạn mức (429/quota, CẤM retry)
  * thay vì khối lỗi thường kèm nút “Thử lại”.
  */
-export function isSummaryQuotaError(error: unknown): boolean {
+export function isChatQuotaError(error: unknown): boolean {
   return error instanceof GeminiQuotaError;
 }

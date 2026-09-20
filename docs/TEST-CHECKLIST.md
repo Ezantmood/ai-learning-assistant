@@ -149,12 +149,18 @@ Theo đúng khuôn `scripts/rls-proof.ts` của FR-05 (2 user test A/B, tự d�
   signed URL được object trong `{B}/`; anon không đọc/không list.
 - Thoát criteria: script exit 0, log số check pass đầy đủ.
 
-## 14. Tóm tắt AI (`/documents/[id]` vùng tóm tắt — CN3-G1 xong tầng logic + unit, UI ở G2)
+## 14. Tóm tắt AI (`/documents/[id]` vùng tóm tắt — CN3-G2 xong code + unit, chờ test tay)
 
 > G1 (2026-09-20): logic `requestSummary`/transport/model đã khóa bằng unit
 > test (mock, không gọi mạng): PDF thành công, DOCX → `unsupported` không gọi
-> Gemini, document người khác → từ chối, Gemini lỗi → `failed`. Các case tay
-> dưới đây thuộc G2 (vùng UI) — chủ dự án chạy khi G2 xong.
+> Gemini, document người khác → từ chối, Gemini lỗi → `failed`.
+> G2 (2026-09-20, session `cn3g2-cn4`): vùng UI `summary-section.tsx` +
+> loader `source.ts` (signed URL → cache → PDF base64/TXT text, API mới,
+> dọn cache best-effort) khóa bằng 8 test `source.test.ts` (mock, không gọi
+> mạng): PDF/TXT OK, DOCX chặn trước mạng, signed URL lỗi, offline, TXT
+> rỗng, dọn cache fail không hỏng kết quả. Tổng 23 suites 240/240 (giữ
+> nguyên test cũ). Các case tay dưới đây thuộc chủ dự án (Expo Go,
+> light/dark).
 
 - [ ] PDF của mình bấm “Tóm tắt bằng AI” → spinner, nút disabled → hiện bản
   tóm tắt tiếng Việt; bấm dồn lúc đang chạy không sinh request thứ hai.
@@ -185,6 +191,39 @@ Theo đúng khuôn `scripts/rls-proof.ts` của FR-05 (2 user test A/B, tự d�
   đó không quay lại được màn riêng tư.
 - [ ] Kill app khi đang login → mở lại còn phiên, vào thẳng tab Trang chủ.
 - [ ] Kill app khi chưa login → mở lại dừng ở `/sign-in`.
+
+## 16. Hỏi đáp AI (`/documents/[id]` vùng hỏi đáp — CN4 xong code + unit, migration 0005 chờ apply tay, còn lại test tay)
+
+> Session `cn3g2-cn4` (2026-09-20): SPEC gốc không có FR-23→FR-30 nên hành
+> vi theo lệnh session (ô nhập trên cùng màn chi tiết, nhồi
+> `extracted_text` vào prompt, cấm RAG/chunking, chặn hỏi khi chưa có
+> text). Unit đã khóa (mock, không gọi mạng): `askTransport.test.ts`
+> 7 test (prompt chứa context + câu hỏi, 429/5xx/mạng/trả rỗng, cấm
+> temperature/key lộ) + `chat.test.ts` 13 test (hỏi OK đúng một request +
+> insert, chặn khi chưa có text/DOCX/sai chủ/rỗng/quá 500, quota không
+> insert, đáp quá 20.000 không insert, lịch sử desc, map lỗi). Tổng
+> 23 suites 240/240 (giữ nguyên test cũ).
+> Giới hạn đã biết: PDF do Gemini đọc trực tiếp (native vision) nên
+> `extracted_text` vẫn null sau tóm tắt → hỏi đáp PDF bị chặn với câu
+> dẫn; hỏi đáp hiện dùng được với TXT sau khi tóm tắt.
+
+- [ ] Áp migration: dán TOÀN BỘ `supabase/migrations/0005_cn4_questions.sql`
+  vào SQL Editor → Run (không `db push`); rồi chạy
+  `PROBE_EMAIL=... PROBE_PASSWORD=... node scripts/cn4-schema-verify.mjs`
+  → kỳ vọng `SIGNIN_OK` + `VERIFY_PASS` (thiếu cột → `42703` là fail thật).
+- [ ] TXT đã tóm tắt: nhập câu hỏi → spinner, nút “Hỏi” disabled → đáp án
+  hiện trong lịch sử, ô nhập trống; hỏi dồn lúc đang chạy không sinh
+  request thứ hai.
+- [ ] Chưa tóm tắt (TXT mới tải): vùng hỏi đáp hiện “Chưa thể hỏi đáp” +
+  câu dẫn bấm tóm tắt trước; không có ô nhập bị treo.
+- [ ] DOCX: Banner gợi ý PDF của CN2 vẫn hiện; vùng tóm tắt ẩn nút, vùng
+  hỏi đáp chặn; không có request AI nào.
+- [ ] Câu hỏi rỗng/quá 500 ký tự → lỗi nằm dưới ô nhập, giữ nguyên câu hỏi.
+- [ ] Bật chế độ máy bay rồi hỏi → lỗi tiếng Việt + “Thử lại”, không tạo
+  row nửa vời trong lịch sử.
+- [ ] Chạm quota free → banner hạn mức, không có nút thử lại, không tự retry.
+- [ ] Hỏi rồi xóa tài liệu → lịch sử mất theo (CASCADE); A hỏi → B không
+  thấy (cách ly RLS `document_questions`, proof A/B ở phiên sau).
 
 ## Smoke test cuối
 

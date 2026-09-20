@@ -241,8 +241,32 @@ Xóa tài liệu (FR-11) không cần bước xóa summary riêng: FK CASCADE d�
 Xóa user xóa cả hai bảng theo dây chuyền `auth.users → documents →
 document_summaries` và `auth.users → document_summaries`.
 
-## Máy trạng thái `extraction_status` trong CN3 (FR-19, FR-20)
+## Bảng `public.document_questions` (CN4, FR-26 → FR-30)
 
+> DDL chính thức chạy được: `supabase/migrations/0005_cn4_questions.sql`.
+> Khi hai bên lệch nhau thì file migration là nguồn sự thật, tài liệu phải sửa theo.
+> (SPEC gốc không có FR-23 → FR-30; lịch sử append-only theo lệnh session
+> `cn3g2-cn4`: lượt hỏi lỗi không tạo row, không sửa/xóa từng câu.)
+
+| Cột | Kiểu/ràng buộc | Ý nghĩa |
+|---|---|---|
+| `id` | `uuid primary key default gen_random_uuid()` | ID lượt hỏi |
+| `document_id` | `uuid not null`, FK về `documents(id) on delete cascade` (`document_questions_document_id_fkey`) | Tài liệu được hỏi; xóa tài liệu kéo theo mất lịch sử |
+| `user_id` | `uuid not null references auth.users(id) on delete cascade` | Chủ sở hữu; denormalized để RLS viết trực tiếp `auth.uid() = user_id` |
+| `question` | `text not null`, `check (1–500)` (chung CHECK `document_questions_qa_rules` với answer) | Câu hỏi (đã trim ở app) |
+| `answer` | `text not null`, `check (1–20000)` | Câu trả lời tiếng Việt |
+| `model` | `text not null default 'gemini-3.5-flash'`, `check (1–100)` (`document_questions_model_rules`) | Model đã trả lời |
+| `created_at` | `timestamptz not null default now()` | Mốc sắp lịch sử mới nhất trước |
+| `updated_at` | `timestamptz not null default now()` | Trigger `set_updated_at()` tái dùng |
+
+Index: `document_questions_doc_created_idx on document_questions(document_id, created_at desc)`
+— phục vụ liệt kê lịch sử mới nhất trước.
+
+RLS policies cho cả bốn lệnh (`USING`/`WITH CHECK` ràng buộc
+`auth.uid() = user_id`, `WITH CHECK` ở UPDATE ngăn đổi `user_id`);
+grants `authenticated` CRUD, `service_role` full, `revoke anon` như CN3.
+
+## Máy trạng thái `extraction_status` trong CN3 (FR-19, FR-20)
 ```
 pending → processing → done
              └───────→ failed →(user bấm thử lại)→ processing

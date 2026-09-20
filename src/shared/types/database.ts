@@ -184,6 +184,47 @@ export type Database = {
           },
         ]
       }
+      document_questions: {
+        Row: {
+          answer: string
+          created_at: string
+          document_id: string
+          id: string
+          model: string
+          question: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          document_id: string
+          id?: string
+          model?: string
+          question: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          document_id?: string
+          id?: string
+          model?: string
+          question?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'document_questions_document_id_fkey'
+            columns: ['document_id']
+            isOneToOne: false
+            referencedRelation: 'documents'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -328,6 +369,8 @@ export const Constants = {
 // `supabase/migrations/0002_cn2_documents.sql` (chờ regen bằng CLI).
 // Bảng CN3 (`document_summaries`) đồng bộ tay theo
 // `supabase/migrations/0004_cn3_summaries.sql` (chờ regen bằng CLI).
+// Bảng CN4 (`document_questions`) đồng bộ tay theo
+// `supabase/migrations/0005_cn4_questions.sql` (chờ regen bằng CLI).
 export type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 export type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
 export type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
@@ -352,3 +395,9 @@ export type DocumentSummaryInsert =
   Database['public']['Tables']['document_summaries']['Insert'];
 export type DocumentSummaryUpdate =
   Database['public']['Tables']['document_summaries']['Update'];
+export type DocumentQuestionRow =
+  Database['public']['Tables']['document_questions']['Row'];
+export type DocumentQuestionInsert =
+  Database['public']['Tables']['document_questions']['Insert'];
+export type DocumentQuestionUpdate =
+  Database['public']['Tables']['document_questions']['Update'];

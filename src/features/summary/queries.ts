@@ -52,6 +52,19 @@ export function useRequestSummary(userId: string) {
   return useMutation({
     mutationFn: (input: { document: SummaryDocument; source: SummarySource }) =>
       requestSummary({ ...input, userId }),
+    onError: (_error, variables) => {
+      // Lỗi vẫn lật DB về `failed` nên cache trạng thái phải refresh
+      // để UI hiện nút “Thử lại” thay vì kẹt spinner.
+      void queryClient.invalidateQueries({
+        queryKey: summaryKey(variables.document.id),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: documentDetailKey(variables.document.id),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ['documents', userId],
+      });
+    },
     onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({
         queryKey: summaryKey(variables.document.id),

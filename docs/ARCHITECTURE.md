@@ -54,22 +54,28 @@ Kiến trúc theo feature, ít tầng và đủ rõ để sinh viên giải thí
 │   │   ├── notes/{api.ts,schemas.ts,queries.ts,errors.ts}
 │   │   ├── documents/{api.ts,storage.ts,schemas.ts,queries.ts,errors.ts} (CN2, FR-06 → FR-13)
 │   │   ├── documents/__tests__/
-│   │   ├── summary/{api.ts,schemas.ts,queries.ts,errors.ts} (CN3-G1, FR-14 → FR-22:
-│   │   │   requestSummary + upsert ghi đè + máy trạng thái + retry/thu hồi treo)
+│   │   ├── summary/{api.ts,source.ts,schemas.ts,queries.ts,errors.ts} (CN3-G1+G2, FR-14 → FR-22:
+│   │   │   requestSummary + upsert ghi đè + máy trạng thái + retry/thu hồi treo +
+│   │   │   loadSummarySource signed URL → cache → base64/text bằng API mới)
 │   │   │   ├── summary/__tests__/summary.test.ts (mock transport/supabase, không gọi mạng)
-│   │   ├── chat/.gitkeep (FR-23 → FR-30, chưa code)
+│   │   │   └── summary/__tests__/source.test.ts (mock storage/File, không gọi mạng)
+│   │   ├── chat/{api.ts,schemas.ts,queries.ts,errors.ts} (CN4, FR-23 → FR-30:
+│   │   │   askQuestion nhồi extracted_text vào prompt + lịch sử append-only)
+│   │   │   └── chat/__tests__/chat.test.ts (mock transport/supabase, không gọi mạng)
 │   │   ├── scan/.gitkeep (FR-31 → FR-37, chưa code)
 │   │   └── solver/.gitkeep (FR-38 → FR-45, chưa code)
-│   ├── lib/ai/{models.ts,transport.ts} (CN3-G1, theo lệnh session — ngoại lệ
+│   ├── lib/ai/{models.ts,transport.ts} (CN3-G1 + CN4, theo lệnh session — ngoại lệ
 │   │   có chủ đích so với quy ước "dùng chung lên shared": hằng số
-│   │   SUMMARY_MODEL duy nhất `gemini-3.5-flash` + một hàm transport
-│   │   `summarizeWithGemini` nhánh key trực tiếp; cấm viết sẵn nhánh proxy
+│   │   SUMMARY_MODEL duy nhất `gemini-3.5-flash` + hai hàm transport
+│   │   `summarizeWithGemini`/`answerWithGemini` nhánh key trực tiếp; cấm viết sẵn nhánh proxy
 │   │   bật/tắt bằng cờ)
-│   │   └── lib/ai/__tests__/transport.test.ts (mock fetch, không gọi mạng)
+│   │   ├── lib/ai/__tests__/transport.test.ts (mock fetch, không gọi mạng)
+│   │   └── lib/ai/__tests__/askTransport.test.ts (mock fetch, không gọi mạng)
 ├── supabase/migrations/
 │   ├── 0001_account_manager.sql
 │   ├── 0002_cn2_documents.sql
 │   └── 0004_cn3_summaries.sql (0003 không tồn tại)
+│   └── 0005_cn4_questions.sql (CN4, CHỜ apply tay qua SQL Editor)
 ├── supabase/functions/
 │   └── gemini-proxy/index.ts (CN3-G1b đã fix auth + model 3.5-flash, CHỜ
 │       deploy tay qua Via Editor — bundle đang chạy là bản cũ `getUser()`
