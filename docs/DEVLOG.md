@@ -521,3 +521,77 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog, secre
 - Branch: `fix/app-shell`
 - Tag: `app-shell` (tạo ngay sau tự merge theo quyết định chủ dự án, đã push)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### Probe gemini-proxy + secret Gemini (CN3-01) — 2026-09-20
+
+**Đã làm gì**
+
+- [0] Đọc AGENTS.md, entry DEVLOG gần nhất (app-shell) và soát tag
+  `edge-probe`: tag KHÔNG tồn tại local lẫn remote nên không có kết luận cũ
+  nào để kế thừa — probe làm lại từ đầu trong phiên này. `.env` đã nằm trong
+  `.gitignore` từ trước (dòng 1), credential đọc theo tên biến, không in giá trị.
+- [1] Branch `chore/gemini-secret` từ `main` (đã `pull --ff-only`, up to date).
+- [2] Thử nạp secret `GEMINI_API_KEY` bằng `supabase secrets set --env-file`
+  (file tạm NGOÀI repo, `chmod 600`, xóa ngay sau khi chạy) với project-ref
+  trong `.env` → lỗi `LegacySecretsSetUnexpectedStatusError`, 403 thiếu quyền.
+  `supabase secrets list` xác nhận chỉ có 5 secret mặc định của hệ thống, chưa
+  có `GEMINI_API_KEY` (list chỉ hiện tên + hash, đúng kỳ vọng). Giá trị key
+  không vào bất kỳ file nào trong repo, kể cả rút gọn.
+- [3] Mới `supabase/functions/gemini-proxy/index.ts` (tên theo lệnh session;
+  SPEC/TASKS ghi `summarize`, tên cuối chốt khi deploy): check JWT ở header
+  `Authorization` (thiếu/sai → 401 qua `getUser`), đọc key duy nhất bằng
+  `Deno.env.get('GEMINI_API_KEY')` (thiếu → 500 kèm thông báo rõ), gọi Gemini
+  2.5 Flash với prompt cố định `"Trả lời đúng một từ: OK"`, trả về text nhận
+  được. CHƯA làm logic CN3. `supabase functions deploy gemini-proxy` → lỗi
+  `FunctionsApiStatusError`, 403 cùng họ (token hiện tại chỉ đọc được, cùng
+  gốc với G2 bỏ `link`/`db push`) nên dừng deploy/curl — chưa có gì để gọi thử.
+  `tsconfig.json` thêm `exclude` cho `supabase/functions` (Deno runtime, không
+  phải TS của app) để cổng typecheck giữ xanh.
+- [4] Ghi `docs/REPORT-NOTES.md` (mục probe 2026-09-20): demo CN3 phải dùng
+  `EXPO_PUBLIC_GEMINI_API_KEY`, đây là giới hạn đã biết + vì sao không an toàn
+  (key trong bundle, đốt quota, phải restrict, lộ thì rotate). Không lặng lẽ
+  chuyển nhánh: quyết định ghi công khai, code fallback để CN3-03 làm.
+- [5] `docs/ARCHITECTURE.md`: sơ đồ đường đi app → Edge Function → Gemini, nêu
+  rõ key không bao giờ rời server ở đường proxy; `docs/SETUP.md`: mục 5d (chủ
+  dự án nạp secret + deploy + curl kỳ vọng 401/200/500) và biến demo;
+  `.env.example` thêm tên biến demo (giá trị rỗng); tick CN3-01 kèm kết quả.
+
+**Quyết định và lý do**
+
+- Giữ source probe trong repo dù chưa deploy được: file không chứa secret,
+  chủ dự án deploy được ngay khi có token đủ quyền (SETUP 5d); xóa đi thì mất
+  bằng chứng đường đúng.
+- Không code nhánh `EXPO_PUBLIC_...` trong phiên này: CN3-01 chỉ chốt nhánh
+  bằng bằng chứng, code fallback là việc CN3-03; nhồi cả hai vào một phiên là
+  dồn commit, trái Quy tắc Git.
+
+**Cố tình không làm và lý do**
+
+- Không gọi thử curl (deploy chưa qua nên không có endpoint để gọi); không
+  retry `secrets set` qua Management API trực tiếp (cùng token, cùng RBAC,
+  kết quả 403 đã đủ kết luận); không sửa SPEC CN3-KEY (đặc tả hai nhánh vẫn
+  đúng, probe chỉ chốt nhánh); xem thêm mục “cố tình không làm” ở báo cáo cuối.
+- Không đụng code app, test, migration, theme; không cài package.
+
+**Đã kiểm thử**
+
+- Lệnh: `npx tsc --noEmit` → exit 0 (gồm `exclude` mới).
+- Lệnh: `npm run lint` → 0 errors, 2 warning `watch()` cũ (kế thừa, không từ
+  code mới).
+- Lệnh: `npm test` → 18 suites, **187/187 PASS** (giữ nguyên, không sửa test,
+  không gọi mạng).
+- Bằng chứng probe (bằng lệnh thật, credential trong `.env`): `secrets set` →
+  403; `functions deploy` → 403; `secrets list` → 5 secret mặc định, không có
+  `GEMINI_API_KEY`.
+
+**Còn nợ**
+
+- Chủ dự án nạp secret + deploy + curl lại theo SETUP 5d (kỳ vọng
+  401 thiếu JWT / 200 `text: OK` / 500 thiếu secret), rồi CN3-03 code nhánh đã chốt.
+- Tên function cuối (`gemini-proxy` hay `summarize`) chốt lúc deploy thật.
+
+**Mốc Git**
+
+- (điền full hash merge + tag sau khi merge theo Quy tắc Git)

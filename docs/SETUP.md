@@ -46,6 +46,10 @@ cả ba cài đúng line SDK 57 bằng `npx expo install`.
    - `EXPO_PUBLIC_SUPABASE_URL`
    - `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
    - `EXPO_PUBLIC_REQUIRE_EMAIL_CONFIRMATION=false` khi dev (`true` khi demo).
+   - `EXPO_PUBLIC_GEMINI_API_KEY` — CHỈ cho bản demo CN3 sau probe 2026-09-20
+     (deploy proxy 403 thiếu quyền): GIỚI HẠN ĐÃ BIẾT, key trong bundle giải
+     nén ra được; phải restrict riêng Gemini API trong Google Cloud Console;
+     không commit, không chụp ảnh, xem REPORT-NOTES.
 2. Tạo `.env.local` (đã gitignore), điền:
    - `SUPABASE_PROJECT_REF`, `SUPABASE_ACCESS_TOKEN`
    - `SUPABASE_DB_PASSWORD`, `SUPABASE_DB_URL`
@@ -108,6 +112,28 @@ DEVLOG G2). Thứ tự:
    user; trigger `updated_at`.
    Dòng nào `KHÔNG DAT` thì migration chưa áp đúng — báo chủ dự án, không sửa
    tay lẻ tẻ.
+
+## 5d. Đường proxy Gemini (chủ dự án làm tay khi có token đủ quyền)
+
+Probe 2026-09-20 (`chore/gemini-secret`, tag `gemini-wired`): `supabase
+secrets set` và `supabase functions deploy` đều 403 thiếu quyền với access
+token hiện tại (cùng họ với G2: token chỉ đọc được), nên secret CHƯA nạp và
+function CHƯA deploy — bằng chứng trong `docs/REPORT-NOTES.md`. Khi có token
+đủ quyền (Owner/Admin hoặc token đủ scope), làm theo thứ tự:
+
+1. Dashboard → Edge Functions → Secrets (hoặc CLI):
+   `supabase secrets set GEMINI_API_KEY=<key> --project-ref <ref>` —
+   giá trị key chỉ nằm trong Dashboard/secret, không vào repo/DEVLOG/ảnh.
+2. Deploy mũi thăm dò có sẵn trong repo (không chứa secret):
+   `supabase functions deploy gemini-proxy --project-ref <ref>`.
+3. Gọi thử bằng JWT thật của một user đã đăng nhập:
+   - Không gửi `Authorization` → mong đợi **401** thiếu JWT.
+   - Gửi `Authorization: Bearer <jwt-hợp-lệ>` → mong đợi **200**
+     `{"ok":true,"model":"gemini-2.5-flash","text":"OK"}` (model có thể trả
+     kèm xuống dòng, đối chiếu sau khi trim).
+   - JWT sai/hết hạn → **401**; thiếu secret → **500** kèm thông báo rõ.
+4. Probe đạt thì CN3-03 code đúng MỘT nhánh proxy và gỡ
+   `EXPO_PUBLIC_GEMINI_API_KEY`; probe vẫn lỗi thì giữ nhánh demo và ghi rõ.
 
 ## 6. Cấu hình Supabase Auth (Dashboard, làm tay)
 

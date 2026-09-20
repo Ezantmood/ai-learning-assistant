@@ -60,6 +60,9 @@ Kiến trúc theo feature, ít tầng và đủ rõ để sinh viên giải thí
 │   │   └── solver/.gitkeep (FR-38 → FR-45, chưa code)
 ├── supabase/migrations/
 │   └── 0001_account_manager.sql
+├── supabase/functions/
+│   └── gemini-proxy/index.ts (mũi thăm dò CN3-01: JWT → secret → Gemini 2.5
+│       Flash prompt cố định; CHƯA deploy được — xem REPORT-NOTES + SETUP 5d)
 ├── scripts/
 │   ├── rls-proof.ts (FR-05, chạy tay với credential .env.local)
 │   └── storage-rls-proof.ts (FR-04, tương tự)
@@ -368,6 +371,9 @@ Repository `src/features/summary/` (không import chéo sang `documents`;
   nhánh trực tiếp (fetch REST Gemini + `EXPO_PUBLIC_GEMINI_API_KEY`). PDF gửi
   base64 inline nguyên file (≤ 10 MB < ngưỡng 50 MB, quyết định CN3-SIZE);
   TXT gửi text trực tiếp. Không lib trích xuất PDF (quyết định CN3-NOLIB).
+  Kết quả probe 2026-09-20: deploy + nạp secret đều 403 thiếu quyền nên chốt
+  nhánh trực tiếp cho bản demo (giới hạn đã biết, xem REPORT-NOTES); khi
+  proxy deploy được thì quay lại đúng MỘT nhánh proxy, không giữ cả hai.
 - Lỗi Gemini map sang tiếng Việt ở `errors.ts`: 429/quota → banner hạn mức
   (~1.500 lượt/ngày, reset nửa đêm giờ Thái Bình Dương); 5xx/mất mạng → retry
   tay; vượt 20.000 ký tự → báo rõ, không cắt im lặng.
@@ -381,6 +387,27 @@ Query key và invalidate:
 Chặn gọi lặp (FR-19): ba lớp — nút disabled khi mutation pending; guard
 `processing` trong `requestSummary` (kể cả bấm từ hai chỗ cùng lúc, request
 thứ hai thấy `processing` thì dừng); `UNIQUE(document_id)` chặn ghi đôi ở DB.
+
+### Đường đi của key (proxy là đường đúng — chưa deploy được)
+
+```text
+Đường đúng (proxy, chờ deploy — key KHÔNG BAO GIỜ rời server):
+app (JWT Supabase) → Edge Function gemini-proxy → Gemini 2.5 Flash
+                      ├─ 401 nếu thiếu/sai JWT (getUser)
+                      ├─ 500 nếu thiếu secret GEMINI_API_KEY
+                      └─ Deno.env.get('GEMINI_API_KEY') chỉ sống trong server
+
+Đường demo đang dùng (fallback sau probe 2026-09-20 — GIỚI HẠN ĐÃ BIẾT):
+app (key trong bundle, giải nén ra được) → Gemini 2.5 Flash trực tiếp
+```
+
+- Source probe `supabase/functions/gemini-proxy/index.ts` đã nằm trong repo
+  (không chứa secret): check JWT → đọc secret → gọi model với prompt cố định
+  `"Trả lời đúng một từ: OK"`, chưa làm logic CN3.
+- Probe 2026-09-20: `secrets set` và `functions deploy` đều 403 thiếu quyền
+  (cùng họ với G2: token hiện tại chỉ đọc được), `secrets list` xác nhận chưa
+  có `GEMINI_API_KEY` — bằng chứng trong REPORT-NOTES, cách mở lại trong
+  SETUP mục 5d.
 
 ## Lý do chọn công nghệ
 - **Expo SDK 57 + TypeScript strict:** một codebase React Native, vòng lặp phát triển nhanh và lỗi kiểu được phát hiện sớm.
@@ -397,13 +424,15 @@ thứ hai thấy `processing` thì dừng); `UNIQUE(document_id)` chặn ghi đ�
 
 ## Biến môi trường
 
-Chỉ dùng hai biến public cần thiết cho client:
+Chỉ dùng hai biến public cần thiết cho client, cộng một biến demo CN3:
 
 ```dotenv
 EXPO_PUBLIC_SUPABASE_URL=
 EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 EXPO_PUBLIC_REQUIRE_EMAIL_CONFIRMATION=false
-# Chỉ dùng ở nhánh fallback CN3 (probe Edge Function thất bại, FR-21):
+# Nhánh demo CN3 sau probe 2026-09-20 (deploy proxy 403 thiếu quyền, FR-21):
+# GIỚI HẠN ĐÃ BIẾT — key trong bundle giải nén ra được, chỉ dùng cho demo,
+# xem REPORT-NOTES; khi proxy deploy được thì gỡ nhánh này.
 # EXPO_PUBLIC_GEMINI_API_KEY=
 ```
 
