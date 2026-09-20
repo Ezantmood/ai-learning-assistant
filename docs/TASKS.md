@@ -212,3 +212,11 @@ Tag `edge-probe` được lệnh nhắc tới nhưng không tồn tại nên pro
 - [ ] CN3-06: Unit test full tầng summary, cập nhật traceability (FR-14→FR-22
   “đạt”), checklist tay CN3, devlog, nguyên liệu báo cáo theo code cuối; rà
   `git diff --cached` không có key. FR: FR-14..FR-22.
+
+## App shell — vỏ tabs + lối lùi (fix/app-shell)
+
+- [x] APP-SHELL: `(app)` sang bottom Tabs (Trang chủ/Tài liệu/Tài khoản),
+  CN1 trong tab Tài khoản, BackAction mọi màn con (`goBackOrReplace`),
+  push cho màn con + replace chỉ ở biên (auth)↔(app), unit test
+  `decideRouteTarget`/`goBackOrReplace`, checklist tay mục 15.
+  (2026-09-20: xong code + test, chờ bấm tay Expo Go.) FR: FR-01..FR-05 (vỏ).

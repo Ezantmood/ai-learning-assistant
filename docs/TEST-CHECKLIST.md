@@ -153,6 +153,25 @@ Theo đúng khuôn `scripts/rls-proof.ts` của FR-05 (2 user test A/B, tự d�
 - [ ] Chạm quota free → banner hạn mức + giờ reset, không tự retry.
 - [ ] A tóm tắt → B không thấy bản của A (cách ly RLS `document_summaries`).
 
+## 15. Vỏ ứng dụng — tabs và lối lùi (fix/app-shell, Expo Go)
+
+- [ ] Đăng nhập → vào tab Trang chủ (3 tab dưới cùng: Trang chủ / Tài liệu /
+  Tài khoản, icon hiện đủ, không ô trống).
+- [ ] Chuyển tab Trang chủ ↔ Tài liệu ↔ Tài khoản: mỗi tab giữ đúng màn gốc,
+  không crash, không mất session.
+- [ ] Tab Tài khoản → nút “Ghi chú học tập” → `/notes` có nút back (Appbar);
+  bấm back về tab Tài khoản.
+- [ ] Từ Trang chủ → thẻ CN1 → `/notes` → chi tiết → back từng bước về đúng chỗ.
+- [ ] Từ `/notes` mới tạo → back về list (không kẹt ở màn tạo).
+- [ ] Nút Back cứng Android ở mọi màn con (`/notes/new`, `/notes/[id]`,
+  `/documents/upload`, `/documents/[id]`, `/subjects`,
+  `/profile/change-password`, `/sign-up`, OTP): lùi đúng một bước, không văng
+  app, không kẹt.
+- [ ] Tab Tài khoản → Đăng xuất → về `/sign-in`; nút Back (cứng + Appbar) sau
+  đó không quay lại được màn riêng tư.
+- [ ] Kill app khi đang login → mở lại còn phiên, vào thẳng tab Trang chủ.
+- [ ] Kill app khi chưa login → mở lại dừng ở `/sign-in`.
+
 ## Smoke test cuối
 
 - [ ] Android và iOS/Expo Go mục tiêu: mở app, điều hướng toàn luồng không crash.
