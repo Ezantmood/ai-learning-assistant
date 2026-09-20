@@ -413,6 +413,12 @@ app (key trong bundle, giải nén ra được) → Gemini 2.5 Flash trực ti�
   `GET .../functions` → `[]`, endpoint → 404 NOT_FOUND. Proxy vẫn là đường
   chốt kiến trúc nhưng CHƯA deploy được — nhánh demo `EXPO_PUBLIC_...` giữ
   nguyên hiệu lực tới khi owner deploy xong.
+- Probe-2 (`chore/gemini-probe-2`, secret + deploy đã làm tay qua Dashboard vì
+  PAT bị RBAC tầng organization chặn ghi): functions list có `gemini-proxy`
+  ACTIVE (`verify_jwt: true`); gọi kèm JWT thật → 401 do bug `getUser()` không
+  đối số (client Edge Function không giữ session) — đã sửa thành
+  `getUser(token)` trong repo, chờ owner redeploy tay rồi curl lại kỳ vọng
+  200; gọi không auth → 401 gateway (hàm không mở cho người lạ).
 
 ## Lý do chọn công nghệ
 - **Expo SDK 57 + TypeScript strict:** một codebase React Native, vòng lặp phát triển nhanh và lỗi kiểu được phát hiện sớm.

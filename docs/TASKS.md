@@ -190,7 +190,11 @@ Tag `edge-probe` được lệnh nhắc tới nhưng không tồn tại nên pro
   REPORT-NOTES; source probe giữ trong repo chờ deploy, tag `gemini-wired`.
   Retry cùng ngày với token MỚI (`chore/gemini-wired`): CLI + Management API
   vẫn 403, `GET .../functions` → `[]`, endpoint 404 — proxy vẫn là chốt kiến
-  trúc nhưng chưa deploy được, nhánh demo giữ hiệu lực.)
+  trúc nhưng chưa deploy được, nhánh demo giữ hiệu lực.
+  Probe-2 (`chore/gemini-probe-2`, deploy tay qua Dashboard): functions list
+  có `gemini-proxy` ACTIVE; gọi kèm JWT → 401 do bug `getUser()` không đối
+  số, đã sửa `getUser(token)` trong repo chờ redeploy; gọi không auth → 401
+  gateway. 200 chưa đạt nên chưa viết chốt, chưa gỡ nhánh demo.)
 - [ ] CN3-02: Viết `src/features/summary/{api.ts,schemas.ts,queries.ts,errors.ts}`
   (upsert `document_summaries` ghi đè theo `UNIQUE(document_id)`, máy
   `pending → processing → done/failed`, `reclaimStaleProcessing` 15 phút theo
