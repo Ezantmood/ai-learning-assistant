@@ -1056,7 +1056,7 @@ https://supabase.com/docs/guides/platform/access-control`
 
 - Commit probe+verify: `148bf15` (2 script, đã push branch)
 - Commit tầng client: `4a694fb` (9 file, đã push branch)
-- Commit merge: `TBD` (merge --no-ff)
+- Commit merge: `12095167ddc83a9347f986fb4e1e805c48f23ab8` (merge --no-ff)
 - Branch: `feat/cn3-g1-summary`
 - Tag: `cn3-g1-done` (tạo + push cùng lệnh với push main)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
