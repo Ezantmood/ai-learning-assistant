@@ -212,7 +212,7 @@ quan trên Dashboard, không phải bước tạo:
 ```bash
 npx tsc --noEmit
 npm run lint
-npm test               # 17 suites, 177/177 PASS — mock supabase, không gọi mạng
+npm test               # 18 suites, 187/187 PASS — mock supabase, không gọi mạng
 ```
 
 `npm test` bao gồm: schema/validate CN1, 64 test tầng dữ liệu documents
