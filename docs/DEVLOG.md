@@ -891,8 +891,7 @@ https://supabase.com/docs/guides/platform/access-control`
 
 **Mốc Git**
 
-- Commit merge: (điền ở commit bổ sung sau merge, theo tiền lệ
-  `docs/*-hash`)
+- Commit merge: `125081db555e06589f028f04c5edb8397aaf14d6` (merge --no-ff)
 - Branch: `chore/tag-audit`
 - Tag: `tag-audit` (tạo ngay sau tự merge theo quyết định chủ dự án, push
   ngay theo quy tắc mới)
