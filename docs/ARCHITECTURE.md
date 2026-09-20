@@ -419,6 +419,11 @@ app (key trong bundle, giải nén ra được) → Gemini 2.5 Flash trực ti�
   đối số (client Edge Function không giữ session) — đã sửa thành
   `getUser(token)` trong repo, chờ owner redeploy tay rồi curl lại kỳ vọng
   200; gọi không auth → 401 gateway (hàm không mở cho người lạ).
+- Verify (`chore/cn3-proxy-verify`, sau redeploy tay từ source mới): functions
+  list vẫn `version: 1` (không tăng); JWT mới chứng minh hợp lệ bằng
+  `/auth/v1/user` → 200 nhưng probe kèm JWT vẫn 401 y hệt — bundle đang chạy
+  khả năng vẫn là code cũ, redeploy chưa ăn source `getUser(token)` trong
+  repo. CHƯA 200 nên hai nhánh giữ nguyên, không viết chốt.
 
 ## Lý do chọn công nghệ
 - **Expo SDK 57 + TypeScript strict:** một codebase React Native, vòng lặp phát triển nhanh và lỗi kiểu được phát hiện sớm.

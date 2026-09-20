@@ -193,8 +193,13 @@ Tag `edge-probe` được lệnh nhắc tới nhưng không tồn tại nên pro
   trúc nhưng chưa deploy được, nhánh demo giữ hiệu lực.
   Probe-2 (`chore/gemini-probe-2`, deploy tay qua Dashboard): functions list
   có `gemini-proxy` ACTIVE; gọi kèm JWT → 401 do bug `getUser()` không đối
-  số, đã sửa `getUser(token)` trong repo chờ redeploy; gọi không auth → 401
-  gateway. 200 chưa đạt nên chưa viết chốt, chưa gỡ nhánh demo.)
+   số, đã sửa `getUser(token)` trong repo chờ redeploy; gọi không auth → 401
+   gateway. 200 chưa đạt nên chưa viết chốt, chưa gỡ nhánh demo.
+   Verify (`chore/cn3-proxy-verify`, sau redeploy tay từ source mới): functions
+   list vẫn `version: 1`; JWT mới hợp lệ (`/auth/v1/user` → 200) nhưng probe
+   kèm JWT vẫn 401 y hệt — nghi bundle chạy vẫn là code cũ, cần dán lại
+   source hiện tại qua Dashboard. CN3-01 giữ tick (probe đã làm đủ bằng chứng),
+   việc còn lại là redeploy đúng source rồi verify 200 ở phiên sau.)
 - [ ] CN3-02: Viết `src/features/summary/{api.ts,schemas.ts,queries.ts,errors.ts}`
   (upsert `document_summaries` ghi đè theo `UNIQUE(document_id)`, máy
   `pending → processing → done/failed`, `reclaimStaleProcessing` 15 phút theo

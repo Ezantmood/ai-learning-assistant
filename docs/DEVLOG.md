@@ -754,3 +754,80 @@ https://supabase.com/docs/guides/platform/access-control`
 - Tag: không tạo `cn3-proxy-verified` (200 chưa đạt, tạo là nói dối mốc);
   `gemini-wired` giữ nguyên
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### Verify gemini-proxy sau redeploy tay (CN3-01 tiếp) — 2026-09-20
+
+**Đã làm gì**
+
+- [0] Đọc AGENTS.md, SETUP 5d, entry probe-2. Bối cảnh mới: owner đã redeploy
+  qua Dashboard từ source mới + nạp tay secret `GEMINI_API_KEY`. CẤM thử CLI
+  theo lệnh (403 RBAC tầng organization đã chứng minh) — không chạy
+  `secrets set` / `functions deploy` lần nào trong phiên.
+- [1] Branch `chore/cn3-proxy-verify` từ `main` (đã `pull --ff-only`, up to date).
+- [2] `GET /v1/projects/{ref}/functions` → 200, có `gemini-proxy`
+  (`status: ACTIVE`, `version: 1`, `verify_jwt: true`) — version KHÔNG tăng
+  so với probe-2. Có endpoint nên đi tiếp probe, không đoán.
+- [3] Probe bằng curl thật (credential chỉ trong shell, file tạm ngoài repo
+  xóa ngay; mật khẩu random không ghi vào repo):
+  - 3.1 Signup tài khoản MỚI `gemini-verify-20260920@example.com` kèm
+    `data: {full_name, student_code}` → 200; signin
+    `/auth/v1/token?grant_type=password` → **200**, có `access_token`.
+  - 3.2 POST `/functions/v1/gemini-proxy` kèm `Bearer <jwt>` → **401**
+    `{"error":"JWT không hợp lệ hoặc đã hết hạn."}` — Y HỆT probe-2.
+  - Đối chiếu JWT: `GET /auth/v1/user` với đúng JWT đó → **200** đúng email
+    nên JWT không có lỗi; code repo đã là `getUser(token)`. Kết luận: bundle
+    đang chạy khả năng vẫn là code cũ, redeploy chưa ăn source mới.
+  - 3.3 POST không kèm `Authorization` → **401**
+    `{"code":"UNAUTHORIZED_NO_AUTH_HEADER","message":"Missing authorization
+    header"}` (gateway chặn) — hàm vẫn không mở cho người lạ.
+- [4] CHƯA ra 200 nên KHÔNG sửa REPORT-NOTES theo hướng chốt proxy, KHÔNG gỡ
+  nhánh demo `EXPO_PUBLIC_GEMINI_API_KEY` — đúng lệnh [4].
+- [5] SETUP 5d thêm mục 6 khớp thực tế (version không tăng + hướng dán lại
+  source); ARCHITECTURE thêm gạch verify; TASKS CN3-01 giữ tick, bổ sung
+  dòng verify (probe đã đủ bằng chứng, còn lại là redeploy đúng source).
+
+**Quyết định và lý do**
+
+- Không tạo tag `cn3-proxy-verified` dù lệnh [7] yêu cầu: tag khẳng định đã
+  verify mà 200 chưa đạt — tạo lúc này là nói dối mốc Git (đúng tiền lệ
+  probe-2). Tag sẽ tạo ở phiên verify 200 thật.
+- Không thử sửa code function thêm: repo đã đúng (`getUser(token)`), JWT đã
+  chứng minh hợp lệ; sửa mù khi chưa nhìn được bundle deploy là đoán mò.
+- Không thử CLI dù chỉ một lần: lệnh cấm rõ ràng, 403 đã chứng minh hai phiên.
+
+**Cố tình không làm và lý do**
+
+- Không deploy/redeploy bằng CLI hay Management API — PAT bị RBAC tầng
+  organization chặn ghi, retry là vô ích (lệnh [0] cấm).
+- Không viết chốt proxy vào REPORT-NOTES / không gỡ nhánh demo — chưa 200,
+  viết sớm là nói dối tiến độ (lệnh [4]).
+- Không đối chiếu model Gemini 2.5 Flash hay sửa source theo hướng key/model:
+  lỗi dừng ở tầng JWT (401 trước khi chạm Gemini), chưa có bằng chứng lỗi
+  từ phía Gemini trong body.
+- Không sửa app, test, migration, theme; không cài package.
+
+**Đã kiểm thử**
+
+- Lệnh: `npx tsc --noEmit` → exit 0.
+- Lệnh: `npm run lint` → 0 errors, 2 warning `watch()` cũ (kế thừa).
+- Lệnh: `npm test` → 18 suites, **187/187 PASS** (giữ nguyên, không sửa test).
+- Check functions (Management API GET, thay cho script `check:functions`
+  không tồn tại trong `package.json`): 200, `gemini-proxy` ACTIVE.
+- Bằng chứng remote (status + body thật, token/password không ghi):
+  signin → 200; probe kèm JWT → 401 thiếu-sai JWT; `/auth/v1/user` → 200;
+  probe không auth → 401 gateway.
+
+**Còn nợ (cần người)**
+
+- Dán lại source `supabase/functions/gemini-proxy/index.ts` HIỆN TẠI trong
+  repo (bản `getUser(token)`) qua Dashboard → redeploy → kiểm tra `version`
+  tăng → curl lại 3 bước SETUP 5d, kỳ vọng 200 `text: OK`. Đạt 200 mới viết
+  chốt REPORT-NOTES + tạo tag `cn3-proxy-verified`.
+
+**Mốc Git**
+
+- Branch: `chore/cn3-proxy-verify`
+- Tag: không tạo `cn3-proxy-verified` (200 chưa đạt, lý do trên)
+- PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh

@@ -151,6 +151,22 @@ Probe (`chore/gemini-probe-2`, endpoint thật đã tồn tại):
 5. Probe đạt 200 thì CN3-03 code đúng MỘT nhánh proxy và gỡ
    `EXPO_PUBLIC_GEMINI_API_KEY`; tới lúc đó hai nhánh vẫn giữ nguyên, không
    viết chốt sớm.
+6. Verify sau redeploy tay (`chore/cn3-proxy-verify`, 2026-09-20): chủ dự án
+   đã redeploy qua Dashboard từ source mới, secret `GEMINI_API_KEY` nạp tay.
+   Đối chiếu `GET .../functions` → 200, `gemini-proxy` vẫn `status: ACTIVE`,
+   `version: 1`, `verify_jwt: true` (version KHÔNG tăng so với probe-2).
+   Probe bằng tài khoản mới `gemini-verify-20260920@example.com` (signup kèm
+   `data.full_name`/`student_code`, signin → 200 có `access_token`):
+   POST kèm JWT → **401** `{"error":"JWT không hợp lệ hoặc đã hết hạn."}`
+   (y hệt probe-2); gọi thẳng `/auth/v1/user` với đúng JWT đó → **200**
+   đúng email nên JWT không có lỗi — khả năng cao bundle đang chạy vẫn là
+   code cũ (`getUser()` không đối số), redeploy chưa ăn source mới trong
+   repo (bản đã sửa `getUser(token)`). Gọi không auth → **401** gateway như
+   cũ. Kết luận: CHƯA đạt 200, giữ nguyên hai nhánh, không viết chốt.
+   Việc cần người: dán lại source
+   `supabase/functions/gemini-proxy/index.ts` HIỆN TẠI trong repo qua
+   Dashboard → redeploy → kiểm tra `version` tăng → curl lại 3 bước trên,
+   kỳ vọng 200 `{"ok":true,"model":"gemini-2.5-flash","text":"OK"}`.
 
 ## 6. Cấu hình Supabase Auth (Dashboard, làm tay)
 
