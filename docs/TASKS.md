@@ -179,11 +179,15 @@ Tag `edge-probe` được lệnh nhắc tới nhưng không tồn tại nên pro
 
 ## CN3-1 — Probe key và nền dữ liệu (phiên 1)
 
-- [ ] CN3-01: Probe Edge Function proxy `summarize` (deploy thử lên Supabase,
+- [x] CN3-01: Probe Edge Function proxy `summarize` (deploy thử lên Supabase,
   key Gemini trong secret, app gửi JWT; ghi kết quả đạt/không vào SPEC/REPORT).
   Probe đạt → code nhánh proxy; probe thất bại → code nhánh
   `EXPO_PUBLIC_GEMINI_API_KEY` + ghi giới hạn demo. Xong khi một nhánh được
   chốt bằng bằng chứng deploy thật, không chốt bằng suy đoán. FR: FR-21.
+  (2026-09-20, probe `gemini-proxy` — tên function theo lệnh session: `secrets
+  set` + `functions deploy` đều 403 thiếu quyền, `secrets list` xác nhận chưa
+  có key → chốt nhánh `EXPO_PUBLIC_GEMINI_API_KEY`, giới hạn đã biết ghi ở
+  REPORT-NOTES; source probe giữ trong repo chờ deploy, tag `gemini-wired`.)
 - [ ] CN3-02: Viết `src/features/summary/{api.ts,schemas.ts,queries.ts,errors.ts}`
   (upsert `document_summaries` ghi đè theo `UNIQUE(document_id)`, máy
   `pending → processing → done/failed`, `reclaimStaleProcessing` 15 phút theo

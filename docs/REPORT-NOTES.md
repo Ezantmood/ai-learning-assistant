@@ -264,3 +264,37 @@ GIỚI HẠN ĐÃ BIẾT CỦA BẢN DEMO, không dùng cho bản thật: key ph
 riêng Gemini API trong Google Cloud Console (từ 2026-06-19 Google chặn key
 không restrict), quota free vẫn tính theo project, và lộ key đồng nghĩa người
 khác đốt quota của mình.
+
+## Kết quả probe `gemini-proxy` 2026-09-20 — chốt nhánh fallback (CN3-01)
+
+Bằng chứng thật (không suy đoán), chạy bằng credential có sẵn trong `.env`:
+
+- `supabase secrets set` → lỗi `LegacySecretsSetUnexpectedStatusError`,
+  message: tài khoản không đủ quyền truy cập endpoint (403 privileges).
+- `supabase functions deploy gemini-proxy` → lỗi `FunctionsApiStatusError`,
+  `unexpected deploy status 403`, cùng message thiếu quyền.
+- `supabase secrets list` (đọc) vẫn chạy: chỉ thấy 5 secret mặc định của
+  hệ thống, không có `GEMINI_API_KEY` — secret CHƯA được nạp bằng CLI.
+- Nguyên nhân gốc cùng họ với DEVLOG G2 (access token `sbp_` không đủ quyền
+  nên đã bỏ `link`/`db push`): token hiện tại đọc được, ghi/deploy không được.
+
+Kết luận: với credential hiện tại, đường proxy KHÔNG deploy được nên bản
+demo CN3 PHẢI dùng `EXPO_PUBLIC_GEMINI_API_KEY` — đây là GIỚI HẠN ĐÃ BIẾT,
+không phải lựa chọn kỹ thuật. Vì sao cách đó không an toàn:
+
+- Key đóng trong JS bundle của app: giải nén bundle là đọc được, ai có key
+  cũng gọi được Gemini tính vào quota của project.
+- Lộ key đồng nghĩa người khác đốt quota free (~1.500 request/ngày, reset
+  nửa đêm giờ Thái Bình Dương); chạm trần thì cả lớp demo cùng đứng.
+- Key demo phải restrict riêng Gemini API trong Google Cloud Console
+  (Google chặn key không restrict từ 2026-06-19); nếu nghi lộ thì rotate key
+  ngay, key cũ coi như đã lộ.
+- Không bao giờ ghi key vào repo/DEVLOG/báo cáo/ảnh chụp; chỉ nằm trong
+  `.env` local (đã gitignore) và Dashboard.
+
+Đường quay lại proxy (việc của chủ dự án, khi có token đủ quyền): thêm
+secret `GEMINI_API_KEY` trong Dashboard (Edge Functions → Secrets), rồi
+deploy `supabase/functions/gemini-proxy/index.ts` — source đã nằm sẵn trong
+repo, không chứa secret, đọc key duy nhất qua `Deno.env.get`. Chi tiết xem
+`docs/SETUP.md` mục 5d. Khi proxy deploy xong, CN3-03 code đúng MỘT nhánh
+proxy và gỡ nhánh fallback; không code cả hai.
