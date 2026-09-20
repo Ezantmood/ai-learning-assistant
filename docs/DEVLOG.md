@@ -673,7 +673,9 @@ https://supabase.com/docs/guides/platform/access-control`
 
 **Mốc Git**
 
-- (điền full hash merge sau khi merge theo Quy tắc Git; tag `gemini-wired` đã
-  tồn tại từ phiên trước — giữ nguyên, không tạo lại)
+- Commit retry: `5c4075c8c1e9fdf8ec3378c6f52943814ecc7152`
+- Commit merge: `46e415d1e8456b1cc071480d425745d35ed8ee79` (merge --no-ff)
 - Branch: `chore/gemini-wired`
+- Tag: `gemini-wired` đã tồn tại từ phiên trước (`d592f1f`, đã push) — giữ
+  nguyên, không tạo lại/di chuyển theo Quy tắc Git
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
