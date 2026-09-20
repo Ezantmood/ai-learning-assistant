@@ -896,3 +896,51 @@ https://supabase.com/docs/guides/platform/access-control`
 - Tag: `tag-audit` (tạo ngay sau tự merge theo quyết định chủ dự án, push
   ngay theo quy tắc mới)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### Verify theme indigo trên app-shell (tabs + Trang chủ) — 2026-09-20
+
+**Bối cảnh**
+
+- Lệnh session là checklist release v2.0.0 nhưng repo đã đi xa hơn:
+  theme indigo (CN2-13) merge ở `dbdcd64`, tag `v2.0.0` đã push; sau đó là
+  app-shell (bottom tabs), gemini-wired, tag-audit. Việc mới duy nhất còn
+  lại là kiểm tương phản vỏ tabs + màn Trang chủ dưới theme indigo.
+
+**Đã làm gì**
+
+- Rà `app/(app)/_layout.tsx` (Tabs) + `app/(app)/dashboard.tsx` (Trang chủ):
+  100% màu qua `theme.colors`, không hex hardcode (grep toàn `src`/`app`
+  chỉ còn `theme.ts`). Không sửa code — không có chỗ vỡ để sửa.
+- Tính WCAG các cặp mới của vỏ (công thức chuẩn, làm tròn 2 chữ số):
+  tab active primary/surface 6.29:1 (light) / 10.05:1 (dark);
+  tab inactive onSurfaceVariant/surface 9.12:1 / 10.04:1;
+  Avatar.Icon enabled primary/primaryContainer 5.01:1 / 5.48:1;
+  thẻ disabled onSurfaceVariant/surfaceVariant 7.25:1 / 5.49:1.
+  Tất cả ≥ 4.5:1. Icon tab (`home`, `file-document-outline`, `account`)
+  là tên glyph chuẩn, không ô trống.
+- Sửa số liệu test đã lỗi thời trong `README.md` + `docs/SETUP.md`
+  (17/177 → 18/187 sau các phiên CN3).
+
+**Cố tình không làm và lý do**
+
+- Không checkout `release/v2.0.0`, không merge/tag lại `v2.0.0`: tag đã
+  push (di chuyển tag vi phạm AGENTS.md); nội dung release đã nằm trong
+  `main` qua merge `dbdcd64`. Làm lại là viết lại lịch sử.
+- Không cô đọng DEVLOG, không sửa TRACEABILITY/TEST-CHECKLIST: các việc
+  đó xong ở v2.0.0 và vẫn đúng (FR-01→FR-13 trỏ file thật, checklist đã
+  có mục 15 tabs).
+
+**Đã kiểm thử**
+
+- Lệnh: `npx tsc --noEmit` → exit 0.
+- Lệnh: `npm run lint` → 0 errors, 2 warning `watch()` cũ (kế thừa).
+- Lệnh: `npm test` → 18 suites, **187/187 PASS**.
+- `scripts/rls-proof.ts` → **7/7**; `scripts/storage-rls-proof.ts` → **5/5**.
+
+**Mốc Git**
+
+- Branch: `docs/shell-contrast`
+- Tag: không tạo (không có mốc version mới)
+- PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
