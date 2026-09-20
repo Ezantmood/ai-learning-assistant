@@ -81,6 +81,7 @@
 - Hết G1–G3: push branch, mở PR (ghi việc đã làm, cách test, FR, còn nợ, xác nhận không secret), DỪNG chờ chủ dự án review. KHÔNG tự merge.
 - Từ G4 trở đi (quyết định chủ dự án 2026-09-18): tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh, tự tạo tag và push. Không mở PR chờ review.
 - Sau merge: ghi full commit hash, branch, tag (và URL PR nếu có) vào `docs/DEVLOG.md`. Không di chuyển tag đã push.
+- Sau khi tạo tag phải push tag lên remote ngay (`git push origin <tag>`); tag chỉ nằm local coi như chưa có.
 
 ### Commit message (Conventional Commits, mô tả tiếng Việt)
 
