@@ -1139,7 +1139,7 @@ https://supabase.com/docs/guides/platform/access-control`
 
 - Commit fix: `cd7dcb5` (probe + function + cổng, đã push branch)
 - Commit docs chờ: `8bce052` (đã push branch)
-- Commit merge: `TBD` (merge --no-ff)
+- Commit merge: `5f137f1cfdc0fba64e6611727efd6abb28f24b65` (merge --no-ff)
 - Branch: `fix/cn3-proxy-auth`
 - Tag: `cn3-g1b-done` (tạo + push cùng lệnh với push main)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
