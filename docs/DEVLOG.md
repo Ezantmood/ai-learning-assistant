@@ -1360,3 +1360,45 @@ https://supabase.com/docs/guides/platform/access-control`
 - Branch: `fix/upload-db-permission`
 - Tag: `fix-upload-db` (tạo + push cùng lệnh với push main)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### Fix upload-read-permission — lỗi READ ở bước đọc file local, không phải DB — 2026-09-21
+
+**Nguyên nhân gốc (máy thật, Expo Go, file .txt 225 B)**
+
+- Log thật: `[documents] upload error: Call to function 'FileSystemFile.base64' has been rejected. → Caused by: Missing 'READ' permission for accessing the file.`
+- Chết ở bước ĐỌC FILE TRÊN MÁY (`new File(asset.uri).base64()`), chưa hề chạm Supabase nên RLS/policy/profiles vô can — chẩn đoán cũ ở `fix/upload-db-permission` (soi INSERT/policies) sai hướng, hủy bỏ.
+- Nhãn sai chồng thêm: message filesystem cũng chứa chữ `permission` nên lọt nhầm vào nhánh DB (`E_DB_*`), che mất nguyên nhân thật. Đây là lần thứ hai nhãn lỗi làm mất thời gian chẩn đoán.
+
+**Bẫy: URI của document-picker không đọc được nếu thiếu copyToCacheDirectory**
+
+- `expo-file-system` chỉ đọc được ngay sau khi chọn nếu picker bật `copyToCacheDirectory: true` (file được copy vào cache, `asset.uri` sau khi copy chính là URI trong cache). Đọc URI gốc của content provider là nổ `READ permission` đúng như log trên.
+- `pickDocument` giữ `copyToCacheDirectory: true`, `uploadDocument` chỉ đọc `asset.uri` (cache), chú thích bẫy ngay tại hàm để phiên sau không tái phạm.
+
+**Đã làm gì**
+
+- Branch `fix/upload-read-permission` từ `main` (đã `pull --ff-only`).
+- `errors.ts`: mới `DocumentFileReadError` + `isFileSystemError` (match hẹp `FileSystemFile`/`READ permission`/`accessing the file`, CẤM match mỗi chữ permis); `toDocumentsErrorMessage`/`getDocumentsErrorCode` đưa filesystem lên TRƯỚC storage/DB → 4 nhóm ra 4 thông điệp/mã khác nhau (filesystem `E_FILE_READ`, mạng `E_NETWORK`, storage `E_STORAGE_*`, DB `E_DB_*`); họ DB giữ `E_DB_PERMISSION_DENIED` đúng chính tả PERMISSION, object gốc giữ nguyên cho `console.error` khi `__DEV__`.
+- `api.ts`: giữ kiến trúc base64 → ArrayBuffer (`base64-arraybuffer`) + contentType; CẤM `fetch(uri).blob()`, CẤM `expo-file-system/legacy`, chỉ API `File`; bọc `File.base64()` → lỗi ném `DocumentFileReadError` + `console.error` nguyên object khi `__DEV__`; upload thành công thì `localFile.delete()` dọn cache best-effort (lỗi dọn chỉ warn, chỉ dọn khi thành công để giữ file cho lần thử lại).
+- `upload.tsx` giữ nguyên (đã log nguyên object khi `__DEV__` + hiện mã dưới banner).
+- Test mới `uploadReadPermission.test.ts` (7 test): URI không đọc được → đúng nhãn filesystem, KHÔNG ra nhãn DB; 4 nhóm 4 thông điệp khác nhau; bọc lỗi READ thành `DocumentFileReadError`; ca upload .txt 225 B (ArrayBuffer + contentType text/plain); dọn cache sau success; dọn lỗi vẫn success; `pickDocument` giữ cờ cache. Không sửa/skip test cũ nào.
+
+**Cố tình không làm và lý do**
+
+- Không đụng RLS/policy/profiles (vô can), không migration mới, không CN5/CN6, không bảng màu, không tag audit, không deploy, không SQL remote — đúng lệnh fix.
+
+**Đã kiểm thử (số thật)**
+
+- `npx tsc --noEmit` → exit 0.
+- `npm run lint` → 0 errors, 2 warning `watch()` cũ (kế thừa).
+- `npm test` → 26 suites, **259/259 PASS** (giữ nguyên 252 cũ, +7 mới).
+- `npm run check:functions` → exit 0 (không đụng functions).
+
+**Mốc Git**
+
+- Commit tính năng: <GHI SAU KHI COMMIT> (branch `fix/upload-read-permission`, đã push)
+- Commit merge: <GHI SAU KHI MERGE> (merge --no-ff)
+- Branch: `fix/upload-read-permission`
+- Tag: `fix-upload-read` (tạo + push cùng lệnh với push main)
+- PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh

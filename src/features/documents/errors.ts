@@ -30,6 +30,47 @@ export class DocumentDeletePartialError extends Error {
 }
 
 /**
+ * Lỗi đọc file cục bộ trên thiết bị (expo-file-system `File.base64()`).
+ * BẪY THẬT đã gặp trên Expo Go: `FileSystemFile.base64` bị từ chối vì
+ * `Missing 'READ' permission for accessing the file` — chết ở bước ĐỌC
+ * FILE TRÊN MÁY, chưa hề chạm Supabase. Lỗi này CẤM map vào họ DB
+ * (từng bị gán nhầm nhãn DB, làm mất thời gian chẩn đoán). Ném lớp này
+ * để UI báo đúng nhóm filesystem, khác hẳn 3 nhóm mạng/storage/DB.
+ */
+export class DocumentFileReadError extends Error {
+  constructor(
+    message = 'Không đọc được tệp trên thiết bị. Hãy chọn lại tệp đã lưu trong bộ nhớ máy rồi thử lại.',
+  ) {
+    super(message);
+    this.name = 'DocumentFileReadError';
+  }
+}
+
+/**
+ * Nhận diện lỗi filesystem thô (chưa bọc lớp trên): message của
+ * expo-file-system chứa `FileSystemFile` + `READ permission`/`accessing
+ * the file`. Chỉ match marker filesystem hẹp — message DB (`permission
+ * denied for table`) KHÔNG chứa các marker này nên không lọt nhầm.
+ * CẤM match mỗi chữ `permis` ở đây (đó là việc của nhánh DB bên dưới).
+ */
+const FILESYSTEM_ERROR_PATTERN =
+  /filesystemfile|missing.*read.*permission|accessing the file|expo-file-system|ENOENT|EISDIR/i;
+
+export function isFileSystemError(error: unknown): boolean {
+  if (error instanceof DocumentFileReadError) {
+    return true;
+  }
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+  const message =
+    error instanceof Error
+      ? error.message
+      : String((error as Record<string, unknown>).message ?? error);
+  return FILESYSTEM_ERROR_PATTERN.test(message);
+}
+
+/**
  * Đọc HTTP status số từ `StorageApiError` thật của supabase-js v2
  * (`status: number`, dự phòng `statusCode` chuỗi số). Trả null khi
  * không phải shape này — CẤM đoán nhóm lỗi từ message.
@@ -73,6 +114,11 @@ export function getDbCode(error: unknown): string | null {
 
 /**
  * Chuẩn hóa lỗi documents sang tiếng Việt trước khi hiển thị.
+ * Thứ tự 4 nhóm hạ tầng KHÁC NHAU, kiểm tra theo thứ tự này:
+ * mạng → guard/xóa-dở → filesystem (file local) → storage (403/404) →
+ * DB phân quyền → chung. Filesystem PHẢI đứng trước storage/DB vì
+ * message của nó cũng chứa chữ `permission` (`Missing 'READ'
+ * permission`) — để sau là lọt nhầm vào nhãn DB (bẫy thật đã gặp).
  */
 export function toDocumentsErrorMessage(error: unknown): string {
   if (isNetworkError(error)) {
@@ -85,6 +131,13 @@ export function toDocumentsErrorMessage(error: unknown): string {
 
   if (error instanceof DocumentDeletePartialError) {
     return error.message;
+  }
+
+  if (isFileSystemError(error)) {
+    if (error instanceof DocumentFileReadError) {
+      return error.message;
+    }
+    return 'Không đọc được tệp trên thiết bị. Hãy chọn lại tệp đã lưu trong bộ nhớ máy rồi thử lại.';
   }
 
   const status = getStorageHttpStatus(error);
@@ -109,6 +162,10 @@ export function toDocumentsErrorMessage(error: unknown): string {
 /**
  * Mã lỗi ngắn cho banner debug (`__DEV__`): phản ánh đúng field có thật
  * trong error (`status`/`code`), không bịa nhóm.
+ * Thứ tự như message: filesystem TRƯỚC storage/DB để lỗi đọc file local
+ * không bao giờ ra nhãn `E_DB_*`. Họ phân quyền DB luôn hiển thị
+ * `E_DB_PERMISSION_DENIED` đúng chính tả (PERMISSION hai S) dù server có
+ * trả biến thể sai chính tả — object gốc giữ nguyên cho console.error.
  */
 export function getDocumentsErrorCode(error: unknown): string {
   if (isNetworkError(error)) {
@@ -119,6 +176,9 @@ export function getDocumentsErrorCode(error: unknown): string {
   }
   if (error instanceof DocumentDeletePartialError) {
     return 'E_DELETE_PARTIAL';
+  }
+  if (isFileSystemError(error)) {
+    return 'E_FILE_READ';
   }
   const status = getStorageHttpStatus(error);
   if (status !== null) {
