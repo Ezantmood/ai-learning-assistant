@@ -50,15 +50,14 @@ export type PickedDocumentAsset = PickedDocumentInput & {
 /**
  * Mở picker chọn đúng 1 tệp (lọc gợi ý PDF/DOCX/TXT ở UI picker).
  * Hủy picker thì trả null, im lặng. Chưa đọc nội dung tệp ở bước này.
- * BẪY: URI của document-picker không đọc được nếu thiếu
- * `copyToCacheDirectory` — expo-file-system chỉ đọc được ngay sau khi
- * chọn khi bật cờ này (file được copy vào cache, `asset.uri` sau khi
- * copy chính là URI trong cache). Luôn đọc `asset.uri` này, CẤM đọc URI
- * gốc của content provider.
+ * Android: giữ URI content:// từ hệ thống. Trong Expo Go, bản sao của
+ * document-picker nằm ở cache chung và File.base64() có thể bị từ chối
+ * READ bởi cơ chế cô lập thư mục theo phiên. File API đọc được content://
+ * khi picker vừa cấp quyền. iOS vẫn sao chép vào cache để đọc ngay.
  */
 export async function pickDocument(): Promise<PickedDocumentAsset | null> {
   const result = await DocumentPicker.getDocumentAsync({
-    copyToCacheDirectory: true,
+    copyToCacheDirectory: Platform.OS !== 'android',
     multiple: false,
     type: [
       EXT_TO_MIME.pdf,
@@ -161,10 +160,10 @@ export async function listDocuments(
  * Insert lỗi thì dọn object vừa upload, không để rác mồ côi.
  * React Native cấm `fetch(uri).blob()` (ra file 0 byte) và cấm import
  * `expo-file-system/legacy` (hàm cũ throw lúc chạy).
- * Đọc file local thất bại (thiếu `READ` permission, file cache mất) thì
+ * Đọc file local thất bại (quyền đọc hết hạn, file cache mất) thì
  * ném `DocumentFileReadError` để UI báo đúng nhóm filesystem — CẤM để
- * lọt vào nhãn DB. File tạm trong cache được dọn best-effort sau khi
- * upload thành công (lỗi dọn chỉ warn, không hỏng luồng chính).
+ * lọt vào nhãn DB. Chỉ dọn file cache iOS sau khi upload thành công;
+ * URI content:// Android là tài liệu gốc của người dùng, không được xóa.
  */
 export async function uploadDocument(input: {
   asset: PickedDocumentAsset;
@@ -198,9 +197,8 @@ export async function uploadDocument(input: {
     throw new DocumentGuardError(capMessage);
   }
 
-  // Chỉ đọc nội dung SAU khi mọi guard đã qua. `asset.uri` là URI trong
-  // cache do picker trả về khi `copyToCacheDirectory: true` (xem
-  // `pickDocument`) — CẤM thay bằng URI gốc của content provider.
+  // Chỉ đọc nội dung SAU khi mọi guard đã qua. Android dùng content://
+  // do picker trả về; iOS dùng bản sao trong cache.
   let localFile: File;
   let base64: string;
   try {
@@ -261,14 +259,16 @@ export async function uploadDocument(input: {
     throw insertError;
   }
 
-  // Upload thành công: dọn file tạm trong cache do picker tạo.
+  // Upload thành công: chỉ dọn bản sao cache, không xóa content:// gốc.
   // Best-effort — lỗi dọn chỉ warn ở `__DEV__`, CẤM làm hỏng luồng chính.
   // Chỉ dọn khi thành công để giữ file cho lần thử lại khi lỗi mạng/DB.
-  try {
-    localFile.delete();
-  } catch (cacheCleanupError) {
-    if (__DEV__) {
-      console.warn('[documents] cleanup cache after upload:', cacheCleanupError);
+  if (input.asset.uri.startsWith('file://')) {
+    try {
+      localFile.delete();
+    } catch (cacheCleanupError) {
+      if (__DEV__) {
+        console.warn('[documents] cleanup cache after upload:', cacheCleanupError);
+      }
     }
   }
 
