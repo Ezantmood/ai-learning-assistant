@@ -1402,3 +1402,15 @@ https://supabase.com/docs/guides/platform/access-control`
 - Branch: `fix/upload-read-permission`
 - Tag: `fix-upload-read` (tạo + push cùng lệnh với push main)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### Fix upload Android READ permission — 2026-09-21
+
+- Nguyên nhân: `expo-document-picker` trên Android chép tệp vào `context.cacheDir` khi `copyToCacheDirectory: true`; `expo-file-system` kiểm tra `File.base64()` theo quyền đường dẫn và cache của phiên Expo Go có thể khác cache chung, nên báo thiếu READ. Bản sửa trước chỉ chuẩn hóa nhãn lỗi, chưa đổi đường đọc.
+- `pickDocument`: Android lấy `content://` gốc do hệ thống cấp quyền đọc; iOS tiếp tục sao chép vào cache. `uploadDocument` chỉ xóa bản sao `file://` sau khi thành công, không xóa tệp gốc `content://`.
+- Unit hồi quy kiểm tra cấu hình picker Android, URI được đọc và tệp gốc không bị xóa. Type check xanh; lint 0 lỗi, 2 warning `watch()` cũ; 26 suites, 260/260 test xanh.
+- Chưa có thiết bị Expo Go trong môi trường này: checklist Android TXT/PDF/DOCX vẫn cần bấm tay trước khi khẳng định lỗi trên máy đã hết.
+- Branch `fix/upload-android-read-uri`; merge `--no-ff` và tag sau cổng chất lượng xanh.
+
+---

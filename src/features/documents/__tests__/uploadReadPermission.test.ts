@@ -1,4 +1,5 @@
 import { describe, expect, it, jest } from '@jest/globals';
+import { Platform } from 'react-native';
 
 import { File } from 'expo-file-system';
 import { decode } from 'base64-arraybuffer';
@@ -203,5 +204,48 @@ describe('uploadReadPermission — dọn cache best-effort', () => {
       expect.objectContaining({ copyToCacheDirectory: true }),
     );
     expect(asset?.uri).toBe(TXT_ASSET.uri);
+  });
+
+  it('Android giữ content URI và không xóa tệp gốc sau upload', async () => {
+    const originalOS = Platform.OS;
+    Object.defineProperty(Platform, 'OS', { configurable: true, value: 'android' });
+    const contentAsset = {
+      ...TXT_ASSET,
+      uri: 'content://com.android.providers.downloads.documents/document/42',
+    };
+    const pickerMock = jest.requireMock('expo-document-picker') as {
+      getDocumentAsync: jest.Mock;
+    };
+    pickerMock.getDocumentAsync.mockImplementation(() =>
+      Promise.resolve({ assets: [contentAsset], canceled: false }),
+    );
+    const deleteMock = jest.fn();
+    (File as unknown as jest.Mock).mockImplementation((uri: unknown) => {
+      expect(uri).toBe(contentAsset.uri);
+      return { base64: () => Promise.resolve('aGVsbG8='), delete: deleteMock };
+    });
+    (decode as unknown as jest.Mock).mockReturnValue(new ArrayBuffer(8));
+    mockCountZero();
+    (
+      supabase.storage as unknown as { from: jest.Mock }
+    ).from.mockReturnValue({
+      remove: jest.fn(),
+      upload: jest.fn(() => Promise.resolve({ error: null })),
+    });
+
+    try {
+      const asset = await pickDocument();
+      expect(pickerMock.getDocumentAsync).toHaveBeenCalledWith(
+        expect.objectContaining({ copyToCacheDirectory: false }),
+      );
+      expect(asset?.uri).toBe(contentAsset.uri);
+      await uploadDocument({ asset: asset!, userId: 'user-1' });
+      expect(deleteMock).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(Platform, 'OS', {
+        configurable: true,
+        value: originalOS,
+      });
+    }
   });
 });

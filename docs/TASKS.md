@@ -96,6 +96,8 @@ có secret. Push ngay sau commit.
   insert) + upload base64→ArrayBuffer + progress + Snackbar. Xong khi tệp hợp
   lệ lên được, tệp sai/quá lớn/vượt giới hạn bị chặn, offline báo retry. FR: FR-06, FR-07.
   (2026-09-20, G1: xong, chờ test tay Expo Go.)
+  (2026-09-21, sửa lỗi Android Expo Go: dùng content URI của picker để đọc,
+  tránh cache chung bị từ chối READ; vẫn chờ test tay trên máy.)
 
 ## CN2-3 — Danh sách và chi tiết (FR-08, FR-09, phiên 1 + 2)
 

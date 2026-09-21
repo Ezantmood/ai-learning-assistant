@@ -71,6 +71,9 @@ mỗi màn chụp cả light lẫn dark trừ khi ghi rõ.
 
 ## 9. Tải lên (`/documents/upload`)
 
+- [ ] Android Expo Go: chọn tệp TXT nhỏ từ trình chọn tệp, bấm Tải lên,
+  xác nhận không còn `DocumentFileReadError`, tài liệu có trong danh sách và
+  tệp gốc vẫn mở được trong ứng dụng quản lý tệp.
 - [ ] Chọn PDF hợp lệ → tải lên → về danh sách kèm Snackbar “Đã tải tài liệu
   lên.” (chụp màn upload + Snackbar).
 - [ ] Lặp lại với 1 DOCX + 1 TXT (chụp danh sách có cả ba).
