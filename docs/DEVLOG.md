@@ -1551,7 +1551,7 @@ https://supabase.com/docs/guides/platform/access-control`
 
 **Mốc Git**
 
-- Commit sửa lỗi: (điền hash sau commit, tra `git log --oneline --grep fix-icons`)
+- Commit sửa lỗi: `e31706272f6a2b3e8c65613a82a42180147eb001` (branch `fix/icons-cn1-cn2`, đã push)
 - Commit merge: (điền sau merge `--no-ff` vào `main`, tra `git log --oneline --grep fix-icons`)
 - Branch: `fix/icons-cn1-cn2`
 - Tag: `fix-icons` (tạo + push cùng lệnh với push main)
