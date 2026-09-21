@@ -1397,8 +1397,8 @@ https://supabase.com/docs/guides/platform/access-control`
 
 **Mốc Git**
 
-- Commit tính năng: <GHI SAU KHI COMMIT> (branch `fix/upload-read-permission`, đã push)
-- Commit merge: <GHI SAU KHI MERGE> (merge --no-ff)
+- Commit tính năng: `fbe4c28265bde0d75350aef2d1c1455bfe863546` (branch `fix/upload-read-permission`, đã push)
+- Commit merge: `49ac8389a8a7b90f4e222b02bb7289a7c7525c44` (merge --no-ff)
 - Branch: `fix/upload-read-permission`
 - Tag: `fix-upload-read` (tạo + push cùng lệnh với push main)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
