@@ -56,6 +56,22 @@ export function getStorageHttpStatus(error: unknown): number | null {
 }
 
 /**
+ * Đọc mã lỗi chuỗi (`code`) của PostgrestError/API phía server. Chuỗi này
+ * server trả nguyên văn trong body (postgrest-js/storage-js không chế),
+ * nên có thể gặp mã không chuẩn SQLSTATE — caller tự quyết map theo pattern.
+ */
+export function getDbCode(error: unknown): string | null {
+  if (typeof error !== 'object' || error === null) {
+    return null;
+  }
+  const code = (error as Record<string, unknown>).code;
+  if (typeof code !== 'string' || code.trim() === '') {
+    return null;
+  }
+  return code;
+}
+
+/**
  * Chuẩn hóa lỗi documents sang tiếng Việt trước khi hiển thị.
  */
 export function toDocumentsErrorMessage(error: unknown): string {
@@ -79,6 +95,14 @@ export function toDocumentsErrorMessage(error: unknown): string {
     return 'Không tìm thấy kho lưu trữ (lỗi 404). Báo chủ dự án kiểm tra bucket documents.';
   }
 
+  // Từ chối phân quyền ở tầng DB: mã chuẩn Postgres 42501
+  // (insufficient_privilege — RLS WITH CHECK trượt) hoặc mã server chứa
+  // 'permis' (ghi cả biến thể sai chính tả từng gặp trên máy thật).
+  const dbCode = getDbCode(error);
+  if (dbCode === '42501' || (dbCode !== null && /permis/i.test(dbCode))) {
+    return 'Không có quyền ghi tài liệu (lỗi phân quyền). Kiểm tra đăng nhập rồi thử lại.';
+  }
+
   return 'Đã có lỗi xảy ra với tài liệu. Vui lòng thử lại.';
 }
 
@@ -100,12 +124,15 @@ export function getDocumentsErrorCode(error: unknown): string {
   if (status !== null) {
     return `E_STORAGE_${status}`;
   }
-  if (
-    typeof error === 'object' &&
-    error !== null &&
-    typeof (error as Record<string, unknown>).code === 'string'
-  ) {
-    return `E_DB_${(error as Record<string, string>).code}`;
+  const dbCode = getDbCode(error);
+  if (dbCode !== null) {
+    // Chuẩn hóa chính tả khi hiển thị: họ phân quyền luôn là
+    // PERMISSION_DENIED dù server có trả biến thể sai chính tả.
+    // Object gốc giữ nguyên cho console.error.
+    if (dbCode === '42501' || /permis/i.test(dbCode)) {
+      return 'E_DB_PERMISSION_DENIED';
+    }
+    return `E_DB_${dbCode}`;
   }
   return 'E_UNKNOWN';
 }

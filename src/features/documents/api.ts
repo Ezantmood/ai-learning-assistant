@@ -221,8 +221,20 @@ export async function uploadDocument(input: {
     .single();
 
   if (insertError) {
-    // Tránh object mồ côi khi insert DB thất bại.
-    await supabase.storage.from(DOCUMENTS_BUCKET).remove([path]);
+    // Tránh object mồ côi khi insert DB thất bại: xóa file vừa lên.
+    // Dọn best-effort — lỗi dọn chỉ log, CẤM che lỗi insert gốc.
+    try {
+      const { error: removeError } = await supabase.storage
+        .from(DOCUMENTS_BUCKET)
+        .remove([path]);
+      if (removeError && __DEV__) {
+        console.warn('[documents] cleanup after failed insert:', removeError);
+      }
+    } catch (cleanupError) {
+      if (__DEV__) {
+        console.warn('[documents] cleanup after failed insert:', cleanupError);
+      }
+    }
     throw insertError;
   }
 

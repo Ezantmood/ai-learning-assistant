@@ -34,7 +34,9 @@ export default function UploadDocumentScreen() {
 
   /** CẤM nuốt im lặng: log nguyên error object để chẩn đoán. */
   const reportError = (error: unknown) => {
-    console.error('[documents] upload error:', error);
+    if (__DEV__) {
+      console.error('[documents] upload error:', error);
+    }
     setApiError(toDocumentsErrorMessage(error));
     setApiErrorCode(getDocumentsErrorCode(error));
   };

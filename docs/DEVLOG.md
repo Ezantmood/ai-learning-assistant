@@ -1294,3 +1294,67 @@ https://supabase.com/docs/guides/platform/access-control`
 - Branch: `fix/upload-error-surface`
 - Tag: `fix-upload-error` (tạo + push cùng lệnh với push main)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### Fix upload-db-permission — mã E_DB sai chính tả + dọn rác insert trượt — 2026-09-21
+
+**Triệu chứng (máy thật)**
+
+- Upload .txt 225 B: banner lỗi + mã `E_DB_ERR_INVALID_PERMISION` (sai
+  chính tả). Storage có thể đã ăn, insert DB trượt.
+
+**Nguyên nhân gốc (điều tra, không đoán)**
+
+- Grep toàn repo + `node_modules` (supabase, expo-file-system, RN…):
+  KHÔNG tồn tại literal `PERMISION` nào. Mã hiển thị là `E_DB_` (code,
+  đúng chính tả) + `.code` runtime của server (sai chính tả) — postgrest-js
+  (`toOpenApiError`) và storage-js truyền `body.code` nguyên văn, client
+  không chế. Kết luận: chính tả sai nằm ở upstream, không phải code ta.
+- Điểm trượt là INSERT `documents` (shape Postgrest: có `code` chuỗi,
+  không có `status` số nên không vào nhánh `E_STORAGE_`).
+- Đối chiếu 3 nghi phạm bằng đọc code/file, không đoán:
+  a. `user_id`: `uploadDocument` set đúng `user_id: input.userId` (bằng
+     auth.uid từ session) — CLEAR.
+  b. profiles: trigger `handle_new_user` (0001) tự tạo row lúc đăng ký;
+     policy/FK của documents không đòi profiles — CLEAR, không liên quan.
+  c. migration 0005 (và 0004): chỉ tạo bảng/policy riêng
+     (`document_questions`/`document_summaries`), không đụng policy/grant
+     của `documents` — CLEAR (verify remote 14/14 vẫn xanh).
+- Kết luận: từ chối đến từ định danh auth của request hoặc trạng thái
+  server, không phải logic app. Không đủ bằng chứng để soạn migration
+  0006 — tạo policy bừa lúc này là đoán mò nên KHÔNG làm.
+
+**Đã làm gì**
+
+- Branch `fix/upload-db-permission` từ `main` (đã `pull --ff-only`).
+- `errors.ts`: mới `getDbCode`; họ phân quyền (`42501` chuẩn Postgres
+  insufficient_privilege + mọi mã chứa `permis` bất kể chính tả) → câu
+  người dùng rõ “Không có quyền ghi tài liệu (lỗi phân quyền)…”; mã hiển
+  thị chuẩn hóa `E_DB_PERMISSION_DENIED` đúng chính tả, object gốc giữ
+  nguyên cho `console.error`. 23503 FK vẫn banner chung (không phải quyền).
+- `api.ts`: nhánh dọn rác khi insert trượt (đã có từ CN2-G1) bọc
+  try/catch + kiểm tra `removeError`: lỗi dọn chỉ `console.warn` ở
+  `__DEV__`, CẤM che lỗi insert gốc.
+- `upload.tsx`: `console.error` nguyên object chỉ chạy khi `__DEV__`
+  (đúng lệnh; banner + mã `__DEV__` giữ nguyên).
+- Test mới `uploadDbPermission.test.ts` (6 test): mock 42501 → câu quyền;
+  mock đúng shape server `ERR_INVALID_PERMISION` → câu quyền + mã đúng
+  chính tả; mock 23503 → banner chung + `E_DB_23503`; ca dọn rác (upload
+  OK → insert 42501): assert `remove` gọi đúng `['user-1/mock-uuid.txt']`
+  1 lần và lỗi gốc 42501 vẫn ném ra. Không sửa/skip test cũ.
+- Bẫy tuân thủ: không `fetch().blob()`, không legacy, không
+  `crypto.randomUUID` toàn cục, màu dev-code từ theme.
+
+**Đã kiểm thử (số thật)**
+
+- `npx tsc --noEmit` → exit 0.
+- `npm run lint` → 0 errors, 2 warning `watch()` cũ (kế thừa).
+- `npm test` → 25 suites, **252/252 PASS** (giữ nguyên 246 cũ, +6 mới).
+- `npm run check:functions` → exit 0 (không đụng functions).
+
+**Mốc Git**
+
+- Branch: `fix/upload-db-permission`
+- Tag: `fix-upload-db` (tạo + push cùng lệnh với push main)
+- PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
