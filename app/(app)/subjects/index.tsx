@@ -21,7 +21,7 @@ import { FormTextInput } from '../../../src/shared/components/FormTextInput';
 import { ListSkeleton } from '../../../src/shared/components/LoadingState';
 import { ScreenContainer } from '../../../src/shared/components/ScreenContainer';
 import { ScreenHeader } from '../../../src/shared/components/ScreenHeader';
-import { goBackOrReplace } from '../../../src/shared/lib/navigation';
+import { goBackToDocuments } from '../../../src/shared/lib/navigation';
 import { useSession } from '../../../src/features/auth/useSession';
 import { toSubjectsErrorMessage } from '../../../src/features/documents/errors';
 import {
@@ -184,7 +184,7 @@ export default function SubjectsScreen() {
     <ScreenContainer
       header={
         <ScreenHeader
-          onBack={() => goBackOrReplace(router, '/documents')}
+          onBack={() => goBackToDocuments(router)}
           showBack
           title="Môn học"
         />

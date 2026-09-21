@@ -149,8 +149,15 @@ có secret. Push ngay sau commit.
   áp cho toàn app gồm cả các màn CN1, cập nhật bảng token bằng giá trị thật,
   rồi chụp lại toàn bộ ảnh báo cáo. Đặt cuối vì đổi theme sớm làm hỏng mọi ảnh
   đã chụp. FR: FR-06..FR-13 (giao diện).
-  (2026-09-20, polish: TonalSpot + ánh xạ tone của Paper, mọi cặp ≥ 4.5:1,
-  test khóa palette; ảnh do chủ dự án chụp lại.)
+   (2026-09-20, polish: TonalSpot + ánh xạ tone của Paper, mọi cặp ≥ 4.5:1,
+   test khóa palette; ảnh do chủ dự án chụp lại.)
+
+**Trạng thái CN2: HOÀN THÀNH (chốt tại `fix/delete-navigation`, tag
+`cn2-hoan-thanh`, 2026-09-21).** FR-06→FR-13 đạt ở mức code + unit 264/264
+(giữ mốc 260 + 4 mới khóa điều hướng xóa) + verify schema remote 14/14.
+CN2-01/CN2-02 giữ nguyên chưa tick (proof A/B `documents-rls-proof` + regen
+`database.ts` bằng CLI thuộc chủ dự án, ngoài phạm vi fix; xem khoảng trống
+trong FR-TRACEABILITY). Không để trạng thái “đang làm” ở CN2 nữa.
 
 ---
 

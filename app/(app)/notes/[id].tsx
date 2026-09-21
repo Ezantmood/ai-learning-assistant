@@ -94,7 +94,7 @@ function NoteEditor({ note }: { note: StudyNoteRow }) {
           setApiError(toNotesErrorMessage(error));
         },
         onSuccess: () => {
-          router.back();
+          goBackOrReplace(router, '/notes');
         },
       });
     }
@@ -111,7 +111,7 @@ function NoteEditor({ note }: { note: StudyNoteRow }) {
       },
       onSuccess: () => {
         setConfirmDelete(false);
-        router.back();
+        goBackOrReplace(router, '/notes');
       },
     });
   };

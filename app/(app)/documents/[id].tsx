@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Banner,
   Button,
@@ -25,7 +26,7 @@ import { QaSection } from './qa-section';
 import { SummarySection } from './summary-section';
 import { ScreenContainer } from '../../../src/shared/components/ScreenContainer';
 import { ScreenHeader } from '../../../src/shared/components/ScreenHeader';
-import { goBackOrReplace } from '../../../src/shared/lib/navigation';
+import { goBackToDocuments } from '../../../src/shared/lib/navigation';
 import { useSession } from '../../../src/features/auth/useSession';
 import {
   toDocumentsErrorMessage,
@@ -38,6 +39,7 @@ import {
   useDocumentUrl,
   useRenameDocument,
   useSubjects,
+  documentKey,
 } from '../../../src/features/documents/queries';
 import {
   DOCX_AI_NOTICE,
@@ -72,6 +74,7 @@ export default function DocumentDetailScreen() {
   const { user } = useSession();
   const theme = useTheme<AppTheme>();
   const userId = user?.id;
+  const queryClient = useQueryClient();
 
   const docQuery = useDocument(userId, id);
   const subjectsQuery = useSubjects(userId);
@@ -166,7 +169,19 @@ export default function DocumentDetailScreen() {
           });
         },
         onSuccess: () => {
-          router.back();
+          const deletedId = doc.id;
+          setDeleteDialogVisible(false);
+          // Xóa xong: replace luôn về /documents (không back) để (1) deep
+          // link mở chi tiết trực tiếp không vỡ GO_BACK, (2) mang stamp xóa
+          // sang danh sách hiện Snackbar, (3) nút back không quay lại được
+          // màn chi tiết đã xóa. Điều hướng TRƯỚC, dọn cache chi tiết SAU
+          // để màn hình không render lại với record null gây unmount sớm —
+          // cache danh sách do useDeleteDocument invalidate.
+          router.replace({
+            params: { deleted: String(Date.now()) },
+            pathname: '/documents',
+          });
+          queryClient.removeQueries({ queryKey: documentKey(deletedId) });
         },
       },
     );
@@ -182,7 +197,7 @@ export default function DocumentDetailScreen() {
       <ScreenContainer
         header={
           <ScreenHeader
-            onBack={() => goBackOrReplace(router, '/documents')}
+            onBack={() => goBackToDocuments(router)}
             showBack
             title="Chi tiết tài liệu"
           />
@@ -198,7 +213,7 @@ export default function DocumentDetailScreen() {
       <ScreenContainer
         header={
           <ScreenHeader
-            onBack={() => goBackOrReplace(router, '/documents')}
+            onBack={() => goBackToDocuments(router)}
             showBack
             title="Chi tiết tài liệu"
           />
@@ -225,8 +240,8 @@ export default function DocumentDetailScreen() {
     <ScreenContainer
       header={
         <ScreenHeader
-          onBack={() => router.back()}
-          showBack={router.canGoBack()}
+          onBack={() => goBackToDocuments(router)}
+          showBack
           title="Chi tiết tài liệu"
         />
       }

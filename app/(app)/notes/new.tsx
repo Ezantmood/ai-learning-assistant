@@ -45,7 +45,7 @@ export default function NewNoteScreen() {
           setApiError(toNotesErrorMessage(error));
         },
         onSuccess: () => {
-          router.back();
+          goBackOrReplace(router, '/notes');
         },
       });
     }

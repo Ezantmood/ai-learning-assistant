@@ -62,6 +62,12 @@ export type BackNavigator = {
 /**
  * Lối lùi mọi màn con: còn lịch sử thì back, hết lịch sử (deep link,
  * restart giữa chừng) thì replace về gốc tab tương ứng — không để kẹt.
+ *
+ * BẪY (fix/delete-navigation): CẤM gọi `router.back()` trần — khi stack rỗng
+ * (VD mở `/documents/[id]` bằng deep link rồi xóa) Expo Router nổ console
+ * error "The action 'GO_BACK' was not handled by any navigator". Mọi nút
+ * back trên Appbar (header Paper duy nhất vì `headerShown: false` toàn
+ * Stack) và mọi `onSuccess` sau tạo/sửa/xóa đều phải đi qua helper này.
  */
 export function goBackOrReplace(
   navigator: BackNavigator,
@@ -73,4 +79,13 @@ export function goBackOrReplace(
   }
 
   navigator.replace(fallback);
+}
+
+/**
+ * Lối lùi luồng tài liệu: gom fallback `/documents` vào một chỗ để màn
+ * chi tiết/upload/môn học không rải string literal + không ai vô tình gọi
+ * `router.back()` trần. Deep link xóa → `canGoBack() === false` → replace.
+ */
+export function goBackToDocuments(navigator: BackNavigator): void {
+  goBackOrReplace(navigator, TAB_ROOTS.documents);
 }
