@@ -1289,6 +1289,8 @@ https://supabase.com/docs/guides/platform/access-control`
 
 **Mốc Git**
 
+- Commit tính năng: `adb88c8` (branch `fix/upload-error-surface`, đã push)
+- Commit merge: `8bd69d2816a8901d489ca2ec467e33dd7c87d97a` (merge --no-ff)
 - Branch: `fix/upload-error-surface`
 - Tag: `fix-upload-error` (tạo + push cùng lệnh với push main)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
