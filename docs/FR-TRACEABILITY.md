@@ -23,7 +23,7 @@ Chỉ chuyển trạng thái sau khi file/hàm tồn tại và case test tương
 | FR-10 | Cùng màn chi tiết; `src/features/documents/api.ts` | `renameDocument` (chỉ đổi `display_name`, không đổi object) | Unit test payload update chỉ `display_name` + chặn tên rỗng/quá dài PASS; test tay tên sai/giữ tên cũ (chủ dự án) | đạt |
 | FR-11 | Cùng màn chi tiết; Storage policy `documents_delete_own` | `deleteDocument` (storage trước, DB sau, có dialog); điều hướng `router.replace('/documents', {deleted: stamp})` + dọn cache chi tiết SAU điều hướng + Snackbar “Đã xóa tài liệu.” (khóa lỗi GO_BACK deep link qua `goBackToDocuments`) | Unit test thứ tự storage→DB + nhánh storage-lỗi-giữ-bản-ghi + nhánh DB-fail→`DocumentDeletePartialError` PASS + 4 test điều hướng xóa (canGoBack true→back / false→replace) PASS; test tay hủy dialog/xóa thật + deep link xóa (chủ dự án) | đạt |
 | FR-12 | `app/(app)/subjects/index.tsx`; `app/(app)/documents/[id].tsx` (gán); bảng `subjects`; `documents.subject_id ON DELETE SET NULL` | `listSubjects`; `createSubject` (guard trần 30); `renameSubject`; `deleteSubject`; `assignDocumentSubject` (chỉ ở chi tiết); `countDocumentsInSubject` (cảnh báo trước xóa) | Unit test schema 1–60/trùng tên/trần 30 + lọc `filterDocumentsLocal` PASS; test tay xóa môn đang có tài liệu → “Chưa phân loại” (chủ dự án) | đạt |
-| FR-13 | Bảng `documents` (`extracted_text`, `extraction_status`) | Hạ tầng ở CN2 (`pending`/`unsupported` qua `getExtractionStatusForExt`, nhãn tiếng Việt `getExtractionStatusLabel`), thực thi trích xuất ở CN3 | Unit test map trạng thái PASS (trong 64 trên); UI chi tiết hiện nhãn đúng; CN3 gọi AI đổ nội dung vào — FR-13 tách đôi, không phải bỏ sót | đạt |
+| FR-13 | Bảng `documents` (`extracted_text`, `extraction_status`); `src/lib/ai/transport.ts` (`EXTRACTION_GENERATION_CONFIG`, `parseExtractionJson`); `src/features/summary/api.ts` (PDF: 1 gọi Gemini JSON 2 trường, update gộp `extracted_text` + `done`) | Hạ tầng ở CN2 (`pending`/`unsupported` qua `getExtractionStatusForExt`, nhãn tiếng Việt `getExtractionStatusLabel`); CN3-PDF trích toàn văn + tóm tắt trong một lần gọi, ghi cả hai trong cùng một update — FR-13 hoàn thành phần còn dở, PDF hỏi đáp được như TXT khi có text | Unit test map trạng thái PASS + `extraction.test.ts` 8 test parser (đủ/dở/rỗng) PASS; UI chi tiết hiện nhãn đúng | đạt |
 
 ### Khoảng trống chưa phủ của CN2 (ghi thẳng, không tô hồng)
 
@@ -47,15 +47,11 @@ Chỉ chuyển trạng thái sau khi file/hàm tồn tại và case test tương
 
 ## Chức năng 4 — AI hỏi đáp dựa trên tài liệu (đang làm — code + unit xong, migration 0005 chờ apply tay, test tay thiết bị)
 
-> SPEC gốc trong repo không có nội dung FR-23 → FR-30 (grep toàn repo
-> không thấy); bảng dưới là diễn giải từ lệnh session `cn3g2-cn4` (ô nhập
-> câu hỏi trên cùng màn chi tiết, nhồi `extracted_text` vào prompt, cấm
-> RAG/chunking, chặn hỏi khi chưa có text, lịch sử hỏi đáp). Nếu đề gốc
-> khác, sửa bảng này trước, không sửa code theo bảng cũ.
+> Đặc tả FR-23 → FR-30 xem `docs/SPEC.md` mục CN4 (bổ sung theo code).
 
 | FR | File dự kiến | Hàm/điểm kiểm soát dự kiến | Cách kiểm thử | Trạng thái |
 |---|---|---|---|---|
-| FR-23 | `app/(app)/documents/qa-section.tsx`; `src/features/chat/{api.ts,schemas.ts,queries.ts,errors.ts}`; `src/lib/ai/transport.ts` (`answerWithGemini`) | `askQuestion` (guard → 1 request Gemini → validate → insert); ô nhập + nút “Hỏi” (testID `qa-input`/`qa-submit`); key `['questions', documentId]` | Unit `chat.test.ts` 13 test + `askTransport.test.ts` 7 test (mock, không gọi mạng) PASS, tổng 23 suites 240/240; test tay hỏi TXT sau tóm tắt (chủ dự án) | Đang làm |
+| FR-23 | `app/(app)/documents/qa-section.tsx`; `src/features/chat/{api.ts,schemas.ts,queries.ts,errors.ts}`; `src/lib/ai/transport.ts` (`answerWithGemini`) | `askQuestion` (guard → 1 request Gemini → validate → insert); ô nhập + nút “Hỏi” (testID `qa-input`/`qa-submit`); key `['questions', documentId]` | Unit `chat.test.ts` 13 test + `askTransport.test.ts` 7 test (mock, không gọi mạng) PASS, tổng 29 suites 274/274; test tay hỏi TXT + PDF sau trích xuất (chủ dự án) | Đang làm |
 | FR-24 | `src/lib/ai/transport.ts` (`QA_PROMPT_HEADER`, `answerWithGemini`) | Toàn văn `extracted_text` nhồi thẳng vào prompt một request; header bắt model chỉ trả lời theo tài liệu, không bịa; cấm vector DB/RAG/chunking | Unit prompt chứa context + câu hỏi, cấm temperature/top_p/top_k PASS; grep không thấy dependency vector/chunk mới | Đang làm |
 | FR-25 | `src/features/chat/api.ts` (guard) + `qa-section.tsx` (UI) | DOCX/`unsupported` → `ChatGuardError`, KHÔNG gọi Gemini; UI không hiện ô nhập khi thiếu text (Banner DOCX của CN2 vẫn hiện) | Unit DOCX (transport không chạy) PASS; test tay DOCX (chủ dự án) | Đang làm |
 | FR-26 | Bảng `document_questions` (`0005_cn4_questions.sql`); `listQuestions`/`useQuestions` | Lịch sử append-only theo tài liệu, mới nhất trước (`order created_at desc`); lượt hỏi lỗi không tạo row; không sửa/xóa từng câu | Unit insert payload + thứ tự desc PASS; verify `scripts/cn4-schema-verify.mjs` (42703 khi thiếu cột) — chờ chủ dự án apply 0005 rồi chạy | Đang làm |

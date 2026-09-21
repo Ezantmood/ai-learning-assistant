@@ -188,6 +188,45 @@ hỏi đáp trên tài liệu (việc của CN4), model khác ngoài `gemini-3.5
   cột vào `documents`. Lý do: tách vòng đời (ghi đè 1 row, sau này muốn lịch
   sử cũng không vỡ schema), không phình `documents`, RLS độc lập rõ ràng,
   CASCADE dọn kèm khi xóa tài liệu.
+- CN3-PDF-EXTRACT (bổ sung theo code, không migration mới): tóm tắt PDF là
+  MỘT lần gọi Gemini trả JSON đúng 2 trường `extracted_text` (toàn văn) và
+  `summary_text` (tóm tắt) qua `responseMimeType: 'application/json'` +
+  `responseSchema`; app ghi CẢ HAI trong cùng một update `documents`
+  (`extracted_text` + `done`) kèm upsert `document_summaries`. Không chunking,
+  không vector DB (PDF ≤ 10 MB < ngưỡng 50 MB/1000 trang). Cắt cụt có hai
+  nhánh: (a) còn chuỗi dở cứu được → lưu phần dở với `done` tái dùng rồi báo
+  user biết bị cắt (cấm giả vờ thành công); (b) rỗng hoàn toàn
+  (parts/text null khi chạm MAX_TOKENS) → `failed`, không ghi đè summary cũ
+  bằng rỗng. CHECK `extraction_status` chỉ có
+  `pending/processing/done/failed/unsupported` nên không bịa giá trị mới cho
+  "cắt cụt". Không đặt `max_output_tokens` nhỏ; giữ nguyên xử lý 429/5xx.
+
+### CN4 — AI hỏi đáp dựa trên tài liệu (FR-23 → FR-30, bổ sung theo code đã có)
+
+| FR | Yêu cầu | Acceptance criteria (Given / When / Then) |
+|----|---------|-------------------------------------------|
+| FR-23 | Hỏi trên tài liệu của mình | **Given** đã đăng nhập và đang ở chi tiết tài liệu có `extracted_text`, **When** nhập câu hỏi (1–500 ký tự) và bấm “Hỏi”, **Then** app gọi Gemini đúng một lần rồi insert một row `document_questions`; ô nhập có testID `qa-input`/`qa-submit`, key lịch sử `['questions', documentId]`. Lỗi không tạo row. |
+| FR-24 | Nhồi toàn văn vào prompt, cấm RAG | **Given** tài liệu có `extracted_text`, **When** hỏi, **Then** toàn văn được nhồi thẳng vào prompt một request kèm header bắt model chỉ trả lời theo tài liệu, không bịa; không vector DB/RAG/chunking. TXT giữ nguyên hành vi; PDF sau trích toàn văn hỏi đáp y như TXT. |
+| FR-25 | DOCX không gọi AI | **Given** tài liệu DOCX/`unsupported`, **When** mở chi tiết, **Then** guard ném `ChatGuardError`, không gọi Gemini; UI không hiện ô nhập khi thiếu text. |
+| FR-26 | Lịch sử hỏi đáp append-only | **Given** đã hỏi trên một tài liệu, **When** xem lịch sử, **Then** thấy mới nhất trước (`order created_at desc`); lượt hỏi lỗi không tạo row; không sửa/xóa từng câu. |
+| FR-27 | Bốn trạng thái vùng hỏi đáp | **Given** đang ở vùng hỏi đáp, **When** xem, **Then** thấy đúng một trong: skeleton / empty (chưa có text thì dẫn tóm tắt trước) / nội dung / lỗi + “Thử lại”; lỗi field nằm dưới ô nhập, giữ câu hỏi khi lỗi mạng. |
+| FR-28 | Báo hạn mức và lỗi server | **Given** Gemini trả 429/quota, **When** hỏi, **Then** banner hạn mức, không retry. **Given** 5xx/mạng, **When** hỏi, **Then** câu riêng + “Thử lại” giữ nguyên câu hỏi. |
+| FR-29 | Lịch sử cách ly theo tài khoản | **Given** hai tài khoản A/B mỗi người lịch sử riêng, **When** A select/insert qua client, **Then** A chỉ thao tác row có `user_id = auth.uid()`; chéo bị RLS chặn như FR-05/FR-22. |
+| FR-30 | Migration và verify CN4 | **Given** migration `0005_cn4_questions.sql` (idempotent, RLS 4 lệnh, CASCADE, CHECK câu 1–500/đáp 1–20000/model 1–100), **When** dán tay qua SQL Editor rồi chạy `scripts/cn4-schema-verify.mjs`, **Then** `VERIFY_PASS`; types tay trong `database.ts` khớp. Cấm `db push`. |
+
+### Luật validate và hành vi CN4 (theo code)
+
+- Guard trước mạng: sai chủ → từ chối; DOCX/`unsupported` → chặn; thiếu
+  `extracted_text` (rỗng sau trim) → chặn, bảo tóm tắt trước; câu hỏi validate
+  trước khi gọi (rỗng/quá 500 bị từ chối).
+- Câu trả lời validate 1–20000 trước khi insert; vượt thì báo, không cắt,
+  không tạo row.
+- Không retry tự động; mỗi lần hỏi tối đa một request Gemini.
+
+### OUT OF SCOPE của CN4 (theo code, không làm)
+
+- Sửa/xóa từng câu hỏi, stream câu trả lời, gợi ý câu hỏi, đánh giá chất
+  lượng đáp, RAG/chunking/vector DB, cache đáp chung giữa các user.
 
 ## CẦN CHỦ DỰ ÁN QUYẾT ĐỊNH
 

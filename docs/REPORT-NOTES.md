@@ -357,3 +357,17 @@ Dashboard từ source mới (SETUP 5d mục 7) tới khi probe kèm JWT trả 20
 - User deploy tay source đã fix → version **2** (đã tăng). Probe lại: kèm
   JWT vẫn **401** y hệt, không auth **401**, REST 200. Hết time-box → DỪNG,
   giữ nhánh trực tiếp, không đào tiếp. Chi tiết xem DEVLOG cn3-g1b.
+
+### Giới hạn đã biết — CN3-PDF trích toàn văn một lần gọi (2026-09-21)
+
+- CHECK `documents_extraction_status_rules` chỉ có 5 giá trị
+  (`pending/processing/done/failed/unsupported`); "cắt cụt" tái dùng `done`
+  (đã lưu phần dở + Banner báo cắt, cấm giả vờ thành công) và `failed` (rỗng
+  hoàn toàn, không ghi đè summary cũ). Không migration mới.
+- PDF rất dài có thể chạm MAX_TOKENS: với `responseSchema` bật, Gemini thường
+  trả `parts`/`text` null (không có mẩu JSON để cứu) → báo thất bại rõ, thử
+  lại với tài liệu ngắn hơn. Không đặt `max_output_tokens` nhỏ vì thinking
+  tokens tính vào hạn mức.
+- Q&A nhồi toàn văn `extracted_text` thẳng vào prompt (không RAG): tài liệu
+  dài sau trích xuất có thể nặng prompt, chạm quota/giới hạn token khi hỏi —
+  hỏi câu hẹp hơn khi gặp lỗi.

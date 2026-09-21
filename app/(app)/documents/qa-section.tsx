@@ -48,7 +48,9 @@ function formatDateTime(value: string): string {
 /**
  * Vùng hỏi đáp CN4 trên cùng màn chi tiết (FR-23 → FR-30).
  * CẤM vector DB/RAG/chunking: toàn văn `extracted_text` nhồi thẳng vào
- * prompt trong một request. Chưa có `extracted_text` → chặn hỏi, bảo
+ * prompt trong một request. Khi `extracted_text` có nội dung thì hỏi đáp
+ * được trên PDF y như TXT (FR-13: PDF trích toàn văn ở CN3); TXT giữ
+ * nguyên hành vi cũ. Chưa có `extracted_text` → chặn hỏi, bảo
  * user tóm tắt trước. Lịch sử append-only, mới nhất trước; lượt hỏi
  * lỗi không tạo row. Lỗi 429/5xx → thông điệp riêng + nút thử lại
  * (riêng 429/quota → banner hạn mức, CẤM retry).
@@ -112,12 +114,7 @@ export function QaSection({
       <Card.Content style={styles.content}>
         {!hasContext ? (
           <EmptyState
-            description={
-              'Hãy bấm “Tóm tắt bằng AI” ở trên để có nội dung hỏi đáp.' +
-              (doc.file_ext === 'pdf'
-                ? ' Lưu ý: PDF do AI đọc trực tiếp nên chưa có văn bản trích xuất; hỏi đáp hiện dùng được với TXT sau khi tóm tắt.'
-                : '')
-            }
+            description="Hãy bấm “Tóm tắt bằng AI” ở trên để có nội dung hỏi đáp. Khi tài liệu đã có nội dung trích xuất (TXT sau tóm tắt, PDF sau trích xuất toàn văn), hỏi đáp dùng được y như nhau."
             icon={AppIcons.messageTextOutline}
             title="Chưa thể hỏi đáp"
           />

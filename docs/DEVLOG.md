@@ -1558,3 +1558,76 @@ https://supabase.com/docs/guides/platform/access-control`
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
 
 ---
+
+### CN3-PDF trích toàn văn + tóm tắt một lần gọi, bỏ chặn Q&A PDF — 2026-09-21
+
+**Số sàn trước khi sửa (branch `feat/cn3-pdf-extract-text` từ `main`)**
+
+- `npx tsc --noEmit` → exit 0; `npm run lint` → 0 errors, 2 warning
+  `watch()` cũ; `npm test` → 28 suites, **266/266 PASS** (trên sàn 260/260);
+  `npm run check:functions` → exit 0. Đủ sàn nên làm tiếp.
+
+**CHECK constraint `extraction_status` (đọc trước khi chạm)**
+
+- `0002_cn2_documents.sql` chỉ cho đúng 5 giá trị, không có giá trị nào nghĩa
+  "cắt cụt" nên DÙNG LẠI giá trị cũ, KHÔNG bịa mới, KHÔNG migration 0006.
+- `0004_cn3_summaries.sql` không chứa cột `extraction_status` (chỉ bảng
+  `document_summaries`), không có CHECK nào khác cho cột này.
+
+**Đã làm gì**
+
+- `src/lib/ai/transport.ts`: thêm `EXTRACTION_GENERATION_CONFIG`
+  (`responseMimeType: 'application/json'` + `responseSchema` 2 trường
+  `extracted_text`/`summary_text`, cấm temperature/top_p/top_k/
+  candidate_count/thinking_budget) và `parseExtractionJson` (đủ → full;
+  dở → cứu phần lấy được `truncated: true`; rỗng hoàn toàn → ném
+  `GeminiEmptyError`). `postGenerate` tái dùng cho cả tóm tắt/hỏi đáp, thêm
+  `generationConfig` tùy chọn; `summarizeWithGemini` gửi config JSON cho PDF,
+  TXT giữ plain; giữ nguyên map 429/5xx, không `max_output_tokens` nhỏ.
+- `src/features/summary/api.ts` (PDF): MỘT gọi Gemini → parse JSON → upsert
+  `document_summaries` + MỘT update `documents` gộp `extracted_text` + `done`.
+  Nhánh (a) dở: lưu phần cứu được với `done` tái dùng rồi ném
+  `SummaryTruncatedError` sau khi lưu (cấm giả vờ thành công; catch không lật
+  về `failed`). Nhánh (b) rỗng: `failed`, không upsert rỗng nên summary cũ
+  giữ nguyên. Chuỗi thuần legacy (mock cũ) coi là tóm tắt, chỉ lật `done`
+  để test cũ `toEqual([{processing},{done}])` vẫn xanh. TXT giữ hành vi cũ.
+- `src/features/summary/errors.ts`: mới `SummaryTruncatedError` +
+  `isSummaryTruncatedError`; `toSummaryErrorMessage` giữ câu guard/truncated.
+- `app/(app)/documents/summary-section.tsx`: hiện Banner cắt cụt ngay cả khi
+  đã có summary (phần dở đã lưu). `qa-section.tsx`: bỏ ghi chú chặn PDF —
+  khi `extracted_text` có nội dung thì hỏi đáp PDF y như TXT (FR-13); TXT giữ nguyên.
+- Test mới `src/lib/ai/__tests__/extraction.test.ts` (8 test): đủ, dở, rỗng
+  (rỗng chuỗi/JSON rỗng/vỡ không cứu được) + config 2 trường + cấm giá suy
+  luận. Không sửa/skip test cũ nào.
+- Docs: SPEC thêm CN3-PDF-EXTRACT + mục CN4 FR-23→FR-30 theo code;
+  FR-TRACEABILITY cập nhật FR-13, gỡ cảnh báo "spec tạm" ở CN4, FR-23 trỏ số
+  mới; REPORT-NOTES thêm giới hạn cắt cụt + Q&A context dài.
+
+**Cố tình không làm và lý do**
+
+- Không migration 0006, không giá trị status mới (CHECK chỉ có 5 giá trị).
+- Không chunking, không vector DB/RAG (PDF ≤ 10 MB < ngưỡng 50 MB/1000 trang).
+- Không Interactions API, không đổi model 3.6/3.7/3.8-flash, không đụng
+  `supabase/functions/**`/Edge proxy, CN5/CN6, bảng màu, refactor ngoài phạm vi.
+
+**Đã kiểm thử (số thật)**
+
+- `npx tsc --noEmit` → exit 0.
+- `npm run lint` → 0 errors, 2 warning `watch()` cũ (kế thừa).
+- `npm test` → 29 suites, **274/274 PASS** (giữ nguyên 266 cũ, +8 mới).
+- `npm run check:functions` → exit 0 (không đụng functions).
+- Test xanh KHÔNG chứng minh luồng upload + trích xuất trên máy thật (mock
+  fetch/supabase, không gọi mạng). Cần kiểm mắt trên Expo Go: upload PDF thật
+  → bấm tóm tắt → thấy đủ toàn văn + tóm tắt; PDF dài quá giới hạn → Banner
+  cắt cụt nhưng phần dở đã lưu; PDF rỗng/lỗi → thất bại rõ, summary cũ giữ;
+  Q&A PDF sau trích xuất trả lời theo nội dung; DOCX vẫn chặn; 429/quota báo
+  hạn mức không retry; light/dark.
+
+**Mốc Git**
+
+- Branch: `feat/cn3-pdf-extract-text`
+- Commit merge: (điền sau merge `--no-ff` vào `main`, tra `git log --oneline --grep cn3-pdf`)
+- Tag: `cn3-pdf-text` (tạo + push cùng lệnh với push main)
+- PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
+
+---

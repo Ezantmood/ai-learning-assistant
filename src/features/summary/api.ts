@@ -1,11 +1,15 @@
 import { SUMMARY_MODEL } from '../../lib/ai/models';
-import { summarizeWithGemini } from '../../lib/ai/transport';
+import {
+  GeminiEmptyError,
+  parseExtractionJson,
+  summarizeWithGemini,
+} from '../../lib/ai/transport';
 import { supabase } from '../../shared/lib/supabase';
 import type {
   DocumentRow,
   DocumentSummaryRow,
 } from '../../shared/types/database';
-import { SummaryGuardError } from './errors';
+import { SummaryGuardError, SummaryTruncatedError } from './errors';
 import { summarySourceSchema, summaryTextSchema } from './schemas';
 
 /**
@@ -152,7 +156,78 @@ export async function requestSummary(input: {
   await setExtractionStatus(document.id, 'processing');
 
   try {
-    const text = await summarizeWithGemini(parsedSource.data);
+    const raw = await summarizeWithGemini(parsedSource.data);
+
+    // PDF: MỘT lần gọi Gemini trả JSON 2 trường (toàn văn + tóm tắt).
+    // Ghi CẢ HAI vào DB: upsert `document_summaries` + MỘT update
+    // `documents` gộp `extracted_text` + `done` (native vision, ≤10MB
+    // nên không chunking, không vector DB). TXT giữ hành vi cũ (plain,
+    // extracted từ local).
+    if (document.file_ext === 'pdf' && parsedSource.data.kind === 'pdf') {
+      const extraction = parseExtractionJson(raw);
+      const parsedSummary = summaryTextSchema.safeParse(
+        extraction.summaryText,
+      );
+      // Nhánh (b) rỗng một phần: có extracted nhưng summary rỗng → vẫn
+      // cứu extracted, giữ summary cũ (không upsert rỗng).
+      let saved: DocumentSummaryRow | null = null;
+      if (extraction.summaryText) {
+        if (!parsedSummary.success) {
+          throw new SummaryGuardError(
+            parsedSummary.error.issues[0]?.message ??
+              'Bản tóm tắt không hợp lệ.',
+          );
+        }
+        const { data, error } = await supabase
+          .from('document_summaries')
+          .upsert(
+            {
+              document_id: document.id,
+              model: SUMMARY_MODEL,
+              summary_text: parsedSummary.data,
+              user_id: userId,
+            },
+            { onConflict: 'document_id' },
+          )
+          .select()
+          .single();
+        if (error || !data) {
+          throw error ?? new SummaryGuardError('Không lưu được bản tóm tắt.');
+        }
+        saved = data;
+      }
+      // Gộp extracted_text + done trong CÙNG một lần update.
+      // Legacy/plain (mock cũ): extracted rỗng → chỉ lật done để test cũ
+      // `toEqual([{processing},{done}])` vẫn xanh.
+      const donePayload =
+        extraction.extractedText.trim() !== ''
+          ? {
+              extracted_text: extraction.extractedText,
+              extraction_status: 'done',
+            }
+          : { extraction_status: 'done' };
+      const { error: doneError } = await supabase
+        .from('documents')
+        .update(donePayload)
+        .eq('id', document.id);
+      if (doneError) {
+        throw doneError;
+      }
+      // Nhánh (a) cắt cụt: đã LƯU phần cứu được (done tái dùng — CHECK
+      // chỉ có pending/processing/done/failed/unsupported, không bịa giá
+      // trị mới, không migration 0006), nhưng CẤM giả vờ thành công.
+      if (extraction.truncated) {
+        throw new SummaryTruncatedError();
+      }
+      if (!saved) {
+        // JSON hợp lệ nhưng summary rỗng và không truncated (không xảy ra
+        // qua parser — phòng thủ): coi như rỗng, không ghi đè cũ.
+        throw new GeminiEmptyError();
+      }
+      return saved;
+    }
+
+    const text = raw;
     const parsedText = summaryTextSchema.safeParse(text);
     if (!parsedText.success) {
       throw new SummaryGuardError(
@@ -179,8 +254,7 @@ export async function requestSummary(input: {
     }
 
     // TXT: nội dung gốc đã có trong tay → đổ luôn vào `extracted_text`
-    // cho CN4 hỏi đáp. PDF: Gemini đọc native vision nên không có text
-    // trích — giữ nguyên `extracted_text`, chỉ lật trạng thái.
+    // cho CN4 hỏi đáp (gộp chung một update với `done`).
     if (document.file_ext === 'txt' && parsedSource.data.kind === 'txt') {
       const { error: doneError } = await supabase
         .from('documents')
@@ -198,8 +272,14 @@ export async function requestSummary(input: {
 
     return data;
   } catch (error) {
-    // Mọi lỗi sau khi đã đặt `processing` đều đưa về `failed` để user
-    // thử lại (FR-20). Giữ lỗi gốc để UI báo đúng (quota/mạng/5xx).
+    // Nhánh (a) đã lưu xong với `done` rồi mới báo cắt — KHÔNG lật về
+    // `failed` (lật là mất dấu đã cứu + giả vờ chưa xong).
+    if (error instanceof SummaryTruncatedError) {
+      throw error;
+    }
+    // Mọi lỗi khác sau khi đã đặt `processing` đều đưa về `failed` để user
+    // thử lại (FR-20), KHÔNG upsert rỗng nên summary cũ được giữ.
+    // Giữ lỗi gốc để UI báo đúng (quota/mạng/5xx/rỗng).
     try {
       await setExtractionStatus(document.id, 'failed');
     } catch {
