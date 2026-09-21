@@ -7,6 +7,7 @@
  * hành (người dùng đổi dark/light trong Settings điện thoại thì app đổi
  * theo mà không cần chạm lại app).
  */
+import { AppIcons } from './icons';
 /** Chế độ giao diện do người dùng chọn. Union hẹp, không string trần. */
 export type ThemeMode = 'dark' | 'light' | 'system';
 
@@ -58,11 +59,11 @@ export function resolveEffectiveScheme(
 export function themeModeIcon(mode: ThemeMode): string {
   switch (mode) {
     case 'system':
-      return 'theme-light-dark';
+      return AppIcons.themeLightDark;
     case 'light':
-      return 'weather-sunny';
+      return AppIcons.weatherSunny;
     case 'dark':
-      return 'weather-night';
+      return AppIcons.weatherNight;
   }
 }
 

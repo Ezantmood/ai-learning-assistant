@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { TextInput } from 'react-native-paper';
 
 import { FormTextInput } from './FormTextInput';
+import { AppIcons } from '../theme/icons';
 
 type PasswordInputProps = Omit<
   React.ComponentProps<typeof FormTextInput>,
@@ -23,14 +24,14 @@ export function PasswordInput({
 
   return (
     <FormTextInput
-      leftIcon="lock-outline"
+      leftIcon={AppIcons.lockOutline}
       secureTextEntry={!visible}
       {...rest}
       right={
         <TextInput.Icon
           accessibilityLabel={visible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
           forceTextInputFocus={false}
-          icon={visible ? 'eye-off' : 'eye'}
+          icon={visible ? AppIcons.eyeOff : AppIcons.eye}
           onPress={() => setVisible((prev) => !prev)}
           testID={toggleTestID}
         />

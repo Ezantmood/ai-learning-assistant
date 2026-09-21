@@ -16,6 +16,7 @@ import {
   toDocumentsErrorMessage,
 } from '../../../src/features/documents/errors';
 import { useUploadDocument } from '../../../src/features/documents/queries';
+import { AppIcons } from '../../../src/shared/theme/icons';
 import { formatFileSize } from '../../../src/features/documents/storage';
 import { spacing } from '../../../src/shared/theme/spacing';
 import type { AppTheme } from '../../../src/shared/theme/theme';
@@ -96,7 +97,7 @@ export default function UploadDocumentScreen() {
       </Text>
 
       {apiError ? (
-        <Banner icon="alert-circle" visible>
+        <Banner icon={AppIcons.alertCircle} visible>
           {apiError}
           {__DEV__ && apiErrorCode ? (
             <Text style={[styles.devCode, { color: theme.colors.error }]}>
@@ -109,7 +110,7 @@ export default function UploadDocumentScreen() {
       {picked ? (
         <Card mode="outlined">
           <Card.Title
-            left={(props) => <List.Icon {...props} icon="file-document-outline" />}
+            left={(props) => <List.Icon {...props} icon={AppIcons.fileDocumentOutline} />}
             subtitle={`${picked.mimeType ?? 'Không rõ loại'} • ${
               picked.size != null ? formatFileSize(picked.size) : 'Không rõ dung lượng'
             }`}
@@ -123,7 +124,7 @@ export default function UploadDocumentScreen() {
         <Button
           accessibilityLabel="Chọn tệp tài liệu"
           disabled={busy}
-          icon="file-document-outline"
+          icon={AppIcons.fileDocumentOutline}
           loading={picking}
           mode="outlined"
           onPress={handlePick}
@@ -135,7 +136,7 @@ export default function UploadDocumentScreen() {
         <Button
           accessibilityLabel="Tải lên tài liệu đã chọn"
           disabled={!picked || busy}
-          icon="upload"
+          icon={AppIcons.upload}
           loading={mutation.isPending}
           mode="contained"
           onPress={handleUpload}

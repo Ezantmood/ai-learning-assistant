@@ -29,6 +29,7 @@ import {
   useSummary,
 } from '../../../src/features/summary/queries';
 import { loadSummarySource } from '../../../src/features/summary/source';
+import { AppIcons } from '../../../src/shared/theme/icons';
 import { spacing } from '../../../src/shared/theme/spacing';
 import type { AppTheme } from '../../../src/shared/theme/theme';
 
@@ -131,7 +132,7 @@ export function SummarySection({
     <Card mode="outlined">
       <Card.Title
         left={(props) => (
-          <List.Icon {...props} icon="text-box-outline" />
+          <List.Icon {...props} icon={AppIcons.textBoxOutline} />
         )}
         subtitle={`Trạng thái: ${getExtractionStatusLabel(doc.extraction_status)}`}
         title="Tóm tắt bằng AI"
@@ -145,7 +146,7 @@ export function SummarySection({
             <Button
               accessibilityLabel="Tóm tắt lại tài liệu này"
               disabled={busy}
-              icon="refresh"
+              icon={AppIcons.refresh}
               mode="outlined"
               onPress={handleRun}
               testID="summary-rerun"
@@ -154,7 +155,7 @@ export function SummarySection({
             </Button>
           </View>
         ) : isQuotaError ? (
-          <Banner icon="alert-circle" visible>
+          <Banner icon={AppIcons.alertCircle} visible>
             <Text style={{ color: theme.colors.error }}>
               {toSummaryErrorMessage(requestMutation.error)}
             </Text>
@@ -163,7 +164,7 @@ export function SummarySection({
           <Button
             accessibilityLabel={stepLabel}
             disabled
-            icon="text-box-outline"
+            icon={AppIcons.textBoxOutline}
             loading
             mode="contained"
             testID="summary-running"
@@ -183,7 +184,7 @@ export function SummarySection({
             <Button
               accessibilityLabel="Thử tóm tắt lại"
               disabled={busy}
-              icon="refresh"
+              icon={AppIcons.refresh}
               mode="outlined"
               onPress={handleRun}
               testID="summary-retry"
@@ -196,7 +197,7 @@ export function SummarySection({
             actionLabel="Thử lại"
             actionTestID="summary-fetch-retry"
             description={toSummaryErrorMessage(summaryQuery.error)}
-            icon="alert-circle"
+            icon={AppIcons.alertCircle}
             onAction={() => {
               void summaryQuery.refetch();
             }}
@@ -210,7 +211,7 @@ export function SummarySection({
             <Button
               accessibilityLabel="Tóm tắt tài liệu bằng AI"
               disabled={busy}
-              icon="text-box-outline"
+              icon={AppIcons.textBoxOutline}
               mode="contained"
               onPress={handleRun}
               testID="summary-run"

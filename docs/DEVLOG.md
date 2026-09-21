@@ -1477,9 +1477,84 @@ https://supabase.com/docs/guides/platform/access-control`
 **Mốc Git**
 
 - Commit sửa lỗi: `35e677f54de1daad6fd6f90db4c42c0b1f9f6638` (branch `fix/delete-navigation`, đã push)
-- Commit merge: (điền sau merge `--no-ff` vào `main`, tra `git log --oneline --grep delete-navigation`)
+- Commit merge: `f3f9d5803142bae71917404ab4f01409b65bf59b` (`--no-ff` vào `main`, đã push)
 - Branch: `fix/delete-navigation`
-- Tag: `cn2-hoan-thanh` (tạo + push cùng lệnh với push main)
+- Tag: `cn2-hoan-thanh` (tạo + push cùng lệnh với push main, trỏ đúng merge trên)
+- PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### Fix icons-cn1-cn2 — icon trùng màu nền + cổng gác tên icon + chốt CN2 — 2026-09-21
+
+**Triệu chứng (Expo Go)**
+
+- Hai thẻ Trang chủ CN1/CN2 chỉ thấy vòng tròn nền xanh, không thấy hình
+  icon (nghi `Avatar.Icon` rỗng ruột). Tab chưa làm hiện icon bình thường.
+
+**Chẩn đoán (tra glyphMap thật, không đoán)**
+
+- Liệt kê toàn bộ tên icon trong `src/features/profile`,
+  `app/(app)` (profile, notes, documents, subjects, dashboard, tabs) +
+  shared dùng bởi chúng (toggle theme, password, snackbar): 44 tên.
+- Đối chiếu TỪNG tên với glyphMap thật của MaterialCommunityIcons
+  (`node_modules/@expo/vector-icons/.../MaterialCommunityIcons.json`,
+  7448 glyph): **44/44 đều CÓ** — giả thuyết “sai tên icon” SAI.
+- Thủ phạm thật là MÀU, không phải tên: `Avatar.Icon` thẻ enabled để
+  `color = theme.colors.primary` trên nền mặc định cũng là `primary`
+  (Paper `AvatarIcon` lấy `backgroundColor` từ `style`, thiếu thì fallback
+  `theme.colors.primary`) → icon trùng màu nền nên tàng hình. Đúng hai thẻ
+  enabled (CN1/CN2) dính, thẻ disabled (nền `surfaceVariant` + chữ
+  `onSurfaceVariant`) vẫn thấy — khớp triệu chứng 100%.
+
+**Bẫy: tên icon sai → render rỗng im lặng, đã có test chặn**
+
+- Paper resolve icon chuỗi qua `settings.icon` sang MaterialCommunityIcons;
+  tên sai render rỗng, không warning. Dù đợt này tên đều đúng, bẫy vẫn rình
+  mọi lần thêm icon sau này nên đặt cổng gác đúng chỗ đã vỡ.
+
+**Đã làm gì**
+
+- Branch `fix/icons-cn1-cn2` từ `main`. Không thêm dependency, không đụng
+  RLS/SQL/Edge Function/bảng màu (ngoài phạm vi fix).
+- Mới `src/shared/theme/icons.ts`: `AppIcons` (44 hằng số camelCase),
+  `AppIconName`, `ALL_APP_ICONS`; export qua `src/shared/theme/index.ts`.
+  Mọi literal icon trong phạm vi trên chuyển sang `AppIcons.*` (tabs,
+  dashboard, notes, profile, documents, subjects, `themeModeIcon`,
+  `ThemeSettingsCard`, `PasswordInput`, `FeedbackSnackbar`,
+  `ProfileView`). Màn auth ngoài phạm vi, giữ nguyên (tên đã đúng).
+- Sửa màu `Avatar.Icon` thẻ enabled: nền `theme.colors.primaryContainer`,
+  icon `theme.colors.primary` (cặp 5.01:1 light / 5.48:1 dark theo mục
+  shell-contrast); disabled giữ `surfaceVariant`/`onSurfaceVariant`.
+  Màu lấy từ theme, không hardcode (grep hex ngoài `theme.ts`: hết).
+- Thẻ CN2 Trang chủ chuyển `partial` → `done` (chip “Hoàn thành”, icon
+  `check`): CN2 đã HOÀN THÀNH tại `cn2-hoan-thanh`, không còn “Đang làm”.
+- Mới `src/shared/theme/__tests__/icons.test.ts` (2 test): assert mọi tên
+  trong `AppIcons` tồn tại trong glyphMap thật (import trực tiếp file JSON
+  bằng đường dẫn tương đối để né `moduleNameMapper` stub vector-icons
+  trong `jest.config.js`) + không trùng/rỗng. CẤM sửa/skip test cũ.
+- Tự kiểm cổng: chèn tạm `tamRac: 'icon-khong-ton-tai-xyz'` → test ĐỎ
+  (1 failed); trả lại → XANH. Tag `cn2-hoan-thanh` kiểm lại: đã tồn tại,
+  trỏ đúng merge `f3f9d58`, không tạo lại/di chuyển.
+
+**Cố tình không làm và lý do**
+
+- Q&A cho PDF (vòng sau), CN5, CN6, bảng màu (đã chốt), tag audit, deploy,
+  SQL remote — đúng lệnh fix.
+
+**Đã kiểm thử (số thật)**
+
+- `npx tsc --noEmit` → exit 0.
+- `npm run lint` → 0 errors, 2 warning `watch()` cũ (kế thừa).
+- `npm test` → 28 suites, **266/266 PASS** (giữ mốc 264, +2 mới, không
+  sửa/skip test cũ).
+- `npm run check:functions` → exit 0 (không đụng functions).
+
+**Mốc Git**
+
+- Commit sửa lỗi: (điền hash sau commit, tra `git log --oneline --grep fix-icons`)
+- Commit merge: (điền sau merge `--no-ff` vào `main`, tra `git log --oneline --grep fix-icons`)
+- Branch: `fix/icons-cn1-cn2`
+- Tag: `fix-icons` (tạo + push cùng lệnh với push main)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
 
 ---

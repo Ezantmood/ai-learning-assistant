@@ -11,6 +11,7 @@ import { ThemeToggleAction } from '../../../src/shared/components/ThemeToggleAct
 import { signOut } from '../../../src/features/auth/api';
 import { toAuthErrorMessage } from '../../../src/features/auth/errors';
 import { useSession } from '../../../src/features/auth/useSession';
+import { AppIcons } from '../../../src/shared/theme/icons';
 import {
   toAvatarErrorMessage,
   toProfileErrorMessage,
@@ -161,7 +162,7 @@ export default function ProfileScreen() {
           <Button
             accessibilityLabel="Đổi mật khẩu"
             accessibilityRole="button"
-            icon="lock-reset"
+            icon={AppIcons.lockReset}
             mode="outlined"
           >
             Đổi mật khẩu
@@ -172,7 +173,7 @@ export default function ProfileScreen() {
           <Button
             accessibilityLabel="Mở ghi chú học tập"
             accessibilityRole="button"
-            icon="note-text-outline"
+            icon={AppIcons.noteTextOutline}
             mode="outlined"
           >
             Ghi chú học tập
@@ -183,7 +184,7 @@ export default function ProfileScreen() {
           accessibilityLabel="Đăng xuất"
           accessibilityRole="button"
           disabled={signOutMutation.isPending}
-          icon="logout"
+          icon={AppIcons.logout}
           loading={signOutMutation.isPending}
           mode="outlined"
           onPress={() => {

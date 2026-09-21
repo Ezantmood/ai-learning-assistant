@@ -22,6 +22,7 @@ import { ListSkeleton } from '../../../src/shared/components/LoadingState';
 import { ScreenContainer } from '../../../src/shared/components/ScreenContainer';
 import { ScreenHeader } from '../../../src/shared/components/ScreenHeader';
 import { goBackToDocuments } from '../../../src/shared/lib/navigation';
+import { AppIcons } from '../../../src/shared/theme/icons';
 import { useSession } from '../../../src/features/auth/useSession';
 import { toSubjectsErrorMessage } from '../../../src/features/documents/errors';
 import {
@@ -155,19 +156,19 @@ export default function SubjectsScreen() {
         accessibilityLabel={`Môn học: ${item.name}, ${count} tài liệu`}
         description={`${count} tài liệu`}
         left={(props) => (
-          <List.Icon {...props} icon="folder-outline" />
+          <List.Icon {...props} icon={AppIcons.folderOutline} />
         )}
         right={() => (
           <View style={styles.rowActions}>
             <IconButton
               accessibilityLabel={`Đổi tên môn ${item.name}`}
-              icon="pencil"
+              icon={AppIcons.pencil}
               onPress={() => openEdit(item)}
               testID={`subject-edit-${item.id}`}
             />
             <IconButton
               accessibilityLabel={`Xóa môn ${item.name}`}
-              icon="trash-can-outline"
+              icon={AppIcons.trashCanOutline}
               iconColor={theme.colors.error}
               onPress={() => openDelete(item)}
               testID={`subject-delete-${item.id}`}
@@ -197,7 +198,7 @@ export default function SubjectsScreen() {
             accessibilityLabel="Tên môn học mới"
             fieldError={newNameError ?? undefined}
             label="Tên môn mới (1–60 ký tự)"
-            leftIcon="folder-outline"
+            leftIcon={AppIcons.folderOutline}
             onChangeText={(value) => {
               setNewName(value);
               setNewNameError(null);
@@ -209,7 +210,7 @@ export default function SubjectsScreen() {
         <Button
           accessibilityLabel="Tạo môn học mới"
           disabled={createMutation.isPending}
-          icon="plus"
+          icon={AppIcons.plus}
           loading={createMutation.isPending}
           mode="contained"
           onPress={handleCreate}
@@ -226,7 +227,7 @@ export default function SubjectsScreen() {
           actionLabel="Thử lại"
           actionTestID="subjects-retry"
           description={toSubjectsErrorMessage(subjectsQuery.error)}
-          icon="alert-circle"
+          icon={AppIcons.alertCircle}
           onAction={() => {
             void subjectsQuery.refetch();
           }}
@@ -235,7 +236,7 @@ export default function SubjectsScreen() {
       ) : subjects.length === 0 ? (
         <EmptyState
           description="Tạo môn học đầu tiên để gom tài liệu theo chủ đề (tối đa 30 môn)."
-          icon="folder-outline"
+          icon={AppIcons.folderOutline}
           title="Chưa có môn học nào"
         />
       ) : (
@@ -266,7 +267,7 @@ export default function SubjectsScreen() {
               accessibilityLabel="Tên môn học mới"
               fieldError={editNameError ?? undefined}
               label="Tên môn (1–60 ký tự)"
-              leftIcon="pencil"
+              leftIcon={AppIcons.pencil}
               onChangeText={(value) => {
                 setEditName(value);
                 setEditNameError(null);

@@ -2,6 +2,7 @@ import { View } from 'react-native';
 import { Card, SegmentedButtons } from 'react-native-paper';
 
 import { useThemeMode } from '../theme/ThemeContext';
+import { AppIcons } from '../theme/icons';
 import { isThemeMode } from '../theme/themeMode';
 
 /**
@@ -24,10 +25,10 @@ export function ThemeSettingsCard() {
         <View testID="theme-segmented">
           <SegmentedButtons
             buttons={[
-              { icon: 'weather-sunny', label: 'Sáng', value: 'light' },
-              { icon: 'weather-night', label: 'Tối', value: 'dark' },
+              { icon: AppIcons.weatherSunny, label: 'Sáng', value: 'light' },
+              { icon: AppIcons.weatherNight, label: 'Tối', value: 'dark' },
               {
-                icon: 'theme-light-dark',
+                icon: AppIcons.themeLightDark,
                 label: 'Hệ thống',
                 value: 'system',
               },

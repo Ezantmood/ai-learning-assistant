@@ -27,6 +27,7 @@ import { SummarySection } from './summary-section';
 import { ScreenContainer } from '../../../src/shared/components/ScreenContainer';
 import { ScreenHeader } from '../../../src/shared/components/ScreenHeader';
 import { goBackToDocuments } from '../../../src/shared/lib/navigation';
+import { AppIcons } from '../../../src/shared/theme/icons';
 import { useSession } from '../../../src/features/auth/useSession';
 import {
   toDocumentsErrorMessage,
@@ -223,7 +224,7 @@ export default function DocumentDetailScreen() {
           actionLabel="Thử lại"
           actionTestID="document-retry"
           description={toDocumentsErrorMessage(docQuery.error)}
-          icon="alert-circle"
+          icon={AppIcons.alertCircle}
           onAction={() => {
             void docQuery.refetch();
           }}
@@ -247,7 +248,7 @@ export default function DocumentDetailScreen() {
       }
     >
       {doc.file_ext === 'docx' ? (
-        <Banner icon="information" visible>
+        <Banner icon={AppIcons.information} visible>
           {DOCX_AI_NOTICE}
         </Banner>
       ) : null}
@@ -255,7 +256,7 @@ export default function DocumentDetailScreen() {
       <Card mode="outlined">
         <Card.Title
           left={(props) => (
-            <List.Icon {...props} icon="file-document-outline" />
+            <List.Icon {...props} icon={AppIcons.fileDocumentOutline} />
           )}
           subtitle={`${getFileTypeLabel(doc.file_ext)} • ${formatFileSize(doc.file_size)}`}
           title={doc.display_name}
@@ -275,7 +276,7 @@ export default function DocumentDetailScreen() {
       <Button
         accessibilityLabel="Mở tài liệu bằng ứng dụng ngoài"
         disabled={opening}
-        icon="open-in-new"
+        icon={AppIcons.openInNew}
         loading={opening}
         mode="contained"
         onPress={handleOpen}
@@ -303,7 +304,7 @@ export default function DocumentDetailScreen() {
             <Button
               accessibilityLabel={`Môn hiện tại: ${currentSubjectName}. Chạm để đổi.`}
               disabled={busy}
-              icon="tag-outline"
+              icon={AppIcons.tagOutline}
               mode="outlined"
               onPress={() => setSubjectMenuVisible(true)}
               testID="document-subject-button"
@@ -334,7 +335,7 @@ export default function DocumentDetailScreen() {
       <Button
         accessibilityLabel="Xóa tài liệu này"
         disabled={deleteMutation.isPending}
-        icon="trash-can-outline"
+        icon={AppIcons.trashCanOutline}
         mode="outlined"
         onPress={() => setDeleteDialogVisible(true)}
         testID="document-delete"
@@ -440,7 +441,7 @@ function RenameDocumentForm({
         accessibilityLabel="Tên tài liệu mới"
         fieldError={fieldError ?? undefined}
         label="Tên hiển thị (1–120 ký tự)"
-        leftIcon="pencil"
+        leftIcon={AppIcons.pencil}
         onChangeText={(text) => {
           setValue(text);
           setFieldError(null);
@@ -451,7 +452,7 @@ function RenameDocumentForm({
       <Button
         accessibilityLabel="Lưu tên tài liệu mới"
         disabled={renameMutation.isPending}
-        icon="content-save"
+        icon={AppIcons.contentSave}
         loading={renameMutation.isPending}
         mode="outlined"
         onPress={handleSave}

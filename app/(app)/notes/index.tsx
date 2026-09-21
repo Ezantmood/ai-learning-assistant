@@ -14,6 +14,7 @@ import { ScreenContainer } from '../../../src/shared/components/ScreenContainer'
 import { ThemeToggleAction } from '../../../src/shared/components/ThemeToggleAction';
 import { goBackOrReplace } from '../../../src/shared/lib/navigation';
 import { useSession } from '../../../src/features/auth/useSession';
+import { AppIcons } from '../../../src/shared/theme/icons';
 import { toNotesErrorMessage } from '../../../src/features/notes/errors';
 import { useNotes } from '../../../src/features/notes/queries';
 import { spacing } from '../../../src/shared/theme/spacing';
@@ -40,7 +41,7 @@ export default function NotesScreen() {
       description={item.content || formatUpdatedAt(item.updated_at)}
       descriptionNumberOfLines={2}
       left={(props) => (
-        <List.Icon {...props} color={theme.colors.primary} icon="note-text-outline" />
+        <List.Icon {...props} color={theme.colors.primary} icon={AppIcons.noteTextOutline} />
       )}
       onPress={() =>
         router.push({ params: { id: item.id }, pathname: '/notes/[id]' })
@@ -62,7 +63,7 @@ export default function NotesScreen() {
         <ThemeToggleAction />
         <Appbar.Action
           accessibilityLabel="Mở hồ sơ"
-          icon="account-circle"
+          icon={AppIcons.accountCircle}
           onPress={() => router.push('/profile')}
         />
       </Appbar.Header>
@@ -74,7 +75,7 @@ export default function NotesScreen() {
           actionLabel="Thử lại"
           actionTestID="notes-retry"
           description={toNotesErrorMessage(notesQuery.error)}
-          icon="alert-circle"
+          icon={AppIcons.alertCircle}
           onAction={() => {
             void notesQuery.refetch();
           }}
@@ -85,7 +86,7 @@ export default function NotesScreen() {
           actionLabel="Tạo ghi chú"
           actionTestID="notes-empty-create"
           description="Tạo ghi chú đầu tiên để kiểm tra dữ liệu riêng của tài khoản."
-          icon="notebook-outline"
+          icon={AppIcons.notebookOutline}
           onAction={() => router.push('/notes/new')}
           title="Chưa có ghi chú nào"
         />
@@ -110,7 +111,7 @@ export default function NotesScreen() {
 
       <FAB
         accessibilityLabel="Thêm ghi chú"
-        icon="plus"
+        icon={AppIcons.plus}
         onPress={() => router.push('/notes/new')}
         style={styles.fab}
         testID="notes-fab"
