@@ -8,6 +8,7 @@ import { PasswordInput } from '../../../src/shared/components/PasswordInput';
 import { ScreenContainer } from '../../../src/shared/components/ScreenContainer';
 import { ScreenHeader } from '../../../src/shared/components/ScreenHeader';
 import { goBackOrReplace } from '../../../src/shared/lib/navigation';
+import { AppIcons } from '../../../src/shared/theme/icons';
 import { changePassword } from '../../../src/features/auth/api';
 import { toAuthErrorMessage } from '../../../src/features/auth/errors';
 import {
@@ -80,20 +81,20 @@ export default function ChangePasswordScreen() {
       </Text>
 
       {apiError ? (
-        <Banner icon="alert-circle" visible>
+        <Banner icon={AppIcons.alertCircle} visible>
           {apiError}
         </Banner>
       ) : null}
 
       {isDone ? (
         <>
-          <Banner icon="check-circle" visible>
+          <Banner icon={AppIcons.checkCircle} visible>
             Đổi mật khẩu thành công. Lần đăng nhập sau dùng mật khẩu mới.
           </Banner>
           <Button
             accessibilityLabel="Về hồ sơ"
             accessibilityRole="button"
-            icon="account"
+            icon={AppIcons.account}
             mode="contained"
             onPress={() => router.replace('/profile')}
           >
@@ -154,7 +155,7 @@ export default function ChangePasswordScreen() {
             accessibilityLabel="Xác nhận đổi mật khẩu"
             accessibilityRole="button"
             disabled={mutation.isPending}
-            icon="lock-reset"
+            icon={AppIcons.lockReset}
             loading={mutation.isPending}
             mode="contained"
             onPress={handleSubmit(onSubmit)}

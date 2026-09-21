@@ -8,13 +8,14 @@ import { FeedbackSnackbar } from '../../src/shared/components/FeedbackSnackbar';
 import { ScreenContainer } from '../../src/shared/components/ScreenContainer';
 import { ThemeToggleAction } from '../../src/shared/components/ThemeToggleAction';
 import { useSession } from '../../src/features/auth/useSession';
+import { AppIcons, type AppIconName } from '../../src/shared/theme/icons';
 import { spacing } from '../../src/shared/theme/spacing';
 import type { AppTheme } from '../../src/shared/theme/theme';
 
 type FeatureCard = {
   description: string;
   frRange: string;
-  icon: string;
+  icon: AppIconName;
   id: string;
   route?: '/notes' | '/documents';
   status: 'done' | 'partial' | 'soon';
@@ -25,7 +26,7 @@ const FEATURES: FeatureCard[] = [
   {
     description: 'Đăng ký, đăng nhập, OTP email, hồ sơ và ghi chú học tập.',
     frRange: 'FR-01 → FR-05',
-    icon: 'account-circle',
+    icon: AppIcons.accountCircle,
     id: '1',
     route: '/notes',
     status: 'done',
@@ -34,16 +35,16 @@ const FEATURES: FeatureCard[] = [
   {
     description: 'Tải lên, lưu trữ và quản lý tài liệu học tập.',
     frRange: 'FR-06 → FR-13',
-    icon: 'file-document-outline',
+    icon: AppIcons.fileDocumentOutline,
     id: '2',
     route: '/documents',
-    status: 'partial',
+    status: 'done',
     title: 'Quản lý tài liệu học tập',
   },
   {
     description: 'AI tóm tắt nội dung tài liệu PDF.',
     frRange: 'FR-14 → FR-22',
-    icon: 'text-box-outline',
+    icon: AppIcons.textBoxOutline,
     id: '3',
     status: 'soon',
     title: 'AI tóm tắt tài liệu PDF',
@@ -51,7 +52,7 @@ const FEATURES: FeatureCard[] = [
   {
     description: 'AI hỏi đáp dựa trên nội dung tài liệu.',
     frRange: 'FR-23 → FR-30',
-    icon: 'message-text-outline',
+    icon: AppIcons.messageTextOutline,
     id: '4',
     status: 'soon',
     title: 'AI hỏi đáp dựa trên tài liệu',
@@ -59,7 +60,7 @@ const FEATURES: FeatureCard[] = [
   {
     description: 'Quét hình ảnh đề bài bằng AI.',
     frRange: 'FR-31 → FR-37',
-    icon: 'camera',
+    icon: AppIcons.camera,
     id: '5',
     status: 'soon',
     title: 'Quét hình ảnh đề bài bằng AI',
@@ -67,7 +68,7 @@ const FEATURES: FeatureCard[] = [
   {
     description: 'AI gợi ý lời giải cho bài tập.',
     frRange: 'FR-38 → FR-45',
-    icon: 'lightbulb-outline',
+    icon: AppIcons.lightbulbOutline,
     id: '6',
     status: 'soon',
     title: 'AI gợi ý lời giải',
@@ -91,7 +92,7 @@ export default function DashboardScreen() {
           <ThemeToggleAction />
           <Appbar.Action
             accessibilityLabel="Mở hồ sơ"
-            icon="account-circle"
+            icon={AppIcons.accountCircle}
             onPress={() => router.push('/profile')}
           />
         </Appbar.Header>
@@ -106,10 +107,10 @@ export default function DashboardScreen() {
         const target = enabled ? feature.route : undefined;
         const chipIcon =
           feature.status === 'done'
-            ? 'check'
+            ? AppIcons.check
             : feature.status === 'partial'
-              ? 'progress-clock'
-              : 'clock-outline';
+              ? AppIcons.progressClock
+              : AppIcons.clockOutline;
         const chipLabel =
           feature.status === 'done'
             ? 'Hoàn thành'
@@ -149,7 +150,7 @@ export default function DashboardScreen() {
                   size={40}
                   style={
                     enabled
-                      ? undefined
+                      ? { backgroundColor: theme.colors.primaryContainer }
                       : { backgroundColor: theme.colors.surfaceVariant }
                   }
                 />

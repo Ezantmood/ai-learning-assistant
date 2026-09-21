@@ -2,6 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import { Icon, Snackbar, Text, useTheme } from 'react-native-paper';
 
 import { spacing } from '../theme/spacing';
+import { AppIcons } from '../theme/icons';
 import type { AppTheme } from '../theme/theme';
 
 export type FeedbackVariant = 'error' | 'info' | 'success';
@@ -16,9 +17,9 @@ type FeedbackSnackbarProps = {
 };
 
 const LEADING_ICON: Record<FeedbackVariant, string> = {
-  error: 'alert-circle',
-  info: 'information',
-  success: 'check-circle',
+  error: AppIcons.alertCircle,
+  info: AppIcons.information,
+  success: AppIcons.checkCircle,
 };
 
 /**
@@ -56,7 +57,7 @@ export function FeedbackSnackbar({
           ? { label: actionLabel, onPress: onAction }
           : undefined
       }
-      icon="close"
+      icon={AppIcons.close}
       iconAccessibilityLabel="Đóng thông báo"
       onDismiss={onDismiss}
       onIconPress={onDismiss}

@@ -24,6 +24,7 @@ import {
   useQuestions,
 } from '../../../src/features/chat/queries';
 import { spacing } from '../../../src/shared/theme/spacing';
+import { AppIcons } from '../../../src/shared/theme/icons';
 import type { AppTheme } from '../../../src/shared/theme/theme';
 
 function toChatDocument(doc: DocumentWithSubject): ChatDocument {
@@ -103,7 +104,7 @@ export function QaSection({
     <Card mode="outlined">
       <Card.Title
         left={(props) => (
-          <List.Icon {...props} icon="message-text-outline" />
+          <List.Icon {...props} icon={AppIcons.messageTextOutline} />
         )}
         subtitle="Trả lời dựa trên nội dung tài liệu"
         title="Hỏi đáp với AI"
@@ -117,7 +118,7 @@ export function QaSection({
                 ? ' Lưu ý: PDF do AI đọc trực tiếp nên chưa có văn bản trích xuất; hỏi đáp hiện dùng được với TXT sau khi tóm tắt.'
                 : '')
             }
-            icon="message-text-outline"
+            icon={AppIcons.messageTextOutline}
             title="Chưa thể hỏi đáp"
           />
         ) : (
@@ -126,7 +127,7 @@ export function QaSection({
               accessibilityLabel="Câu hỏi về tài liệu"
               fieldError={fieldError ?? undefined}
               label="Câu hỏi về tài liệu (tối đa 500 ký tự)"
-              leftIcon="message-text-outline"
+              leftIcon={AppIcons.messageTextOutline}
               multiline
               numberOfLines={3}
               onChangeText={(text) => {
@@ -139,7 +140,7 @@ export function QaSection({
             <Button
               accessibilityLabel="Gửi câu hỏi cho AI"
               disabled={asking}
-              icon="send"
+              icon={AppIcons.send}
               loading={asking}
               mode="contained"
               onPress={handleAsk}
@@ -148,7 +149,7 @@ export function QaSection({
               Hỏi
             </Button>
             {isQuotaError ? (
-              <Banner icon="alert-circle" visible>
+              <Banner icon={AppIcons.alertCircle} visible>
                 <Text style={{ color: theme.colors.error }}>
                   {toChatErrorMessage(askMutation.error)}
                 </Text>
@@ -164,7 +165,7 @@ export function QaSection({
                 <Button
                   accessibilityLabel="Hỏi lại câu vừa rồi"
                   disabled={asking}
-                  icon="refresh"
+                  icon={AppIcons.refresh}
                   mode="outlined"
                   onPress={handleAsk}
                   testID="qa-retry"
@@ -182,7 +183,7 @@ export function QaSection({
                 actionLabel="Thử lại"
                 actionTestID="questions-retry"
                 description={toChatErrorMessage(questionsQuery.error)}
-                icon="alert-circle"
+                icon={AppIcons.alertCircle}
                 onAction={() => {
                   void questionsQuery.refetch();
                 }}
@@ -191,7 +192,7 @@ export function QaSection({
             ) : (questionsQuery.data ?? []).length === 0 ? (
               <EmptyState
                 description="Hãy đặt câu hỏi đầu tiên về tài liệu."
-                icon="message-text-outline"
+                icon={AppIcons.messageTextOutline}
                 title="Chưa có câu hỏi nào"
               />
             ) : (

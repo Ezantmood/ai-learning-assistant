@@ -17,6 +17,7 @@ import { ScreenContainer } from '../../../src/shared/components/ScreenContainer'
 import { ScreenHeader } from '../../../src/shared/components/ScreenHeader';
 import { goBackOrReplace } from '../../../src/shared/lib/navigation';
 import { useSession } from '../../../src/features/auth/useSession';
+import { AppIcons } from '../../../src/shared/theme/icons';
 import { toNotesErrorMessage } from '../../../src/features/notes/errors';
 import {
   useDeleteNote,
@@ -128,7 +129,7 @@ function NoteEditor({ note }: { note: StudyNoteRow }) {
     >
 
       {apiError ? (
-        <Banner icon="alert-circle" visible>
+        <Banner icon={AppIcons.alertCircle} visible>
           {apiError}
         </Banner>
       ) : null}
@@ -140,7 +141,7 @@ function NoteEditor({ note }: { note: StudyNoteRow }) {
           <FormTextInput
             fieldError={fieldState.error?.message}
             label="Tiêu đề"
-            leftIcon="format-title"
+            leftIcon={AppIcons.formatTitle}
             onBlur={field.onBlur}
             onChangeText={field.onChange}
             value={field.value}
@@ -155,7 +156,7 @@ function NoteEditor({ note }: { note: StudyNoteRow }) {
           <FormTextInput
             fieldError={fieldState.error?.message}
             label="Nội dung"
-            leftIcon="text"
+            leftIcon={AppIcons.text}
             multiline
             numberOfLines={6}
             onBlur={field.onBlur}
@@ -169,7 +170,7 @@ function NoteEditor({ note }: { note: StudyNoteRow }) {
         accessibilityLabel="Lưu thay đổi"
         accessibilityRole="button"
         disabled={updateMutation.isPending}
-        icon="content-save"
+        icon={AppIcons.contentSave}
         loading={updateMutation.isPending}
         mode="contained"
         onPress={handleSubmit(onSubmit)}
@@ -182,7 +183,7 @@ function NoteEditor({ note }: { note: StudyNoteRow }) {
         accessibilityLabel="Xóa ghi chú"
         accessibilityRole="button"
         disabled={deleteMutation.isPending}
-        icon="trash-can-outline"
+        icon={AppIcons.trashCanOutline}
         mode="outlined"
         onPress={() => setConfirmDelete(true)}
         textColor={theme.colors.error}

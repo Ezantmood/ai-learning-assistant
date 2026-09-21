@@ -1,4 +1,5 @@
 export { radius, spacing } from './spacing';
+export { ALL_APP_ICONS, AppIcons, type AppIconName } from './icons';
 export {
   ThemeModeProvider,
   useThemeMode,

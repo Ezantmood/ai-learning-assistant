@@ -23,6 +23,7 @@ import { ListSkeleton } from '../../../src/shared/components/LoadingState';
 import { ScreenContainer } from '../../../src/shared/components/ScreenContainer';
 import { ThemeToggleAction } from '../../../src/shared/components/ThemeToggleAction';
 import { useSession } from '../../../src/features/auth/useSession';
+import { AppIcons } from '../../../src/shared/theme/icons';
 import { toDocumentsErrorMessage } from '../../../src/features/documents/errors';
 import {
   useDocuments,
@@ -117,7 +118,7 @@ export default function DocumentsScreen() {
         <List.Icon
           {...props}
           color={theme.colors.primary}
-          icon="file-document-outline"
+          icon={AppIcons.fileDocumentOutline}
         />
       )}
       onPress={() => router.push(`/documents/${item.id}`)}
@@ -140,7 +141,7 @@ export default function DocumentsScreen() {
         <Appbar.Content title="Tài liệu học tập" />
         <Appbar.Action
           accessibilityLabel="Quản lý môn học"
-          icon="folder-outline"
+          icon={AppIcons.folderOutline}
           onPress={() => router.push('/subjects')}
         />
         <ThemeToggleAction />
@@ -198,7 +199,7 @@ export default function DocumentsScreen() {
           actionLabel="Thử lại"
           actionTestID="documents-retry"
           description={toDocumentsErrorMessage(docsQuery.error)}
-          icon="alert-circle"
+          icon={AppIcons.alertCircle}
           onAction={() => {
             void docsQuery.refetch();
           }}
@@ -213,7 +214,7 @@ export default function DocumentsScreen() {
               ? 'Thử từ khóa khác hoặc chọn bộ lọc khác.'
               : 'Tải lên tệp PDF, DOCX hoặc TXT (tối đa 10 MB) để bắt đầu.'
           }
-          icon="file-document-outline"
+          icon={AppIcons.fileDocumentOutline}
           onAction={() => router.push('/documents/upload')}
           title={emptyTitle}
         />
@@ -238,7 +239,7 @@ export default function DocumentsScreen() {
 
       <FAB
         accessibilityLabel="Tải tài liệu lên"
-        icon="upload"
+        icon={AppIcons.upload}
         onPress={() => router.push('/documents/upload')}
         style={styles.fab}
         testID="documents-fab"

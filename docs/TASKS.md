@@ -86,8 +86,8 @@ có secret. Push ngay sau commit.
 - [x] CN2-03: Màn `/documents` rỗng (Appbar + empty state đúng DESIGN-SYSTEM)
   nối vào dashboard (thẻ CN2 dẫn tới đây); thẻ CN3–6 vẫn "Sắp có". Xong khi
   điều hướng không crash ở cả light/dark. FR: FR-08 (khung).
-  (2026-09-20, G1: làm vượt khung — danh sách thật skeleton/empty/error/retry +
-  pull-to-refresh, chưa tìm kiếm/lọc; thẻ CN2 chip “Đang làm”.)
+   (2026-09-20, G1: làm vượt khung — danh sách thật skeleton/empty/error/retry +
+   pull-to-refresh, chưa tìm kiếm/lọc; thẻ CN2 khi đó chip chưa hoàn thành.)
 
 ## CN2-2 — Tải lên (FR-06, FR-07, phiên 1)
 
@@ -158,6 +158,10 @@ có secret. Push ngay sau commit.
 CN2-01/CN2-02 giữ nguyên chưa tick (proof A/B `documents-rls-proof` + regen
 `database.ts` bằng CLI thuộc chủ dự án, ngoài phạm vi fix; xem khoảng trống
 trong FR-TRACEABILITY). Không để trạng thái “đang làm” ở CN2 nữa.
+(2026-09-21, `fix/icons-cn1-cn2`: icon Trang chủ CN2 sang “Hoàn thành”;
+44 tên icon gom vào `src/shared/theme/icons.ts` + test cổng gác glyphMap;
+sửa `Avatar.Icon` trùng màu nền; tổng unit 266/266. Tag `cn2-hoan-thanh`
+kiểm lại trỏ đúng merge `f3f9d58`, giữ nguyên.)
 
 ---
 

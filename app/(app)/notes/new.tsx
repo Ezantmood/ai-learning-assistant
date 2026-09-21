@@ -8,6 +8,7 @@ import { ScreenContainer } from '../../../src/shared/components/ScreenContainer'
 import { ScreenHeader } from '../../../src/shared/components/ScreenHeader';
 import { goBackOrReplace } from '../../../src/shared/lib/navigation';
 import { useSession } from '../../../src/features/auth/useSession';
+import { AppIcons } from '../../../src/shared/theme/icons';
 import { toNotesErrorMessage } from '../../../src/features/notes/errors';
 import { useCreateNote } from '../../../src/features/notes/queries';
 import {
@@ -66,7 +67,7 @@ export default function NewNoteScreen() {
       </Text>
 
       {apiError ? (
-        <Banner icon="alert-circle" visible>
+        <Banner icon={AppIcons.alertCircle} visible>
           {apiError}
         </Banner>
       ) : null}
@@ -78,7 +79,7 @@ export default function NewNoteScreen() {
           <FormTextInput
             fieldError={fieldState.error?.message}
             label="Tiêu đề"
-            leftIcon="format-title"
+            leftIcon={AppIcons.formatTitle}
             onBlur={field.onBlur}
             onChangeText={field.onChange}
             value={field.value}
@@ -93,7 +94,7 @@ export default function NewNoteScreen() {
           <FormTextInput
             fieldError={fieldState.error?.message}
             label="Nội dung"
-            leftIcon="text"
+            leftIcon={AppIcons.text}
             multiline
             numberOfLines={6}
             onBlur={field.onBlur}
@@ -107,7 +108,7 @@ export default function NewNoteScreen() {
         accessibilityLabel="Lưu ghi chú"
         accessibilityRole="button"
         disabled={mutation.isPending}
-        icon="content-save"
+        icon={AppIcons.contentSave}
         loading={mutation.isPending}
         mode="contained"
         onPress={handleSubmit(onSubmit)}

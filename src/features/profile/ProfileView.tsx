@@ -14,6 +14,7 @@ import {
 import { EmptyState } from '../../shared/components/EmptyState';
 import { FeedbackSnackbar } from '../../shared/components/FeedbackSnackbar';
 import { FormTextInput } from '../../shared/components/FormTextInput';
+import { AppIcons } from '../../shared/theme/icons';
 import type { AppTheme } from '../../shared/theme/theme';
 import { radius, spacing } from '../../shared/theme/spacing';
 import { profileSchema, type ProfileFormValues } from './schemas';
@@ -94,7 +95,7 @@ export function ProfileView({
           actionLabel="Thử lại"
           actionTestID="profile-retry"
           description="Kiểm tra mạng rồi thử lại."
-          icon="alert-circle"
+          icon={AppIcons.alertCircle}
           onAction={onRetry}
           title="Không tải được hồ sơ."
         />
@@ -163,7 +164,7 @@ export function ProfileView({
                 <Icon
                   color={theme.colors.onPrimary}
                   size={16}
-                  source="camera"
+                  source={AppIcons.camera}
                 />
               )}
             </View>
@@ -180,7 +181,7 @@ export function ProfileView({
           <FormTextInput
             fieldError={fieldState.error?.message}
             label="Họ tên"
-            leftIcon="account"
+            leftIcon={AppIcons.account}
             onBlur={field.onBlur}
             onChangeText={field.onChange}
             value={field.value}
@@ -196,7 +197,7 @@ export function ProfileView({
             autoCapitalize="none"
             fieldError={fieldState.error?.message}
             label="Mã sinh viên"
-            leftIcon="badge-account-horizontal-outline"
+            leftIcon={AppIcons.badgeAccountHorizontalOutline}
             onBlur={field.onBlur}
             onChangeText={field.onChange}
             value={field.value}
@@ -208,7 +209,7 @@ export function ProfileView({
         accessibilityLabel="Lưu hồ sơ"
         accessibilityRole="button"
         disabled={saving}
-        icon="content-save"
+        icon={AppIcons.contentSave}
         loading={saving}
         mode="contained"
         onPress={handleSubmit(submit)}
