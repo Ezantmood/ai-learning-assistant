@@ -1416,3 +1416,70 @@ https://supabase.com/docs/guides/platform/access-control`
 - Tag: `fix-upload-android-read` (đã push). Không mở PR theo quy tắc từ G4.
 
 ---
+
+### Fix delete-navigation — xóa deep link vỡ GO_BACK + chốt CN2 HOÀN THÀNH — 2026-09-21
+
+**Nguyên nhân gốc (lỗi thật trên Expo Go)**
+
+- Xóa tài liệu thì dữ liệu xóa đúng, nhưng console văng `The action
+  'GO_BACK' was not handled by any navigator`: `handleDelete` ở
+  `/documents/[id]` gọi `router.back()` trần. Mở chi tiết bằng deep link
+  (stack rỗng) thì không có gì để lùi nên navigator nào cũng từ chối.
+- Cùng họ lỗi còn rải ở 3 chỗ khác (`notes/new`, `notes/[id]` update +
+  delete) và header chi tiết tài liệu (`onBack={() => router.back()}` +
+  `showBack={canGoBack()}`) — grep cả repo, không chỉ màn xóa.
+
+**Bẫy: CẤM `router.back()` trần, luôn `canGoBack()`**
+
+- `headerShown: false` toàn Stack nên Appbar của Paper là header duy nhất —
+  nút back trên Appbar cũng phải đi qua helper, màu ăn theme hiệu lực.
+- Mọi lối lùi đi qua `goBackOrReplace` (`canGoBack()` thì `back()`, không
+  thì `replace` về route cha: `/documents` cho luồng tài liệu,
+  `goBackToDocuments` gom một chỗ để không rải literal); riêng xóa thì
+  `replace` luôn về `/documents` kèm stamp + Snackbar “Đã xóa tài liệu.”
+  (không lùi im lặng, nút back không quay lại được màn đã xóa).
+- Thứ tự xóa: điều hướng TRƯỚC, dọn cache chi tiết SAU
+  (`removeQueries(documentKey)` sau `replace`; danh sách do
+  `useDeleteDocument` invalidate) để màn chi tiết không render lại với
+  record null gây unmount sớm. Phủ 3 nhánh: xóa từ chi tiết, từ danh sách,
+  deep link mở rồi xóa (ca vỡ).
+
+**Đã làm gì**
+
+- Branch `fix/delete-navigation` từ `main`. Không thêm dependency, không
+  đụng RLS/SQL/Edge Function/bảng màu (ngoài phạm vi fix).
+- `navigation.ts`: mới `goBackToDocuments` (bọc `goBackOrReplace`,
+  không logic mới) + chú thích bẫy; `ScreenHeader` sửa chú thích theo.
+- `documents/[id]`: xóa xong `replace('/documents', {deleted: stamp})` +
+  dọn cache sau; header thống nhất `goBackToDocuments` + luôn `showBack`.
+- `documents/index`: Snackbar xóa derive-trong-render (không effect, đúng
+  luật lint G2), stamp duy nhất nên xóa liên tiếp vẫn hiện lại.
+- `notes/new`, `notes/[id]`: `back()` trần → `goBackOrReplace(router,
+  '/notes')`. `upload`/`subjects`: chuyển sang `goBackToDocuments`.
+- Test mới `delete-navigation.test.ts` (4 test, mock router:
+  canGoBack=false → replace không back; true → back không replace). CẤM
+  sửa/skip test cũ — giữ nguyên toàn bộ.
+- TASKS + FR-TRACEABILITY: CN2 (FR-06→FR-13) chốt HOÀN THÀNH tại đây;
+  CN2-01/CN2-02 giữ chưa tick (proof A/B + regen CLI thuộc chủ dự án).
+
+**Cố tình không làm và lý do**
+
+- Q&A cho PDF (vòng sau), CN5, CN6, bảng màu, tag audit, deploy, SQL
+  remote — đúng lệnh fix, không mở rộng phạm vi.
+
+**Đã kiểm thử (số thật)**
+
+- `npx tsc --noEmit` → exit 0.
+- `npm run lint` → 0 errors, 2 warning `watch()` cũ (kế thừa).
+- `npm test` → 27 suites, **264/264 PASS** (giữ mốc 260, +4 mới).
+- `npm run check:functions` → exit 0.
+
+**Mốc Git**
+
+- Commit sửa lỗi: `35e677f54de1daad6fd6f90db4c42c0b1f9f6638` (branch `fix/delete-navigation`, đã push)
+- Commit merge: (điền sau merge `--no-ff` vào `main`, tra `git log --oneline --grep delete-navigation`)
+- Branch: `fix/delete-navigation`
+- Tag: `cn2-hoan-thanh` (tạo + push cùng lệnh với push main)
+- PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
+
+---
