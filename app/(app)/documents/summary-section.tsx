@@ -21,6 +21,7 @@ import {
 } from '../../../src/features/summary/api';
 import {
   isSummaryQuotaError,
+  isSummaryTruncatedError,
   toSummaryErrorMessage,
 } from '../../../src/features/summary/errors';
 import {
@@ -101,6 +102,9 @@ export function SummarySection({
   const isQuotaError =
     requestMutation.error != null &&
     isSummaryQuotaError(requestMutation.error);
+  const isTruncated =
+    requestMutation.error != null &&
+    isSummaryTruncatedError(requestMutation.error);
   const running = busy || doc.extraction_status === 'processing';
   const stepLabel = loadingFile ? 'Đang tải tệp…' : 'Đang tóm tắt…';
 
@@ -142,6 +146,13 @@ export function SummarySection({
           <ListSkeleton rows={2} />
         ) : summary ? (
           <View style={styles.content}>
+            {isTruncated ? (
+              <Banner icon={AppIcons.alertCircle} visible>
+                <Text style={{ color: theme.colors.error }}>
+                  {toSummaryErrorMessage(requestMutation.error)}
+                </Text>
+              </Banner>
+            ) : null}
             <Text variant="bodyMedium">{summary.summary_text}</Text>
             <Button
               accessibilityLabel="Tóm tắt lại tài liệu này"

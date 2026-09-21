@@ -20,9 +20,27 @@ export class SummaryGuardError extends Error {
   }
 }
 
+/**
+ * Nhánh (a) cắt cụt: đã CỨU phần lấy được và LƯU (status `done` tái dùng,
+ * CHECK chỉ có pending/processing/done/failed/unsupported nên không bịa
+ * giá trị mới, không migration 0006), nhưng CẤM giả vờ thành công — ném
+ * lỗi này SAU khi lưu để UI BÁO user biết bị cắt.
+ */
+export class SummaryTruncatedError extends Error {
+  constructor(
+    message = 'Tài liệu quá dài nên bản trích xuất bị cắt cụt. Phần đã lưu chỉ là một phần nội dung — hãy thử với tài liệu ngắn hơn để có đầy đủ.',
+  ) {
+    super(message);
+    this.name = 'SummaryTruncatedError';
+  }
+}
+
 /** Chuẩn hóa mọi lỗi tóm tắt sang tiếng Việt trước khi hiển thị ở G2. */
 export function toSummaryErrorMessage(error: unknown): string {
-  if (error instanceof SummaryGuardError) {
+  if (
+    error instanceof SummaryGuardError ||
+    error instanceof SummaryTruncatedError
+  ) {
     return error.message;
   }
 
@@ -55,4 +73,9 @@ export function toSummaryErrorMessage(error: unknown): string {
  */
 export function isSummaryQuotaError(error: unknown): boolean {
   return error instanceof GeminiQuotaError;
+}
+
+/** UI dùng để hiện cảnh báo “bị cắt cụt” dù phần dở đã được lưu. */
+export function isSummaryTruncatedError(error: unknown): boolean {
+  return error instanceof SummaryTruncatedError;
 }

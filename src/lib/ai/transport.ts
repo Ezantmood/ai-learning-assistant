@@ -25,6 +25,33 @@ export const SUMMARY_PROMPT =
   'bằng tiếng Việt, trình bày ngắn gọn theo các ý chính, giữ đúng thuật ngữ ' +
   'chuyên môn trong tài liệu. Chỉ trả về bản tóm tắt, không thêm lời dẫn.';
 
+/**
+ * Cấu hình JSON cho MỘT lần gọi Gemini trích PDF (CN3-PDF): trả đúng 2
+ * trường `extracted_text` (toàn văn) và `summary_text` (tóm tắt tiếng Việt).
+ * Gemini đọc PDF bằng native vision (giới hạn 50MB/1000 trang; app trần
+ * 10MB nên không chia nhỏ). KHÔNG đặt max_output_tokens nhỏ (thinking
+ * tokens tính vào hạn mức, model có thể đốt hết rồi trả rỗng), KHÔNG
+ * temperature/top_p/top_k/candidate_count/thinking_budget (Gemini 3.x
+ * trả HTTP 400). Muốn chỉnh chi phí thì dùng thinking_level.
+ */
+export const EXTRACTION_GENERATION_CONFIG = {
+  responseMimeType: 'application/json',
+  responseSchema: {
+    properties: {
+      extracted_text: { type: 'STRING' },
+      summary_text: { type: 'STRING' },
+    },
+    required: ['extracted_text', 'summary_text'],
+    type: 'OBJECT',
+  },
+} as const;
+
+export type ExtractionResult = {
+  extractedText: string;
+  summaryText: string;
+  truncated: boolean;
+};
+
 export class GeminiError extends Error {
   constructor(message: string) {
     super(message);
@@ -71,6 +98,93 @@ export class GeminiServerError extends GeminiError {
   }
 }
 
+/**
+ * Gemini không trả nội dung nào (parts=null/text=null khi chạm MAX_TOKENS
+ * với responseSchema bật — googleapis/python-genai#1039 — hoặc chuỗi rỗng).
+ * Nhánh (b): báo thất bại rõ, KHÔNG ghi đè summary cũ bằng rỗng.
+ */
+export class GeminiEmptyError extends GeminiError {
+  constructor() {
+    super(
+      'Gemini không trả về nội dung (có thể tài liệu quá dài chạm giới hạn). Hãy thử lại với tài liệu ngắn hơn.',
+    );
+    this.name = 'GeminiEmptyError';
+  }
+}
+
+function unescapeJsonString(value: string): string {
+  try {
+    return JSON.parse(`"${value}"`) as string;
+  } catch {
+    return value
+      .replace(/\\n/g, '\n')
+      .replace(/\\"/g, '"')
+      .replace(/\\\\/g, '\\');
+  }
+}
+
+/** Cứu chuỗi dở khi JSON bị cắt cụt: bắt giá trị chưa đóng ngoặc của 1 key. */
+function rescueTruncatedField(raw: string, key: string): string {
+  const pattern = new RegExp(
+    `"${key}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)`,
+  );
+  const match = pattern.exec(raw);
+  if (!match) {
+    return '';
+  }
+  return unescapeJsonString(match[1] ?? '').trim();
+}
+
+/**
+ * Parser JSON trích xuất PDF: đủ / dở / RỖNG HOÀN TOÀN.
+ * - Đủ: JSON hợp lệ, cả hai trường non-empty → {truncated: false}.
+ * - Dở: JSON không parse được nhưng còn chuỗi dở cứu được ít nhất một
+ *   trường → {truncated: true} để caller LƯU phần lấy được và BÁO user
+ *   biết bị cắt (CẤM giả vờ thành công).
+ * - Rỗng hoàn toàn (raw rỗng hoặc không cứu được gì) → ném
+ *   GeminiEmptyError để caller báo thất bại, KHÔNG upsert rỗng.
+ * - Chuỗi thuần không phải JSON (legacy/plain, vd mock cũ): coi là bản
+ *   tóm tắt, extractedText rỗng, truncated false — giữ tương thích.
+ */
+export function parseExtractionJson(raw: string): ExtractionResult {
+  const text = raw.trim();
+  if (!text) {
+    throw new GeminiEmptyError();
+  }
+  try {
+    const parsed = JSON.parse(text) as Record<string, unknown>;
+    const extractedText =
+      typeof parsed.extracted_text === 'string'
+        ? parsed.extracted_text.trim()
+        : '';
+    const summaryText =
+      typeof parsed.summary_text === 'string'
+        ? parsed.summary_text.trim()
+        : '';
+    if (extractedText && summaryText) {
+      return { extractedText, summaryText, truncated: false };
+    }
+    if (extractedText || summaryText) {
+      return { extractedText, summaryText, truncated: true };
+    }
+    throw new GeminiEmptyError();
+  } catch (error) {
+    if (error instanceof GeminiEmptyError) {
+      throw error;
+    }
+    const extractedText = rescueTruncatedField(text, 'extracted_text');
+    const summaryText = rescueTruncatedField(text, 'summary_text');
+    if (extractedText || summaryText) {
+      return { extractedText, summaryText, truncated: true };
+    }
+    // Không phải JSON mà là văn bản thuần (legacy): giữ làm tóm tắt.
+    if (!text.startsWith('{') && !text.startsWith('[')) {
+      return { extractedText: '', summaryText: text, truncated: false };
+    }
+    throw new GeminiEmptyError();
+  }
+}
+
 type GeminiPart = { text: string } | { inline_data: { mime_type: string; data: string } };
 
 function readApiKey(): string {
@@ -108,11 +222,14 @@ function extractText(data: GeminiGenerateResponse): string {
  * `emptyMessage` riêng cho từng nghiệp vụ (tóm tắt / hỏi đáp) để câu
  * báo "trả rỗng" đúng ngữ cảnh. Key lấy từ EXPO_PUBLIC_GEMINI_API_KEY,
  * CẤM log key (không bao giờ đưa key vào message lỗi).
- * Không set temperature/top_p/top_k (deprecated trên Gemini 3.x).
+ * Không set temperature/top_p/top_k/candidate_count/thinking_budget
+ * (deprecated/400 trên Gemini 3.x). `generationConfig` chỉ mang
+ * responseMimeType/responseSchema cho trích PDF (1 lần gọi, JSON 2 trường).
  */
 async function postGenerate(
   parts: GeminiPart[],
   emptyMessage: string,
+  generationConfig?: typeof EXTRACTION_GENERATION_CONFIG,
 ): Promise<string> {
   const apiKey = readApiKey();
 
@@ -121,7 +238,10 @@ async function postGenerate(
     res = await fetch(
       `${GEMINI_GENERATE_URL}?key=${encodeURIComponent(apiKey)}`,
       {
-        body: JSON.stringify({ contents: [{ parts }] }),
+        body: JSON.stringify({
+          contents: [{ parts }],
+          ...(generationConfig ? { generationConfig } : {}),
+        }),
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
       },
@@ -151,14 +271,18 @@ async function postGenerate(
 }
 
 /**
- * Gọi Gemini REST trực tiếp từ client, trả về bản tóm tắt tiếng Việt.
- * Key lấy từ EXPO_PUBLIC_GEMINI_API_KEY, CẤM log key (không bao giờ đưa
- * key vào message lỗi). Không set temperature/top_p/top_k (deprecated).
+ * Gọi Gemini REST trực tiếp từ client, trả về chuỗi thô (PDF: JSON 2 trường
+ * `extracted_text`/`summary_text` do `EXTRACTION_GENERATION_CONFIG` ép kiểu;
+ * TXT: văn bản tóm tắt thuần). Caller (requestSummary) parse chuỗi PDF qua
+ * `parseExtractionJson` để lấy cả hai và ghi DB trong cùng một lần cập nhật.
+ * Key lấy từ EXPO_PUBLIC_GEMINI_API_KEY, CẤM log key. Không set
+ * temperature/top_p/top_k (deprecated). Giữ nguyên mapping 429/5xx.
  */
 export async function summarizeWithGemini(source: SummarySource): Promise<string> {
   return postGenerate(
     buildParts(source),
     'Gemini không trả về nội dung tóm tắt. Hãy thử lại.',
+    source.kind === 'pdf' ? EXTRACTION_GENERATION_CONFIG : undefined,
   );
 }
 
