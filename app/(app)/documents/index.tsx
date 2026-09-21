@@ -75,8 +75,18 @@ function filterLabel(
 export default function DocumentsScreen() {
   const theme = useTheme<AppTheme>();
   const { user } = useSession();
-  const params = useLocalSearchParams<{ uploaded?: string }>();
+  const params = useLocalSearchParams<{ deleted?: string; uploaded?: string }>();
   const [showUploaded, setShowUploaded] = useState(params.uploaded === '1');
+  // Snackbar xóa: derive trong render (không effect + setState, theo luật
+  // lint `set-state-in-effect` của G2). Mỗi lần xóa mang stamp duy nhất nên
+  // xóa liên tiếp vẫn hiện lại — phủ cả 3 nhánh: xóa từ chi tiết, xóa từ
+  // danh sách, deep link mở chi tiết rồi xóa (stack rỗng).
+  const [dismissedDeleted, setDismissedDeleted] = useState<string | null>(null);
+  const deletedStamp = params.deleted;
+  const showDeleted =
+    deletedStamp !== undefined &&
+    deletedStamp !== '0' &&
+    deletedStamp !== dismissedDeleted;
   const [search, setSearch] = useState('');
   const [subjectFilter, setSubjectFilter] =
     useState<SubjectFilterValue>(undefined);
@@ -235,10 +245,23 @@ export default function DocumentsScreen() {
       />
 
       <FeedbackSnackbar
-        message="Đã tải tài liệu lên."
-        onDismiss={() => setShowUploaded(false)}
+        message="Đã xóa tài liệu."
+        onDismiss={() => {
+          setDismissedDeleted(deletedStamp ?? null);
+          router.setParams({ deleted: '0' });
+        }}
         variant="success"
-        visible={showUploaded}
+        visible={showDeleted}
+      />
+
+      <FeedbackSnackbar
+        message="Đã tải tài liệu lên."
+        onDismiss={() => {
+          setShowUploaded(false);
+          router.setParams({ uploaded: '0' });
+        }}
+        variant="success"
+        visible={showUploaded && !showDeleted}
       />
     </ScreenContainer>
   );

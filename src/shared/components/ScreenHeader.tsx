@@ -11,9 +11,11 @@ type ScreenHeaderProps = {
 };
 
 /**
- * Header Paper dùng chung G6.1 (header navigator đã tắt toàn bộ Stack).
- * Màn hình truyền `showBack={router.canGoBack()}` để entry point không
- * hiện nút back thừa.
+ * Header Paper dùng chung G6.1 (header navigator đã tắt toàn bộ Stack —
+ * `headerShown: false`, Appbar này là header duy nhất, màu ăn theme hiệu
+ * lực). BẪY: CẤM `router.back()` trần ở `onBack` — luôn đi qua
+ * `goBackOrReplace`/`goBackToDocuments` (canGoBack thì back, không thì
+ * replace về gốc tab) để deep link/stack rỗng không vỡ GO_BACK.
  */
 export function ScreenHeader({
   actions,
