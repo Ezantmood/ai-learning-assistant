@@ -1355,6 +1355,8 @@ https://supabase.com/docs/guides/platform/access-control`
 
 **Mốc Git**
 
+- Commit tính năng: `176f035` (branch `fix/upload-db-permission`, đã push)
+- Commit merge: `278b0b6335d5837c3bc3ece4c3ab972596f0a4dd` (merge --no-ff)
 - Branch: `fix/upload-db-permission`
 - Tag: `fix-upload-db` (tạo + push cùng lệnh với push main)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
