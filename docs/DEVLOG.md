@@ -1237,3 +1237,58 @@ https://supabase.com/docs/guides/platform/access-control`
 - Branch: `feat/cn3g2-cn4`
 - Tag: `cn3-cn4-done` (tạo + push cùng lệnh với push main)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### Fix upload-error-surface — không nuốt lỗi upload — 2026-09-21
+
+**Triệu chứng**
+
+- Bấm Tải lên file .txt 225 B → banner chung “Đã có lỗi xảy ra với tài
+  liệu. Vui lòng thử lại.”, không biết lỗi gì. `toDocumentsErrorMessage`
+  gộp mọi lỗi hạ tầng vào một chuỗi, screen không log gì.
+
+**Đã làm gì**
+
+- Branch `fix/upload-error-surface` từ `main` (đã `pull --ff-only`).
+- `src/features/documents/errors.ts`: mới `getStorageHttpStatus` đọc HTTP
+  status số từ `StorageApiError` thật (`status: number`, dự phòng
+  `statusCode` chuỗi số; đã đối chiếu shape trong
+  `@supabase/storage-js` đang cài) — null thì không đoán nhóm từ message.
+  `toDocumentsErrorMessage` thêm đúng 2 nhánh mới: 403 → câu quyền riêng,
+  404 → câu bucket riêng; guard/mạng/xóa-dở/generic giữ nguyên từng chữ.
+  Mới `getDocumentsErrorCode` (`E_NETWORK`/`E_GUARD`/`E_DELETE_PARTIAL`/
+  `E_STORAGE_<status>`/`E_DB_<code>`/`E_UNKNOWN`) chỉ phản ánh field có thật.
+- `src/features/documents/api.ts`: `uploadDocument` chặn `Platform.OS ===
+  'web'` ngay đầu bằng `DocumentGuardError` tiếng Việt (luồng `File`/
+  base64 không chạy trên web), trước mọi guard khác.
+- `app/(app)/documents/upload.tsx`: cả hai catch (chọn tệp + mutate) log
+  `console.error('[documents] upload error:', error)` nguyên object; thêm
+  state mã lỗi, `__DEV__` hiện mã ngắn dưới banner bằng `theme.colors.error`
+  (error trên surface 6.29:1 light / 10.09:1 dark — đạt AA).
+- Test mới `uploadErrors.test.ts` (6 test): 403/404 → đúng câu riêng;
+  vượt trần 100 + sai định dạng (qua guard thật) → giữ câu guard;
+  mã ngắn 5 trường hợp; web mock `Platform.OS` → chặn “Expo Go”.
+  Không sửa/skip test cũ nào.
+
+**Cố tình không làm và lý do**
+
+- Không đổi luồng upload (guard → File.base64 → ArrayBuffer → storage
+  trước DB sau) — đang chạy đúng trên Expo Go; không `fetch(uri).blob()`,
+  không `expo-file-system/legacy`.
+- Không thêm nhánh message cho mã DB/Postgrest lạ: không kiểm chứng được
+  ngữ nghĩa từng mã nên để generic + hiện mã ở `__DEV__` là đủ.
+- Không đụng CN5/CN6/bảng màu; không sửa screen nào ngoài upload.
+
+**Đã kiểm thử (số thật)**
+
+- `npx tsc --noEmit` → exit 0.
+- `npm run lint` → 0 errors, 2 warning `watch()` cũ (kế thừa).
+- `npm test` → 24 suites, **246/246 PASS** (giữ nguyên 240 cũ, +6 mới).
+- `npm run check:functions` → exit 0 (không đụng functions).
+
+**Mốc Git**
+
+- Branch: `fix/upload-error-surface`
+- Tag: `fix-upload-error` (tạo + push cùng lệnh với push main)
+- PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
