@@ -11,6 +11,7 @@ import type {
 } from '../../shared/types/database';
 import {
   DocumentDeletePartialError,
+  DocumentFileReadError,
   DocumentGuardError,
 } from './errors';
 import { deriveDisplayName, displayNameSchema } from './schemas';
@@ -49,6 +50,11 @@ export type PickedDocumentAsset = PickedDocumentInput & {
 /**
  * Mở picker chọn đúng 1 tệp (lọc gợi ý PDF/DOCX/TXT ở UI picker).
  * Hủy picker thì trả null, im lặng. Chưa đọc nội dung tệp ở bước này.
+ * BẪY: URI của document-picker không đọc được nếu thiếu
+ * `copyToCacheDirectory` — expo-file-system chỉ đọc được ngay sau khi
+ * chọn khi bật cờ này (file được copy vào cache, `asset.uri` sau khi
+ * copy chính là URI trong cache). Luôn đọc `asset.uri` này, CẤM đọc URI
+ * gốc của content provider.
  */
 export async function pickDocument(): Promise<PickedDocumentAsset | null> {
   const result = await DocumentPicker.getDocumentAsync({
@@ -155,6 +161,10 @@ export async function listDocuments(
  * Insert lỗi thì dọn object vừa upload, không để rác mồ côi.
  * React Native cấm `fetch(uri).blob()` (ra file 0 byte) và cấm import
  * `expo-file-system/legacy` (hàm cũ throw lúc chạy).
+ * Đọc file local thất bại (thiếu `READ` permission, file cache mất) thì
+ * ném `DocumentFileReadError` để UI báo đúng nhóm filesystem — CẤM để
+ * lọt vào nhãn DB. File tạm trong cache được dọn best-effort sau khi
+ * upload thành công (lỗi dọn chỉ warn, không hỏng luồng chính).
  */
 export async function uploadDocument(input: {
   asset: PickedDocumentAsset;
@@ -188,8 +198,21 @@ export async function uploadDocument(input: {
     throw new DocumentGuardError(capMessage);
   }
 
-  // Chỉ đọc nội dung SAU khi mọi guard đã qua.
-  const base64 = await new File(input.asset.uri).base64();
+  // Chỉ đọc nội dung SAU khi mọi guard đã qua. `asset.uri` là URI trong
+  // cache do picker trả về khi `copyToCacheDirectory: true` (xem
+  // `pickDocument`) — CẤM thay bằng URI gốc của content provider.
+  let localFile: File;
+  let base64: string;
+  try {
+    localFile = new File(input.asset.uri);
+    base64 = await localFile.base64();
+  } catch (readError) {
+    if (__DEV__) {
+      // In nguyên error object để chẩn đoán (đúng lệnh fix).
+      console.error('[documents] local file read failed:', readError);
+    }
+    throw new DocumentFileReadError();
+  }
   const buffer = decode(base64);
 
   const path = buildStoragePath(
@@ -236,6 +259,17 @@ export async function uploadDocument(input: {
       }
     }
     throw insertError;
+  }
+
+  // Upload thành công: dọn file tạm trong cache do picker tạo.
+  // Best-effort — lỗi dọn chỉ warn ở `__DEV__`, CẤM làm hỏng luồng chính.
+  // Chỉ dọn khi thành công để giữ file cho lần thử lại khi lỗi mạng/DB.
+  try {
+    localFile.delete();
+  } catch (cacheCleanupError) {
+    if (__DEV__) {
+      console.warn('[documents] cleanup cache after upload:', cacheCleanupError);
+    }
   }
 
   return data;
