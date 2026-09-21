@@ -1411,6 +1411,8 @@ https://supabase.com/docs/guides/platform/access-control`
 - `pickDocument`: Android lấy `content://` gốc do hệ thống cấp quyền đọc; iOS tiếp tục sao chép vào cache. `uploadDocument` chỉ xóa bản sao `file://` sau khi thành công, không xóa tệp gốc `content://`.
 - Unit hồi quy kiểm tra cấu hình picker Android, URI được đọc và tệp gốc không bị xóa. Type check xanh; lint 0 lỗi, 2 warning `watch()` cũ; 26 suites, 260/260 test xanh.
 - Chưa có thiết bị Expo Go trong môi trường này: checklist Android TXT/PDF/DOCX vẫn cần bấm tay trước khi khẳng định lỗi trên máy đã hết.
-- Branch `fix/upload-android-read-uri`; merge `--no-ff` và tag sau cổng chất lượng xanh.
+- Commit sửa lỗi: `e7dad9f71549a46b2ec48f93b6d14931ae841c5e` (branch `fix/upload-android-read-uri`, đã push).
+- Commit merge: `901209d9cfd75d4da3fad3a6e2b4572ee6824867` (`--no-ff` vào `main`, đã push).
+- Tag: `fix-upload-android-read` (đã push). Không mở PR theo quy tắc từ G4.
 
 ---
