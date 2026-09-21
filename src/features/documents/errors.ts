@@ -30,6 +30,32 @@ export class DocumentDeletePartialError extends Error {
 }
 
 /**
+ * Đọc HTTP status số từ `StorageApiError` thật của supabase-js v2
+ * (`status: number`, dự phòng `statusCode` chuỗi số). Trả null khi
+ * không phải shape này — CẤM đoán nhóm lỗi từ message.
+ */
+export function getStorageHttpStatus(error: unknown): number | null {
+  if (typeof error !== 'object' || error === null) {
+    return null;
+  }
+  const record = error as Record<string, unknown>;
+  if (typeof record.status === 'number') {
+    return record.status;
+  }
+  if (typeof record.statusCode === 'number') {
+    return record.statusCode;
+  }
+  if (
+    typeof record.statusCode === 'string' &&
+    record.statusCode !== '' &&
+    Number.isInteger(Number(record.statusCode))
+  ) {
+    return Number(record.statusCode);
+  }
+  return null;
+}
+
+/**
  * Chuẩn hóa lỗi documents sang tiếng Việt trước khi hiển thị.
  */
 export function toDocumentsErrorMessage(error: unknown): string {
@@ -45,7 +71,43 @@ export function toDocumentsErrorMessage(error: unknown): string {
     return error.message;
   }
 
+  const status = getStorageHttpStatus(error);
+  if (status === 403) {
+    return 'Không có quyền tải lên (lỗi 403). Kiểm tra đăng nhập rồi thử lại.';
+  }
+  if (status === 404) {
+    return 'Không tìm thấy kho lưu trữ (lỗi 404). Báo chủ dự án kiểm tra bucket documents.';
+  }
+
   return 'Đã có lỗi xảy ra với tài liệu. Vui lòng thử lại.';
+}
+
+/**
+ * Mã lỗi ngắn cho banner debug (`__DEV__`): phản ánh đúng field có thật
+ * trong error (`status`/`code`), không bịa nhóm.
+ */
+export function getDocumentsErrorCode(error: unknown): string {
+  if (isNetworkError(error)) {
+    return 'E_NETWORK';
+  }
+  if (error instanceof DocumentGuardError) {
+    return 'E_GUARD';
+  }
+  if (error instanceof DocumentDeletePartialError) {
+    return 'E_DELETE_PARTIAL';
+  }
+  const status = getStorageHttpStatus(error);
+  if (status !== null) {
+    return `E_STORAGE_${status}`;
+  }
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    typeof (error as Record<string, unknown>).code === 'string'
+  ) {
+    return `E_DB_${(error as Record<string, string>).code}`;
+  }
+  return 'E_UNKNOWN';
 }
 
 /**

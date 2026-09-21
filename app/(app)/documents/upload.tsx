@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Banner, Button, Card, List, Text } from 'react-native-paper';
+import { Banner, Button, Card, List, Text, useTheme } from 'react-native-paper';
 
 import { ScreenContainer } from '../../../src/shared/components/ScreenContainer';
 import { ScreenHeader } from '../../../src/shared/components/ScreenHeader';
@@ -11,20 +11,33 @@ import {
   pickDocument,
   type PickedDocumentAsset,
 } from '../../../src/features/documents/api';
-import { toDocumentsErrorMessage } from '../../../src/features/documents/errors';
+import {
+  getDocumentsErrorCode,
+  toDocumentsErrorMessage,
+} from '../../../src/features/documents/errors';
 import { useUploadDocument } from '../../../src/features/documents/queries';
 import { formatFileSize } from '../../../src/features/documents/storage';
 import { spacing } from '../../../src/shared/theme/spacing';
+import type { AppTheme } from '../../../src/shared/theme/theme';
 
 export default function UploadDocumentScreen() {
+  const theme = useTheme<AppTheme>();
   const { user } = useSession();
   const [picked, setPicked] = useState<PickedDocumentAsset | null>(null);
   const [picking, setPicking] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [apiErrorCode, setApiErrorCode] = useState<string | null>(null);
 
   const mutation = useUploadDocument(user?.id ?? '');
 
   const busy = picking || mutation.isPending;
+
+  /** CẤM nuốt im lặng: log nguyên error object để chẩn đoán. */
+  const reportError = (error: unknown) => {
+    console.error('[documents] upload error:', error);
+    setApiError(toDocumentsErrorMessage(error));
+    setApiErrorCode(getDocumentsErrorCode(error));
+  };
 
   const handlePick = () => {
     if (busy) {
@@ -32,6 +45,7 @@ export default function UploadDocumentScreen() {
     }
     setPicking(true);
     setApiError(null);
+    setApiErrorCode(null);
     pickDocument()
       .then((asset) => {
         // Hủy picker thì im lặng, giữ nguyên màn hình.
@@ -40,7 +54,7 @@ export default function UploadDocumentScreen() {
         }
       })
       .catch((error: unknown) => {
-        setApiError(toDocumentsErrorMessage(error));
+        reportError(error);
       })
       .finally(() => {
         setPicking(false);
@@ -52,10 +66,11 @@ export default function UploadDocumentScreen() {
       return;
     }
     setApiError(null);
+    setApiErrorCode(null);
     mutation.mutate(picked, {
       onError: (error: unknown) => {
         // Giữ tệp đã chọn để thử lại khi lỗi mạng/giới hạn.
-        setApiError(toDocumentsErrorMessage(error));
+        reportError(error);
       },
       onSuccess: () => {
         router.replace({ params: { uploaded: '1' }, pathname: '/documents' });
@@ -81,6 +96,11 @@ export default function UploadDocumentScreen() {
       {apiError ? (
         <Banner icon="alert-circle" visible>
           {apiError}
+          {__DEV__ && apiErrorCode ? (
+            <Text style={[styles.devCode, { color: theme.colors.error }]}>
+              {apiErrorCode}
+            </Text>
+          ) : null}
         </Banner>
       ) : null}
 
@@ -129,5 +149,8 @@ export default function UploadDocumentScreen() {
 const styles = StyleSheet.create({
   actions: {
     gap: spacing.sm,
+  },
+  devCode: {
+    marginTop: spacing.xs,
   },
 });

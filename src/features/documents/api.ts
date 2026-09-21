@@ -2,6 +2,7 @@ import * as Crypto from 'expo-crypto';
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
 import { decode } from 'base64-arraybuffer';
+import { Platform } from 'react-native';
 
 import { supabase } from '../../shared/lib/supabase';
 import type {
@@ -159,6 +160,15 @@ export async function uploadDocument(input: {
   asset: PickedDocumentAsset;
   userId: string;
 }): Promise<DocumentRow> {
+  // Web không được hỗ trợ: luồng đọc `File`/`Paths` + base64 của
+  // expo-file-system chỉ chạy trên Expo Go / thiết bị. Chặn sớm để lỗi
+  // không ngã vào catch chung khó đọc.
+  if (Platform.OS === 'web') {
+    throw new DocumentGuardError(
+      'Tải tài liệu chỉ chạy trên Expo Go / thiết bị. Phiên bản web không được hỗ trợ.',
+    );
+  }
+
   const guardMessage = validatePickedFile(input.asset);
   if (guardMessage) {
     throw new DocumentGuardError(guardMessage);
