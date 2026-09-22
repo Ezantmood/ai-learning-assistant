@@ -2002,3 +2002,77 @@ https://supabase.com/docs/guides/platform/access-control`
 - Tag: `docs-cn6` (tạo + push cùng lệnh với push main)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng
   xanh (tiền lệ `docs-cn5`).
+
+---
+
+### CN6-01 — Soạn 0007 + verify, DỪNG chờ dán tay — 2026-09-22
+
+**Bối cảnh**
+
+- TASKS CN6-01: soạn `0007_cn6_solutions.sql` (bảng `document_solutions`
+  theo SPEC mục CN6) + `scripts/cn6-schema-verify.mjs` rồi DỪNG; chủ dự án
+  tự apply qua SQL Editor (PAT sbp_ 403 thiếu quyền ghi, cấm thử CLI/db
+  push — như CN5-01).
+- Đã đọc nguyên văn `0005_cn4_questions.sql` (khuôn: RLS 4 lệnh, CASCADE,
+  CHECK độ dài, constraints thêm theo cặp `if not exists`) và
+  `scripts/cn4-schema-verify.mjs` (khuôn verify: select cột mới, thiếu cột
+  → 42703) trước khi viết. Idempotent theo cặp add-if-not-exists như
+  0002/0005: dán 2 lần không vỡ.
+
+**Đã làm gì (schema only, không code app)**
+
+- `supabase/migrations/0007_cn6_solutions.sql`: bảng `document_solutions`
+  (`document_id` UNIQUE + FK CASCADE về `documents`, `user_id`
+  denormalized + CASCADE về `auth.users`, `solution_text` 1–20000 mirror
+  `document_summaries_summary_rules`, `model` 1–100 default
+  `'gemini-3.5-flash'` như CN4, `created_at`/`updated_at` + trigger
+  `set_updated_at()` tái dùng, index `(user_id)`); RLS 4 lệnh khuôn
+  CN3/CN4; grants authenticated/service_role/revoke anon. KHÔNG đụng
+  `extraction_status` (5 giá trị giữ nguyên), KHÔNG sửa bảng/cột/policy
+  hiện có.
+- `scripts/cn6-schema-verify.mjs` (khuôn cn4 + bước READ_OK hồi quy
+  `documents` như cn5): signin probe → đọc `documents` → select 8 cột
+  `document_solutions` limit 1. `node --check` đạt.
+- Verify chạy THẬT trước apply (không pass giả):
+  `SIGNIN_OK` → `READ_OK` → `VERIFY_FAIL code=PGRST205 message=Could not
+  find the table 'public.document_solutions' in the schema cache` →
+  kết luận bảng chưa tồn tại, exit 1. Nhánh 42703 (bảng có nhưng thiếu
+  cột — trường hợp dán thiếu) đã code sẵn kết luận riêng.
+- TASKS CN6-01 tick kèm ghi chú chờ `VERIFY_PASS` trước CN6-02.
+
+**Chủ dự án tự làm trên Dashboard (từng bước bấm)**
+
+1. Mở Supabase Dashboard → chọn đúng project → menu trái bấm **SQL
+   Editor** → bấm **New query**.
+2. Mở file `supabase/migrations/0007_cn6_solutions.sql` trong repo, copy
+   TOÀN BỘ file, dán vào ô query (không chạy từng đoạn rời rạc — thiếu
+   policy sẽ hở bảo mật).
+3. Bấm **Run** (hoặc Ctrl+Enter). Phải hiện success; lỗi thì copy nguyên
+   văn báo lại, không sửa rồi chạy tiếp khi chưa rõ.
+4. Kiểm nhanh: menu **Table Editor** → bảng `document_solutions` phải hiện
+   ra, RLS enabled; 8 cột đủ (`id`, `document_id`, `user_id`,
+   `solution_text`, `model`, `created_at`, `updated_at` — kiểm bằng mắt).
+5. Chạy verify: `set -a; . ./.env; set +a; node
+   scripts/cn6-schema-verify.mjs` → phải `VERIFY_PASS`. Còn `VERIFY_FAIL`
+   là apply chưa ăn — báo lại, không code tiếp.
+6. Báo lại một câu "`VERIFY_PASS`" để session CN6-02 code tiếp. Dán 2 lần
+   không vỡ (idempotent), nhưng chỉ cần dán 1 lần đạt.
+
+**Cố tình không làm và lý do**
+
+- Không tự apply SQL, không CLI/db push (PAT 403 — cấm thử).
+- Không code app (`src/features/solver/`, transport, UI — đó là CN6-02..
+  CN6-04), không đụng `supabase/functions/**`, không sửa/skip/xoá test cũ.
+- Không sửa FR-01→FR-45 đã chốt, theme/bảng màu, `featureStatus`.
+
+**Đã kiểm thử**
+
+- `npx tsc --noEmit` → exit 0; `npm run lint` → 0 errors, 2 warning
+  `watch()` kế thừa; `npm test` → 34 suites, **303/303 PASS** (giữ nguyên,
+  schema không đụng test); `npm run check:functions` → exit 0.
+- Verify script chạy thật trước apply: FAIL đúng như thiết kế (PGRST205).
+
+**Mốc Git**
+
+- Branch: `feat/cn6-solver`
+- Tag: `cn6-schema` (tạo + push cùng lệnh với push main)

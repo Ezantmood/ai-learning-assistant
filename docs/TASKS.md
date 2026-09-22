@@ -381,6 +381,9 @@ gốc khác thì sửa SPEC trước, không sửa code).
   PostgREST rõ). CẤM tự apply SQL (PAT sbp_ bị RBAC chặn ghi, cấm thử
   CLI/db push). Xong khi DỪNG và báo chủ dự án dán tay qua SQL Editor; code
   tiếp chỉ sau `VERIFY_PASS`. FR: FR-45 (nền).
+  (2026-09-22: file và script đã commit/push; verify chạy thật trước apply
+  FAIL đúng (`PGRST205` bảng chưa tồn tại, xem DEVLOG CN6-01); chờ chủ dự án
+  dán SQL và chạy verify đạt `VERIFY_PASS` trước CN6-02.)
 - [ ] CN6-02: `solveWithGemini` trong `src/lib/ai/transport.ts` (mở rộng
   `postGenerate` dùng chung như CN4/CN5: prompt giải bài cố định +
   `responseMimeType` + `responseSchema` JSON một trường `solution_text`;
