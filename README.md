@@ -10,9 +10,9 @@ PDF/DOCX/TXT (tối đa 10 MB, tối đa 100 tài liệu/30 môn), danh sách + 
 Dữ liệu mỗi tài khoản được cách ly bằng Supabase Row Level Security.
 Chức năng 3 (AI tóm tắt, FR-14 → FR-22) và Chức năng 4 (AI hỏi đáp,
 FR-23 → FR-30) đã hoàn thành (kiểm tay Expo Go với PDF thật); 2 chức năng
-còn lại (FR-31 → FR-45) chưa làm. Màn hình tổng quan sau đăng nhập liệt kê
-cả 6: thẻ CN1→CN4 hiển thị "Hoàn thành" và bấm được, thẻ chưa làm hiển thị
-"Sắp có" và bị vô hiệu hóa.
+còn lại gồm CN5 đang hoàn thiện kiểm tay/RLS (FR-31 → FR-37) và CN6 chưa làm
+(FR-38 → FR-45). Màn hình tổng quan sau đăng nhập liệt kê cả 6: thẻ CN1→CN5
+bấm được; CN6 hiển thị "Sắp có".
 
 ## Stack
 
@@ -30,10 +30,10 @@ base64-arraybuffer. Chạy bằng Expo Go, không development build.
 | 2. Quản lý tài liệu học tập | FR-06 → FR-13 | Tải lên PDF/DOCX/TXT, danh sách, chi tiết, đổi tên, xóa, môn học, hạ tầng trích xuất | Xong code + unit (64 test) + verify schema 14/14 — còn nợ test tay Expo Go và proof A/B `documents` (xem `docs/FR-TRACEABILITY.md`) |
 | 3. AI tóm tắt tài liệu PDF | FR-14 → FR-22 | Tóm tắt bằng Gemini trong màn chi tiết tài liệu | Xong — code + unit + kiểm tay Expo Go với PDF thật |
 | 4. AI hỏi đáp dựa trên tài liệu | FR-23 → FR-30 | Hỏi đáp trên toàn văn trích xuất trong màn chi tiết | Xong — code + unit + kiểm tay Expo Go với PDF thật |
-| 5. Quét hình ảnh đề bài bằng AI | FR-31 → FR-37 | — | Chưa làm |
+| 5. Quét hình ảnh đề bài bằng AI | FR-31 → FR-37 | Chọn/chụp ảnh, OCR Gemini, lưu kết quả | Code + unit xong; chờ kiểm tay Expo Go và proof RLS A/B |
 | 6. AI gợi ý lời giải | FR-38 → FR-45 | — | Chưa làm |
 
-Chi tiết file/hàm/test của FR-01 → FR-30 xem `docs/FR-TRACEABILITY.md`.
+Chi tiết file/hàm/test của FR-01 → FR-37 xem `docs/FR-TRACEABILITY.md`.
 
 ## Cách chạy
 

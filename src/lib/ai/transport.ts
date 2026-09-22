@@ -187,6 +187,52 @@ export function parseExtractionJson(raw: string): ExtractionResult {
 
 type GeminiPart = { text: string } | { inline_data: { mime_type: string; data: string } };
 
+export const OCR_PROMPT =
+  'Hãy đọc ảnh đề bài và chép lại toàn bộ chữ nhìn thấy bằng tiếng Việt. ' +
+  'Giữ nguyên công thức, ký hiệu và thứ tự dòng. Nếu ảnh không có chữ đọc được ' +
+  'hoặc không phải đề bài, trả extracted_text là chuỗi rỗng. Không giải bài.';
+
+export const OCR_GENERATION_CONFIG = {
+  // OCR la chep chu, khong can suy luan dai. Gemini 3.5 Flash ho tro minimal;
+  // medium giam token anh/latency, van giu du chi tiet cho anh de bai ro.
+  thinkingConfig: { thinkingLevel: 'minimal' },
+  mediaResolution: 'MEDIA_RESOLUTION_MEDIUM',
+  responseMimeType: 'application/json',
+  responseSchema: {
+    properties: { extracted_text: { type: 'STRING' } },
+    required: ['extracted_text'],
+    type: 'OBJECT',
+  },
+} as const;
+
+export type OcrResult = { extractedText: string; truncated: boolean };
+
+export function parseOcrJson(raw: string): OcrResult {
+  const text = raw.trim();
+  if (!text) {
+    throw new GeminiEmptyError();
+  }
+  try {
+    const parsed = JSON.parse(text) as Record<string, unknown>;
+    const extractedText = typeof parsed.extracted_text === 'string'
+      ? parsed.extracted_text.trim()
+      : '';
+    if (!extractedText) {
+      throw new GeminiEmptyError();
+    }
+    return { extractedText, truncated: false };
+  } catch (error) {
+    if (error instanceof GeminiEmptyError) {
+      throw error;
+    }
+    const extractedText = rescueTruncatedField(text, 'extracted_text');
+    if (!extractedText) {
+      throw new GeminiEmptyError();
+    }
+    return { extractedText, truncated: true };
+  }
+}
+
 function readApiKey(): string {
   const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY?.trim();
   if (!apiKey) {
@@ -229,7 +275,7 @@ function extractText(data: GeminiGenerateResponse): string {
 async function postGenerate(
   parts: GeminiPart[],
   emptyMessage: string,
-  generationConfig?: typeof EXTRACTION_GENERATION_CONFIG,
+  generationConfig?: typeof EXTRACTION_GENERATION_CONFIG | typeof OCR_GENERATION_CONFIG,
 ): Promise<string> {
   const apiKey = readApiKey();
 
@@ -325,4 +371,17 @@ export async function answerWithGemini(
     buildQuestionParts(source),
     'Gemini không trả về câu trả lời. Hãy thử lại.',
   );
+}
+
+/** OCR CN5: text trước ảnh, base64 picker luôn là JPEG. Một request. */
+export async function ocrWithGemini(base64Data: string): Promise<OcrResult> {
+  const raw = await postGenerate(
+    [
+      { text: OCR_PROMPT },
+      { inline_data: { mime_type: 'image/jpeg', data: base64Data } },
+    ],
+    'AI không đọc được chữ trong ảnh. Hãy chọn ảnh rõ hơn rồi thử lại.',
+    OCR_GENERATION_CONFIG,
+  );
+  return parseOcrJson(raw);
 }

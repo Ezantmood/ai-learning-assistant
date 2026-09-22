@@ -371,3 +371,40 @@ Dashboard từ source mới (SETUP 5d mục 7) tới khi probe kèm JWT trả 20
 - Q&A nhồi toàn văn `extracted_text` thẳng vào prompt (không RAG): tài liệu
   dài sau trích xuất có thể nặng prompt, chạm quota/giới hạn token khi hỏi —
   hỏi câu hẹp hơn khi gặp lỗi.
+
+### CN5 — Quét hình ảnh đề bài bằng AI (2026-09-22)
+
+- Màn `/scan` cho chọn ảnh hoặc chụp camera, xem trước rồi user bấm “Quét”.
+  `expo-image-picker` trả base64 JPEG; ảnh gốc HEIC cũng lưu lên Storage
+  bằng `.jpg` + `image/jpeg` để path/contentType khớp. GIF bị chặn.
+- App gửi một request Gemini multimodal (prompt trước ảnh) qua transport
+  chung với CN3/CN4, JSON schema một trường `extracted_text`. Kết quả lưu
+  vào row mới `documents`, trạng thái `pending → processing → done/failed`.
+  Cắt cụt cứu text và cảnh báo; rỗng để `failed`, không ghi rỗng đè lên dữ liệu.
+- Migration 0006 đã apply tay + `VERIFY_PASS`; bucket private 10 MB, 8 MIME,
+  không GIF. RLS Data API A/B cho row ảnh: `RLS_PROOF_PASS 8/8` (chi tiết
+  `docs/RLS-PROOF.md`). Unit 301/301 và bundle Android đạt. Ảnh chụp báo cáo
+  cần chủ dự án bấm Expo Go theo checklist mục 17 ở light/dark.
+
+- Smoke OCR thật (không qua thiết bị) ngày 2026-09-22: ảnh JPEG mẫu ở `/tmp`
+  có chữ `Bai 1: 2 + 3 = ?`, Gemini trả đúng chuỗi qua JSON schema.
+  Đây chỉ xác nhận model/key/payload; kiểm giao diện camera và Expo Go vẫn
+  chờ chủ dự án bấm theo checklist mục 17.
+
+- Sau khi chủ dự án gặp 503 ngắt quãng và OCR chậm trên Expo Go, bản CN5
+  giảm suy luận Gemini 3.5 Flash xuống `minimal` và độ phân giải xử lý
+  ảnh xuống `medium` chỉ cho OCR. Smoke cùng ảnh mẫu đọc đúng, thời gian
+  17 giây so với một lượt mặc định timeout 60 giây; phép đo ít mẫu,
+  không khẳng định tốc độ cố định. 503 là quá tải phía Gemini, app giữ
+  nút “Thử lại” do đặc tả cấm retry tự động. Ảnh chữ nhỏ cần kiểm tay.
+
+- Đo một lượt toàn luồng trên remote: Gemini ~20 giây và các bước
+  Auth/Storage/DB cộng ~20 giây. Vì vậy sau khi tạo row, app gối update
+  `processing` với request Gemini để giảm thời gian chờ tổng mà vẫn giữ
+  đúng một request OCR và trạng thái cuối. Đây là tối ưu code; tải
+  Supabase/Gemini vẫn có thể biến động từng lượt.
+
+- Chủ dự án đã chụp/quét thành công trên Expo Go và chấp nhận đóng CN5-05
+  ngày 2026-09-22. Bằng chứng thiết bị mới phủ luồng camera thành công và
+  thông báo 503; các ca thư viện/GIF, quyền lỗi, mạng/quota, light/dark,
+  độ chính xác chữ nhỏ và thời gian sau tối ưu vẫn để mở ở checklist mục 17.

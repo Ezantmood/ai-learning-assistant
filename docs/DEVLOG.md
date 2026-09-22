@@ -20,6 +20,7 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog, secre
 ---
 
 
+
 ### Docs CN2 — Đặc tả quản lý tài liệu FR-06 → FR-13 — 2026-09-19
 
 **Đã làm gì**
@@ -1775,3 +1776,140 @@ https://supabase.com/docs/guides/platform/access-control`
   `npm run check:functions` exit 0.
 
 ---
+
+### CN5-01 — Soạn migration ảnh và verify — 2026-09-22
+
+- Branch `feat/cn5-scan-image`; commit `ae72befffeae81993de4c7f3271c64036a5306af`
+  đã push: `0006_cn5_scan_images.sql` chỉ mở rộng CHECK `file_ext` và MIME
+  bucket `documents`, giữ private và trần 10 MB. Không thêm bảng, cột,
+  status hay policy. `cn5-schema-verify.mjs` thử PNG được nhận và GIF bị
+  CHECK chặn qua session authenticated, rồi dọn row thử.
+- Rà lại script: kiểm tra kết quả DELETE và báo rõ ID nếu dọn row thử lỗi,
+  tránh báo `VERIFY_PASS` giả. Cổng local: `node --check` đạt; `npx tsc
+  --noEmit` đạt; `npm run lint` 0 lỗi, 2 warning `watch()` cũ; `npm test
+  -- --runInBand` 30 suites, 277/277 đạt. Chưa chạy verify remote.
+- Dừng tại cổng thủ công CN5-01: chủ dự án dán toàn bộ SQL qua Supabase
+  Dashboard SQL Editor, kiểm tra bucket có đủ 8 MIME và không GIF, chạy
+  `cn5-schema-verify.mjs` đến `VERIFY_PASS`. Chỉ sau đó mới làm CN5-02.
+
+---
+
+---
+
+### CN5-01 remote đạt; CN5-02 chọn/chụp ảnh — 2026-09-22
+
+- Chủ dự án đã dán 0006; chạy `cn5-schema-verify.mjs` với tài khoản test:
+  `SIGNIN_OK`, `READ_OK`, `PNG_OK`, `GIF_OK`, `VERIFY_PASS`. Đọc bucket
+  `documents` qua Storage API bằng quyền quản trị: `BUCKET_PASS` (private,
+  10 MB, đúng 8 MIME, không GIF). Không ghi credential/token vào nhật ký.
+- CN5-02: thêm `pickScanImage`, `captureScanImage`, `recoverPendingScanImage`
+  Android; chọn/chụp một ảnh, hủy im lặng, xin quyền camera trước khi mở,
+  trả `canAskAgain` cho màn hướng dẫn Settings. Kiểm tra MIME/đuôi nguồn,
+  từ chối GIF, ảnh rỗng hoặc JPEG base64 quá 10 MB. HEIC nguồn vẫn chuẩn hóa
+  base64 picker thành `.jpg` + `image/jpeg` để ext/contentType khớp bucket.
+- Unit mock picker/quyền, không gọi mạng. Kiểm tay Expo Go để sau CN5-04 khi
+  có màn quét; FR-31/FR-32 còn `đang làm` cho đến lúc UI và test tay đạt.
+
+---
+
+### CN5-03 — OCR Gemini và lưu row ảnh quét — 2026-09-22
+
+- Mở rộng `postGenerate` dùng chung, không thêm đường fetch. `ocrWithGemini`
+  gửi prompt trước ảnh JPEG, JSON schema một trường `extracted_text`, dùng
+  model duy nhất `SUMMARY_MODEL`; không set các núm Gemini 3.x bị cấm.
+  Parser xử lý JSON đủ, chuỗi dở cứu được và rỗng hoàn toàn.
+- `runScan`: xác thực session sở hữu, upload JPEG vào bucket `documents`,
+  tạo row mới `pending`, chuyển `processing`, gọi một request OCR rồi ghi
+  `extracted_text` + `done` cùng update. OCR rỗng/lỗi → `failed`, không ghi
+  đè bằng rỗng; cắt cụt → lưu phần cứu được, giữ `done` và báo lỗi cắt.
+  Insert DB lỗi thì dọn object vừa upload.
+- Unit mock fetch và Supabase: payload, 429/5xx không retry, parser ba
+  nhánh, thứ tự upload/row/status, từ chối user chéo và dữ liệu ảnh hỏng.
+  Test tay OCR thật đợi màn CN5-04; FR-33/FR-34 còn `đang làm`.
+
+---
+
+### CN5-04 — Màn quét và dashboard — 2026-09-22
+
+- Thêm `/scan` từ thẻ CN5, giữ route con ẩn khỏi tab bar, back dùng
+  `goBackOrReplace`. Màn cho xem trước ảnh, nút chọn/chụp/quét, bốn trạng
+  thái processing/result/empty/error, quyền camera vĩnh viễn dẫn Settings,
+  quota 429 báo banner. Ref chặn bấm Quét lặp ngay cùng một tick; mutation
+  pending khóa các nút. Android đọc pending result sau khi activity bị kill.
+- `getLatestScan` lấy row ảnh mới nhất của user; `reclaimStaleScan` chuyển
+  `processing` quá 15 phút theo `updated_at` về `failed`. Dashboard CN5
+  sang `done`; icon ảnh mới qua cổng glyphMap.
+- Cổng local: TypeScript đạt, lint 0 lỗi/2 warning `watch()` cũ, 34 suites
+  301/301 test đạt; `npx expo export --platform android` bundle thành công.
+  Chưa bấm tay trên Expo Go: checklist mục 17 dành cho chủ dự án. CN5-05
+  còn proof RLS A/B, traceability tổng kết và báo cáo.
+
+---
+
+### CN5-05 — Proof RLS remote và OCR smoke; chờ test tay — 2026-09-22
+
+- `scripts/cn5-rls-proof.mjs` tạo hai user A/B tạm, gọi Data API bằng hai
+  session thật, kiểm SELECT/INSERT/UPDATE/DELETE chéo và row B còn nguyên:
+  `RLS_PROOF_PASS 8/8`. Script xóa hai user trong `finally`; ID rút gọn,
+  kết quả ở `docs/RLS-PROOF.md`. FR-37 chuyển `đạt`.
+- OCR smoke trực tiếp với ảnh JPEG chữ `Bai 1: 2 + 3 = ?` tạo ở `/tmp`,
+  một request Gemini với prompt trước ảnh + JSON schema:
+  `OCR_SMOKE_PASS`, trích đúng chữ. Không commit ảnh mẫu hoặc key.
+- Storage smoke với session user test: JPEG `.jpg` + `image/jpeg` upload
+  vào folder riêng thành công rồi xóa ngay: `STORAGE_PASS`.
+- Không có Android `adb` hay iOS `simctl` trên máy này để bấm Expo Go.
+  Checklist CN5 mục 17 còn trống; FR-31→FR-36 giữ `đang làm` và CN5-05
+  chưa tick. Chưa merge/tag vì chưa có kiểm tay thiết bị và cổng cuối.
+
+---
+
+### CN5 — OCR chậm và 503 ngắt quãng, tối ưu có đo — 2026-09-22
+
+- Chủ dự án bấm tay camera/quét: có lượt thành công, có lượt Gemini trả
+  HTTP 503 và cảm giác chậm. Theo tài liệu Gemini, 503 là dịch vụ tạm
+  quá tải; app không thể bảo đảm xóa 503. SPEC CN5 cấm retry tự động,
+  nên giữ một request mỗi lần bấm và thông báo 503 rõ kèm “Thử lại”.
+- Chỉ đổi cấu hình OCR (không đổi model/nhánh CN3-CN4):
+  `thinkingConfig.thinkingLevel = minimal` và
+  `mediaResolution = MEDIA_RESOLUTION_MEDIUM`. Cả hai được Gemini 3.5
+  Flash hỗ trợ; không đặt các núm bị cấm. Mức ảnh medium có thể kém hơn
+  với chữ quá nhỏ nên checklist yêu cầu kiểm ảnh thật sau đổi.
+- Đo bằng cùng JPEG mẫu và JSON schema (mỗi cấu hình một request):
+  mặc định timeout 60 giây; minimal + mặc định 35 giây/200/đọc đúng;
+  minimal + medium 17 giây/200/đọc đúng. Đây là quan sát ít mẫu trên
+  dịch vụ tải biến động, không cam kết cải thiện cố định.
+- Cổng: `npx tsc --noEmit` đạt; lint 0 lỗi, 2 warning `watch()` cũ;
+  `npm test -- --runInBand` 34 suites, 302/302 đạt. Chờ chủ dự án bấm
+  lại Expo Go với ảnh thật để chốt FR-31→FR-36/CN5-05.
+
+---
+
+### CN5 — Đo thời gian từng tầng và gối update trạng thái với OCR — 2026-09-22
+
+- Chủ dự án xác nhận quét vẫn được nhưng độ trễ thay đổi giữa các lượt.
+  Google mô tả 503 là dịch vụ tạm quá tải; chưa có bằng chứng đủ để kết
+  luận do giờ trong ngày. Đo một lượt cùng JPEG mẫu trên remote, có dọn
+  row và object thử sau đó: Auth 1,2s, Storage upload 5,6s, DB insert
+  1,5s, DB `processing` 8,5s, Gemini 19,6s (HTTP 200), DB `done` 4,0s.
+  Tổng khoảng 40s; tất cả là một mẫu, tải mạng/server có thể đổi.
+- Sau khi row `pending` được tạo, update `processing` và một request
+  Gemini độc lập được chạy đồng thời bằng `Promise.allSettled`; chỉ ghi
+  `done` sau khi cả hai thành công. Lỗi ở một nhánh vẫn đưa row về
+  `failed`, không tự retry, không thêm request AI. Unit khóa việc Gemini
+  bắt đầu khi update status vẫn đang chờ.
+- Chờ chủ dự án đo lại ảnh thật trên Expo Go. Nếu Gemini vẫn chiếm phần
+  lớn, phần đó phụ thuộc tải dịch vụ; không đổi model ngoài phạm vi CN5.
+
+---
+
+### CN5-05 — Chủ dự án nghiệm thu và đóng chức năng 5 — 2026-09-22
+
+- Chủ dự án xác nhận đã chụp camera/quét thành công trên Expo Go, đánh giá
+  cơ bản ổn và cho đóng CN5-05; dự kiến đo lại tốc độ ngày 2026-09-23.
+  503 ngắt quãng và thời gian biến động vẫn được ghi nhận, không hứa thời
+  gian cố định.
+- RLS A/B remote 8/8, `VERIFY_PASS`, OCR/Storage smoke và unit là bằng
+  chứng bổ sung. Các ca tay chưa chạy giữ ô trống ở checklist mục 17;
+  FR-31→FR-37 chuyển `đạt` theo nghiệm thu với khoảng trống ghi rõ.
+- Cổng đóng: `npx tsc --noEmit` đạt; `npm run lint` 0 lỗi, 2 warning
+  `watch()` cũ; `npm test -- --runInBand` 34 suites, 303/303 đạt.

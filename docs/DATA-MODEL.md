@@ -146,7 +146,7 @@ phép kéo theo mất dữ liệu gốc của user.
 | `subject_id` | `uuid null references subjects(id) on delete set null` | Môn học; NULL = “Chưa phân loại” |
 | `display_name` | `text not null`, `check (char_length(display_name) between 1 and 120)` | Tên hiển thị (tên gốc đã chuẩn hóa); FR-10 chỉ đổi cột này, không đổi object |
 | `storage_path` | `text not null unique` | Đường dẫn object `{user_id}/{uuid}.{ext}`; bất biến sau khi tạo (FR-10 không đổi) |
-| `file_ext` | `text not null`, `check (file_ext in ('pdf', 'docx', 'txt'))` | Phần mở rộng đã lowercase (FR-07 whitelist) |
+| `file_ext` | `text not null`, `documents_file_ext_whitelist` ban đầu cho `pdf/docx/txt`; migration `0006_cn5_scan_images.sql` mở thêm `png/jpg/jpeg/webp/heic/heif` | Phần mở rộng đã lowercase (FR-07 và CN5) |
 | `mime_type` | `text not null` | MIME đã đối chiếu với `file_ext` ở client |
 | `file_size` | `bigint not null`, `check (file_size > 0 and file_size <= 10485760)` | Byte; tối đa 10 MB |
 | `extracted_text` | `text null` | Nội dung trích cho AI; NULL cho tới khi CN3 đổ vào |
@@ -182,7 +182,8 @@ Trigger `updated_at` tái dùng
 - Bucket: `documents`, **private**, giới hạn 10 MB, whitelist MIME
   `application/pdf`,
   `application/vnd.openxmlformats-officedocument.wordprocessingml.document`,
-  `text/plain`.
+  `text/plain`. Migration `0006_cn5_scan_images.sql` mở thêm `image/png`,
+  `image/jpeg`, `image/webp`, `image/heic`, `image/heif`; không mở GIF.
 - Quy ước đường dẫn object: `{user_id}/{uuid}.{ext}` (`uuid` sinh ở client
   bằng `Crypto.randomUUID()` của `expo-crypto` — cấm `crypto.randomUUID()`
   toàn cục vì Hermes trên Expo Go không đảm bảo có, thiếu thì nổ đúng lúc

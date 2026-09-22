@@ -86,6 +86,7 @@ export default function AppTabsLayout() {
       <Tabs.Screen name="documents/upload" options={HIDDEN_SCREEN_OPTIONS} />
       <Tabs.Screen name="documents/[id]" options={HIDDEN_SCREEN_OPTIONS} />
       <Tabs.Screen name="subjects" options={HIDDEN_SCREEN_OPTIONS} />
+      <Tabs.Screen name="scan" options={HIDDEN_SCREEN_OPTIONS} />
       <Tabs.Screen
         name="profile/change-password"
         options={HIDDEN_SCREEN_OPTIONS}

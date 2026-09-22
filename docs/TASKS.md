@@ -290,7 +290,7 @@ staged diff phải không có secret/key. Push ngay sau commit. Đặc tả ở
 `docs/SPEC.md` mục CN5 (diễn giải do session `docs/cn5-spec` đề xuất — đề
 gốc khác thì sửa SPEC trước, không sửa code).
 
-- [ ] CN5-01: Soạn `supabase/migrations/0006_cn5_scan_images.sql`
+- [x] CN5-01: Soạn `supabase/migrations/0006_cn5_scan_images.sql`
   (idempotent, CHỈ mở rộng whitelist `file_ext` + `allowed_mime_types`
   bucket `documents` cho ảnh png/jpg/jpeg/webp/heic/heif, KHÔNG gif; trần
   10 MB; không bảng/cột/giá trị status mới) +
@@ -298,14 +298,18 @@ gốc khác thì sửa SPEC trước, không sửa code).
   (PAT sbp_ bị RBAC chặn ghi, cấm thử CLI/db push). Xong khi DỪNG và báo
   chủ dự án dán tay qua SQL Editor; code tiếp chỉ sau `VERIFY_PASS`.
   FR: FR-34 (nền).
-- [ ] CN5-02: `src/features/scan/{api.ts,schemas.ts,queries.ts,errors.ts}`
+  (2026-09-22: file và script đã commit/push; chờ chủ dự án dán SQL và
+  chạy verify đạt trước CN5-02.)
+- [x] CN5-02: `src/features/scan/{api.ts,schemas.ts,queries.ts,errors.ts}`
   (pick/camera bằng `expo-image-picker`: `mediaTypes: ['images']`,
   `result.canceled`/`assets[0]`, `base64: true`; lọc mime nhận
   png/jpeg/webp/heic/heif + từ chối gif tiếng Việt; quyền camera +
   `canAskAgain === false` → Settings + `getPendingResultAsync()` Android;
   user hủy → về cũ im lặng) + unit test mock picker/quyền (không gọi mạng).
   FR: FR-31, FR-32.
-- [ ] CN5-03: OCR qua transport dùng lại ở `src/lib/ai` (prompt text TRƯỚC
+  (2026-09-22: picker/camera + unit hoàn thành; test tay Expo Go thực hiện
+  sau khi CN5-04 có màn quét.)
+- [x] CN5-03: OCR qua transport dùng lại ở `src/lib/ai` (prompt text TRƯỚC
   ảnh, mime `image/jpeg` cố định cho base64 picker, `responseMimeType` +
   `responseSchema`; parser JSON 3 nhánh đủ/dở/rỗng như CN3-PDF; giữ nguyên
   map 429/5xx, không retry; CẤM temperature/top_p/top_k/candidate_count/
@@ -313,16 +317,24 @@ gốc khác thì sửa SPEC trước, không sửa code).
   (ảnh lên storage, `extracted_text` + `done` gộp; rỗng → `failed`, không
   ghi đè cũ) + unit test parser/quyền/sở hữu (không gọi mạng).
   FR: FR-33, FR-34.
-- [ ] CN5-04: Màn quét (`app/(app)/scan.tsx` push từ thẻ CN5 dashboard,
+  (2026-09-22: transport, parser, lưu Storage/DB và unit hoàn thành;
+  test OCR thật trên Expo Go thuộc CN5-04/05.)
+- [x] CN5-04: Màn quét (`app/(app)/scan.tsx` push từ thẻ CN5 dashboard,
   back qua `goBackOrReplace`): xem trước ảnh + nút “Quét”, 4 trạng thái
   (spinner/OCR/empty/lỗi + “Thử lại”, testID `scan-pick`/`scan-capture`/
   `scan-run`/`scan-retry`), banner hạn mức khi 429, chặn gọi lặp khi
   `processing`, thu hồi treo 15 phút; icon lấy từ `AppIcons` (thêm tên mới
   phải qua cổng glyphMap); thẻ CN5 dashboard sang `done`. FR: FR-35, FR-36.
-- [ ] CN5-05: Proof RLS A/B `documents` cho row ảnh quét (khuôn FR-05) +
+  (2026-09-22: screen + route/dashboard + unit trạng thái/stale hoàn thành;
+  kiểm tay Expo Go cần chủ dự án chạy sau khi mở bản code mới.)
+- [x] CN5-05: Proof RLS A/B `documents` cho row ảnh quét (khuôn FR-05) +
   unit full tầng scan + cập nhật traceability (FR-31→FR-37 “đạt”),
   checklist tay CN5, devlog, báo cáo theo code cuối; rà `git diff --cached`
   không có key. FR: FR-37 (+ đóng gói).
+  (2026-09-22: proof remote 8/8, OCR smoke và unit đạt; chủ dự án đã chụp
+  camera, quét thành công và chấp nhận đóng CN5-05. Lỗi 503 và độ trễ
+  biến động đã được ghi nhận, tối ưu; đo lại ngày sau và các ca tay chưa
+  chạy vẫn để mở trong checklist, không coi là bằng chứng đã kiểm.)
 
 ## App shell — vỏ tabs + lối lùi (fix/app-shell)
 
