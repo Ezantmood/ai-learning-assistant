@@ -9,23 +9,23 @@ import {
   useTheme,
 } from 'react-native-paper';
 
-import { EmptyState } from '../../../src/shared/components/EmptyState';
-import { FormTextInput } from '../../../src/shared/components/FormTextInput';
-import { ListSkeleton } from '../../../src/shared/components/LoadingState';
-import type { DocumentWithSubject } from '../../../src/features/documents/api';
+import { EmptyState } from '../../shared/components/EmptyState';
+import { FormTextInput } from '../../shared/components/FormTextInput';
+import { ListSkeleton } from '../../shared/components/LoadingState';
+import type { DocumentWithSubject } from '../documents/api';
 import {
   ChatGuardError,
   isChatQuotaError,
   toChatErrorMessage,
-} from '../../../src/features/chat/errors';
-import type { ChatDocument } from '../../../src/features/chat/api';
+} from './errors';
+import type { ChatDocument } from './api';
 import {
   useAskQuestion,
   useQuestions,
-} from '../../../src/features/chat/queries';
-import { spacing } from '../../../src/shared/theme/spacing';
-import { AppIcons } from '../../../src/shared/theme/icons';
-import type { AppTheme } from '../../../src/shared/theme/theme';
+} from './queries';
+import { spacing } from '../../shared/theme/spacing';
+import { AppIcons } from '../../shared/theme/icons';
+import type { AppTheme } from '../../shared/theme/theme';
 
 function toChatDocument(doc: DocumentWithSubject): ChatDocument {
   return {

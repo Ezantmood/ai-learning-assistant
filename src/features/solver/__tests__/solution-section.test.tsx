@@ -1,13 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { act, create } from 'react-test-renderer';
 import { Button, PaperProvider } from 'react-native-paper';
-import { SolutionSection } from '../solution-section';
-import { lightTheme } from '../../../../src/shared/theme/theme';
-import { useRequestSolution, useSolution } from '../../../../src/features/solver/queries';
-import type { DocumentWithSubject } from '../../../../src/features/documents/api';
-import { GeminiQuotaError } from '../../../../src/lib/ai/transport';
+import { SolutionSection } from '../SolutionSection';
+import { lightTheme } from '../../../shared/theme/theme';
+import { useRequestSolution, useSolution } from '../queries';
+import type { DocumentWithSubject } from '../../documents/api';
+import { GeminiQuotaError } from '../../../lib/ai/transport';
 
-jest.mock('../../../../src/features/solver/queries', () => ({
+jest.mock('../queries', () => ({
   useRequestSolution: jest.fn(), useSolution: jest.fn(),
 }));
 const queryMock = jest.mocked(useSolution);

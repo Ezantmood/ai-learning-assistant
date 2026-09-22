@@ -22,9 +22,9 @@ import {
 } from '../../../src/shared/components/FeedbackSnackbar';
 import { FormTextInput } from '../../../src/shared/components/FormTextInput';
 import { ListSkeleton } from '../../../src/shared/components/LoadingState';
-import { QaSection } from './qa-section';
-import { SummarySection } from './summary-section';
-import { SolutionSection } from './solution-section';
+import { QaSection } from '../../../src/features/chat/QaSection';
+import { SummarySection } from '../../../src/features/summary/SummarySection';
+import { SolutionSection } from '../../../src/features/solver/SolutionSection';
 import { ScreenContainer } from '../../../src/shared/components/ScreenContainer';
 import { ScreenHeader } from '../../../src/shared/components/ScreenHeader';
 import { goBackToDocuments } from '../../../src/shared/lib/navigation';
