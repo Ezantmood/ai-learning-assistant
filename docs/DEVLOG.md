@@ -1751,6 +1751,8 @@ https://supabase.com/docs/guides/platform/access-control`
 
 **Mốc Git**
 
+- Commit docs: `8f2889d` (branch `docs/cn5-spec`, đã push)
+- Commit merge: `578eada9a72d9fb7d9070e1cc9612a9b38beff3f` (merge --no-ff)
 - Branch: `docs/cn5-spec`
 - Tag: `docs-cn5` (tạo + push cùng lệnh với push main)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
