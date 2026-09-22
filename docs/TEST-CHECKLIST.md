@@ -14,8 +14,9 @@ mỗi màn chụp cả light lẫn dark trừ khi ghi rõ.
 ## 1. Khởi động và dashboard
 
 - [ ] Kill app → mở lại (chưa login) → dừng ở `/sign-in`, không nháy màn khác.
-- [ ] Đăng nhập A → vào dashboard: 6 thẻ, thẻ 1 “Hoàn thành” tới `/notes`,
-  thẻ 2 “Đang làm” tới `/documents`, 4 thẻ còn lại “Sắp có” (chụp light + dark).
+- [ ] Đăng nhập A → vào dashboard: 6 thẻ, thẻ 1→4 “Hoàn thành” (thẻ 1
+  tới `/notes`, thẻ 2→4 tới `/documents`), 2 thẻ còn lại “Sắp có”
+  (chụp light + dark).
 
 ## 2. Đăng nhập (`/sign-in`)
 

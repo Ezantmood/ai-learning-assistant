@@ -1655,3 +1655,35 @@ https://supabase.com/docs/guides/platform/access-control`
   thoại của chủ dự án ở đây; checklist mục 14 vẫn để mở.
 
 ---
+
+### Fix cn3-cn4-status — thẻ CN3/CN4 sang "Hoàn thành", bấm vào tab Tài liệu — 2026-09-22
+
+- Branch `fix/cn3-cn4-status` từ `main`. Tiền đề của chủ dự án: CN3/CN4 đã
+  kiểm tay trên Expo Go với PDF thật nên thẻ dashboard không được hiện
+  "Sắp có" nữa.
+- Liệt kê "Sắp có" toàn repo trước khi sửa: `dashboard.tsx` (nhãn chip +
+  4 status `soon` id 3/4/5/6 + cổng `enabled = status !== 'soon'` + comment
+  "CN3→CN6 chưa khả dụng"); `ARCHITECTURE.md` (2 chỗ "CN3→CN6/CN3–6 Sắp có",
+  bảng icon `clock-outline` giữ nguyên vì CN5/6 còn dùng); `README.md`
+  (dòng tổng + 2 hàng coverage "Chưa làm"); `TEST-CHECKLIST.md` mục 1
+  (snapshot cũ "4 thẻ Sắp có"); `DEVLOG.md:1200` + `TASKS.md:87` là lịch sử,
+  giữ nguyên không sửa.
+- Đổi trạng thái: mới `src/shared/config/featureStatus.ts` (NGUỒN DUY NHẤT:
+  `FEATURE_STATUS` cho 6 id — CN1→CN4 `done` + route, CN5/CN6 `soon` không
+  route); `dashboard.tsx` dựng `FEATURES` bằng merge meta + nguồn duy nhất,
+  không còn literal trạng thái rời rạc. CN3/CN4 bấm `push('/documents')`
+  (vùng tóm tắt + hỏi đáp nằm trong `/documents/[id]`); CN5/CN6 vẫn disabled
+  + Snackbar "đang phát triển". Icon vẫn từ `AppIcons`, màu vẫn từ theme
+  (không tím mặc định, không `router.back()` trần — file này chỉ `push`).
+- Test mới `featureStatus.test.ts` (3 test: CN3/CN4 done + route documents;
+  CN5/CN6 soon + không route; CN1/CN2 giữ nguyên). Không sửa/skip test cũ.
+- Docs: README (tổng + coverage + chi tiết FR-01→FR-30), ARCHITECTURE (2 chỗ),
+  TEST-CHECKLIST mục 1, FR-TRACEABILITY FR-14→FR-30 sang "đạt" + header CN3/CN4.
+- Cổng: `npx tsc --noEmit` exit 0; `npm run lint` 0 errors, 2 warning
+  `watch()` cũ; `npm test` 30 suites, 277/277 PASS (274 cũ + 3 mới);
+  `npm run check:functions` exit 0. `git diff --cached` không có key/secret.
+- Còn nợ (khai thẳng): proof RLS A/B cho `document_summaries`
+  (TASKS CN3-05) và `document_questions` (FR-29) vẫn chưa viết — cách ly hiện
+  chỉ chứng minh qua verify schema + unit từ chối chéo + kiểm tay.
+
+---

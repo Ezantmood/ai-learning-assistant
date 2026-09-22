@@ -139,7 +139,8 @@ Khởi động `/` (decideRouteTarget trong src/shared/lib/navigation.ts)
    ├─ tab Trang chủ `/dashboard`: lưới 6 thẻ CN
    │  ├─ CN1 → (push) `/notes` → `/notes/new`, `/notes/[id]`
    │  ├─ CN2 → tab Tài liệu (chuyển tab, giữ lịch sử để back)
-   │  └─ CN3→CN6 "Sắp có", bấm báo "đang phát triển" (chỗ cắm CN sau)
+   │  ├─ CN3/CN4 → tab Tài liệu (tóm tắt + hỏi đáp nằm trong `/documents/[id]`)
+   │  └─ CN5→CN6 "Sắp có", bấm báo "đang phát triển" (chỗ cắm CN sau)
    ├─ tab Tài liệu `/documents` (+ `/documents/upload`, `/documents/[id]`,
    │  `/subjects` push đè lên, back về tab, tab bar ẩn ở màn con)
    └─ tab Tài khoản `/profile` (CN1 nằm trong tab này: nút “Ghi chú học tập”
@@ -195,7 +196,7 @@ ScrollView theo token `src/shared/theme`); tiêu đề `headlineSmall`, phụ đ
 | Route | Mục đích | Component chính | Loading / empty / error / success |
 |---|---|---|---|
 | `/` | Chọn nhánh theo session | `LoadingState` | Loading khi khôi phục session; lỗi cấu hình hiển thị rõ; thành công redirect |
-| `/dashboard` | Tab Trang chủ sau login: lưới 6 thẻ CN | `Card` + `Chip` (testID `dashboard-card-<id>`) | Không loading (không fetch); CN1 bấm tới `/notes`; CN2 tới tab Tài liệu; CN3–6 "Sắp có", bấm báo "đang phát triển" |
+| `/dashboard` | Tab Trang chủ sau login: lưới 6 thẻ CN | `Card` + `Chip` (testID `dashboard-card-<id>`, trạng thái từ nguồn duy nhất `src/shared/config/featureStatus.ts`) | Không loading (không fetch); CN1 bấm tới `/notes`; CN2→CN4 tới tab Tài liệu (CN3/CN4 dùng trong `/documents/[id]`); CN5–6 "Sắp có", bấm báo "đang phát triển" |
 | `/sign-in` | FR-02 đăng nhập | `FormTextInput` (email `email-outline`), `PasswordInput`, `Button` icon `login` (testID `login-submit`), link đăng ký/quên mật khẩu | Button spinner; không có empty; lỗi field/API; thành công về `/dashboard` |
 | `/sign-up` | FR-01 đăng ký | Full name (`account`)/student code (`badge-account-horizontal-outline`)/email (`email-outline`) + 2 `PasswordInput` (testID `password-toggle`, `password-confirm-toggle`), nút icon `account-plus` (testID `register-submit`) | Spinner; lỗi Zod/email hoặc student code trùng; dev vào app ngay, demo yêu cầu kiểm tra email theo env |
 | `/forgot-password` | FR-03 gửi email reset | Email form icon `email-outline`, nút icon `send` (testID `forgot-submit`) | Spinner; luôn dùng thông báo success trung tính; offline cho retry |
