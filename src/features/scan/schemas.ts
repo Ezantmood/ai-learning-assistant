@@ -1,6 +1,11 @@
 import type { ImagePickerAsset } from 'expo-image-picker';
+import { z } from 'zod';
 
 export const SCAN_MAX_BYTES = 10 * 1024 * 1024;
+
+export const scanDisplayNameSchema = z.string()
+  .transform((value) => value.trim().replace(/\s+/g, ' '))
+  .pipe(z.string().min(1, 'Tên ảnh quét không được để trống.').max(120, 'Tên ảnh quét tối đa 120 ký tự.'));
 
 const ALLOWED_MIMES = new Set([
   'image/png',

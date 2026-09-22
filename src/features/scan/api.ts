@@ -1,8 +1,13 @@
 import * as ImagePicker from 'expo-image-picker';
+import * as Crypto from 'expo-crypto';
+import { decode } from 'base64-arraybuffer';
 import { Platform } from 'react-native';
 
-import { ScanGuardError } from './errors';
-import { toScanImage, validateScanAsset, type ScanImage } from './schemas';
+import { ocrWithGemini } from '../../lib/ai/transport';
+import { supabase } from '../../shared/lib/supabase';
+import type { DocumentRow } from '../../shared/types/database';
+import { ScanGuardError, ScanTruncatedError } from './errors';
+import { scanDisplayNameSchema, SCAN_MAX_BYTES, toScanImage, validateScanAsset, type ScanImage } from './schemas';
 
 export type ScanPickOutcome =
   | { status: 'ready'; image: ScanImage }
@@ -60,4 +65,87 @@ export async function recoverPendingScanImage(): Promise<ScanPickOutcome | null>
     throw new ScanGuardError('Không khôi phục được ảnh vừa chụp. Hãy thử lại.');
   }
   return fromPickerResult(result, 'camera');
+}
+
+export type ScanResult = { document: DocumentRow; extractedText: string };
+
+/** Mỗi lần bấm Quét tạo một row mới; ảnh gốc JPEG lên Storage trước DB. */
+export async function runScan(input: {
+  image: ScanImage;
+  rawDisplayName?: string;
+  userId: string;
+}): Promise<ScanResult> {
+  if (input.image.mimeType !== 'image/jpeg' || input.image.fileExt !== 'jpg' ||
+      input.image.sizeBytes <= 0 || input.image.sizeBytes > SCAN_MAX_BYTES || !input.image.base64) {
+    throw new ScanGuardError('Ảnh quét không hợp lệ. Hãy chọn hoặc chụp lại.');
+  }
+
+  const displayName = scanDisplayNameSchema.parse(
+    input.rawDisplayName ?? `Đề bài quét ${new Date().toLocaleString('vi-VN')}`,
+  );
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || authData.user?.id !== input.userId) {
+    throw new ScanGuardError('Bạn không có quyền quét ảnh cho tài khoản này.');
+  }
+  const path = `${input.userId}/${Crypto.randomUUID()}.jpg`;
+  const { error: uploadError } = await supabase.storage
+    .from('documents')
+    .upload(path, decode(input.image.base64), { contentType: 'image/jpeg', upsert: false });
+  if (uploadError) {
+    throw uploadError;
+  }
+
+  const { data: document, error: insertError } = await supabase
+    .from('documents')
+    .insert({
+      display_name: displayName,
+      extraction_status: 'pending',
+      file_ext: 'jpg',
+      file_size: input.image.sizeBytes,
+      mime_type: 'image/jpeg',
+      storage_path: path,
+      user_id: input.userId,
+    })
+    .select()
+    .single();
+  if (insertError || !document) {
+    await supabase.storage.from('documents').remove([path]);
+    throw insertError ?? new ScanGuardError('Không lưu được ảnh quét. Hãy thử lại.');
+  }
+
+  const { error: processingError } = await supabase
+    .from('documents')
+    .update({ extraction_status: 'processing' })
+    .eq('id', document.id)
+    .eq('user_id', input.userId);
+  if (processingError) {
+    throw processingError;
+  }
+
+  try {
+    const result = await ocrWithGemini(input.image.base64);
+    const { data: saved, error: doneError } = await supabase
+      .from('documents')
+      .update({ extracted_text: result.extractedText, extraction_status: 'done' })
+      .eq('id', document.id)
+      .eq('user_id', input.userId)
+      .select()
+      .single();
+    if (doneError || !saved) {
+      throw doneError ?? new ScanGuardError('Không lưu được kết quả quét. Hãy thử lại.');
+    }
+    if (result.truncated) {
+      throw new ScanTruncatedError(result.extractedText);
+    }
+    return { document: saved, extractedText: result.extractedText };
+  } catch (error) {
+    if (error instanceof ScanTruncatedError) {
+      throw error;
+    }
+    await supabase.from('documents')
+      .update({ extraction_status: 'failed' })
+      .eq('id', document.id)
+      .eq('user_id', input.userId);
+    throw error;
+  }
 }

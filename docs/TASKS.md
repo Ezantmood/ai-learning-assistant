@@ -309,7 +309,7 @@ gốc khác thì sửa SPEC trước, không sửa code).
   FR: FR-31, FR-32.
   (2026-09-22: picker/camera + unit hoàn thành; test tay Expo Go thực hiện
   sau khi CN5-04 có màn quét.)
-- [ ] CN5-03: OCR qua transport dùng lại ở `src/lib/ai` (prompt text TRƯỚC
+- [x] CN5-03: OCR qua transport dùng lại ở `src/lib/ai` (prompt text TRƯỚC
   ảnh, mime `image/jpeg` cố định cho base64 picker, `responseMimeType` +
   `responseSchema`; parser JSON 3 nhánh đủ/dở/rỗng như CN3-PDF; giữ nguyên
   map 429/5xx, không retry; CẤM temperature/top_p/top_k/candidate_count/
@@ -317,6 +317,8 @@ gốc khác thì sửa SPEC trước, không sửa code).
   (ảnh lên storage, `extracted_text` + `done` gộp; rỗng → `failed`, không
   ghi đè cũ) + unit test parser/quyền/sở hữu (không gọi mạng).
   FR: FR-33, FR-34.
+  (2026-09-22: transport, parser, lưu Storage/DB và unit hoàn thành;
+  test OCR thật trên Expo Go thuộc CN5-04/05.)
 - [ ] CN5-04: Màn quét (`app/(app)/scan.tsx` push từ thẻ CN5 dashboard,
   back qua `goBackOrReplace`): xem trước ảnh + nút “Quét”, 4 trạng thái
   (spinner/OCR/empty/lỗi + “Thử lại”, testID `scan-pick`/`scan-capture`/

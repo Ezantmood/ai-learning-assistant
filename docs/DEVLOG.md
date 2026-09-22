@@ -1809,3 +1809,20 @@ https://supabase.com/docs/guides/platform/access-control`
   base64 picker thành `.jpg` + `image/jpeg` để ext/contentType khớp bucket.
 - Unit mock picker/quyền, không gọi mạng. Kiểm tay Expo Go để sau CN5-04 khi
   có màn quét; FR-31/FR-32 còn `đang làm` cho đến lúc UI và test tay đạt.
+
+---
+
+### CN5-03 — OCR Gemini và lưu row ảnh quét — 2026-09-22
+
+- Mở rộng `postGenerate` dùng chung, không thêm đường fetch. `ocrWithGemini`
+  gửi prompt trước ảnh JPEG, JSON schema một trường `extracted_text`, dùng
+  model duy nhất `SUMMARY_MODEL`; không set các núm Gemini 3.x bị cấm.
+  Parser xử lý JSON đủ, chuỗi dở cứu được và rỗng hoàn toàn.
+- `runScan`: xác thực session sở hữu, upload JPEG vào bucket `documents`,
+  tạo row mới `pending`, chuyển `processing`, gọi một request OCR rồi ghi
+  `extracted_text` + `done` cùng update. OCR rỗng/lỗi → `failed`, không ghi
+  đè bằng rỗng; cắt cụt → lưu phần cứu được, giữ `done` và báo lỗi cắt.
+  Insert DB lỗi thì dọn object vừa upload.
+- Unit mock fetch và Supabase: payload, 429/5xx không retry, parser ba
+  nhánh, thứ tự upload/row/status, từ chối user chéo và dữ liệu ảnh hỏng.
+  Test tay OCR thật đợi màn CN5-04; FR-33/FR-34 còn `đang làm`.
