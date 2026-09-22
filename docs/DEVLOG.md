@@ -19,6 +19,7 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog, secre
 
 ---
 
+
 ### Docs CN2 — Đặc tả quản lý tài liệu FR-06 → FR-13 — 2026-09-19
 
 **Đã làm gì**
@@ -1629,5 +1630,28 @@ https://supabase.com/docs/guides/platform/access-control`
 - Commit merge: (điền sau merge `--no-ff` vào `main`, tra `git log --oneline --grep cn3-pdf`)
 - Tag: `cn3-pdf-text` (tạo + push cùng lệnh với push main)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### Fix CN3: Gemini key trong `.env.local` — 2026-09-22
+
+- Branch `fix/cn3-gemini-env`, FR-14/FR-21. `.env` không có Gemini key;
+  `.env.local` có giá trị, cú pháp gán hợp lệ. `source .env` đơn lẻ để shell
+  thiếu key; `source .env.local` sau đó làm biến có giá trị. Không ghi key.
+- `src/lib/ai/transport.ts` đã đọc đúng dot notation
+  `process.env.EXPO_PUBLIC_GEMINI_API_KEY`; không có lỗi destructure/dấu `[]`.
+  Expo export Android nạp `.env.local .env`; bundle JS `--no-bytecode`
+  chứa giá trị key đã inline, không còn tham chiếu env động. Key từ file gọi
+  `GET /v1beta/models?pageSize=1` với `x-goog-api-key` → HTTP 200 (chỉ ghi
+  status, không ghi giá trị). Vì vậy lỗi “Chưa cấu hình” trên thiết bị cần
+  kiểm tra Metro/bundle đang chạy và biến shell có bị export rỗng hay không.
+- Sửa `docs/SETUP.md` mục 4 để cắm key tại `.env.local`, dừng Metro và chạy
+  `npx expo start --clear`; mục 5d ghi rõ là lịch sử probe, không phải bước
+  cấu hình app hiện tại. Thông báo lỗi chỉ đúng file; checklist thêm bước
+  test tay Expo Go. Không đổi request Gemini hay nhánh kiến trúc.
+- Cổng chất lượng: `npx tsc --noEmit` PASS; `npm run lint` 0 lỗi, 2 warning
+  `watch()` có sẵn; `npm test -- --runInBand` 29 suites, 274/274 PASS;
+  Android export PASS. Chưa kiểm trên Expo Go thật vì không có phiên app/điện
+  thoại của chủ dự án ở đây; checklist mục 14 vẫn để mở.
 
 ---

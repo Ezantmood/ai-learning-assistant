@@ -244,6 +244,10 @@ Tag `edge-probe` được lệnh nhắc tới nhưng không tồn tại nên pro
 
 ## CN3-3 — Cách ly và đóng gói (phiên 3)
 
+- [x] CN3 env bugfix: Kiểm tra nguồn `.env.local`, xác nhận Expo nạp và inline
+  `EXPO_PUBLIC_GEMINI_API_KEY`; sửa hướng dẫn setup và lỗi cấu hình cho nhánh
+  Gemini trực tiếp. FR: FR-14, FR-21.
+
 - [ ] CN3-05: Viết `scripts/summaries-rls-proof.ts` theo khuôn FR-05 (A/B cho
   CRUD `document_summaries`); chạy proof trên remote đạt 100%; hồi quy
   `rls-proof` 7/7 + `storage-rls-proof` 5/5 còn xanh. FR: FR-22.

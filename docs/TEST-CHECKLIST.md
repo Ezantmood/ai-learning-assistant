@@ -165,6 +165,10 @@ Theo đúng khuôn `scripts/rls-proof.ts` của FR-05 (2 user test A/B, tự d�
 > nguyên test cũ). Các case tay dưới đây thuộc chủ dự án (Expo Go,
 > light/dark).
 
+- [ ] Sau khi điền `EXPO_PUBLIC_GEMINI_API_KEY` trong `.env.local`, dừng
+  Metro, chạy `npx expo start --clear` từ gốc repo; log `env: export` có tên
+  biến, mở lại Expo Go và bấm tóm tắt không còn lỗi “Chưa cấu hình”. Không
+  chụp/in giá trị key.
 - [ ] PDF của mình bấm “Tóm tắt bằng AI” → spinner, nút disabled → hiện bản
   tóm tắt tiếng Việt; bấm dồn lúc đang chạy không sinh request thứ hai.
 - [ ] DOCX: nút tóm tắt ẩn + Banner gợi ý chuyển sang PDF; không có request AI.
