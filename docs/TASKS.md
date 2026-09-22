@@ -410,3 +410,11 @@ gốc khác thì sửa SPEC trước, không sửa code).
   `cn5-rls-proof.mjs`) + unit full tầng solver + cập nhật traceability
   (FR-38→FR-45 “đạt”), checklist tay CN6, devlog, báo cáo theo code cuối;
   rà `git diff --cached` không có key. FR: FR-44 (+ đóng gói).
+
+## Hotfix sau CN6
+
+- [x] CN6-HF-01: Màn chi tiết có `SolutionSection` và `RenameDocumentForm`
+  cùng `key={doc.id}` trong một danh sách con; React báo lỗi ở component
+  thứ hai khi render lại sau lượt gợi ý. Đặt key riêng cho vùng gợi ý,
+  chạy cổng chất lượng và ghi ca Expo Go còn chờ chủ dự án kiểm.
+  Branch `fix/cn6-solution-key`; tag `cn6-solution-key-fix`.
