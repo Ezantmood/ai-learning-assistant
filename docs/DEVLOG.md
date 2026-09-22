@@ -2074,5 +2074,7 @@ https://supabase.com/docs/guides/platform/access-control`
 
 **Mốc Git**
 
+- Commit schema: `806ec9a` (branch `feat/cn6-solver`, đã push)
+- Commit merge: `b6df642` (merge --no-ff vào `main`)
 - Branch: `feat/cn6-solver`
 - Tag: `cn6-schema` (tạo + push cùng lệnh với push main)
