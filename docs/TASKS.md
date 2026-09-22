@@ -280,6 +280,50 @@ chặn + bảo tóm tắt trước. Branch `feat/cn3g2-cn4`, tag `cn3-cn4-done`.
   `database.ts`. CẤM tự chạy SQL remote. FR: FR-26, FR-29, FR-30.
   (2026-09-20: xong file; apply + verify thuộc chủ dự án.)
 
+## Backlog CN5 — Quét hình ảnh đề bài bằng AI (FR-31 → FR-37)
+
+Một branch code duy nhất `feat/cn5-scan-image`, merge `--no-ff` và tag
+`cn5-hoan-thanh` sau khi cổng xanh (quyết định chủ dự án). Mỗi checkbox là
+một commit độc lập và phải để app chạy được. Trước commit chạy
+`npx tsc --noEmit`, `npm run lint`, `npm test` và test tay phần liên quan;
+staged diff phải không có secret/key. Push ngay sau commit. Đặc tả ở
+`docs/SPEC.md` mục CN5 (diễn giải do session `docs/cn5-spec` đề xuất — đề
+gốc khác thì sửa SPEC trước, không sửa code).
+
+- [ ] CN5-01: Soạn `supabase/migrations/0006_cn5_scan_images.sql`
+  (idempotent, CHỈ mở rộng whitelist `file_ext` + `allowed_mime_types`
+  bucket `documents` cho ảnh png/jpg/jpeg/webp/heic/heif, KHÔNG gif; trần
+  10 MB; không bảng/cột/giá trị status mới) +
+  `scripts/cn5-schema-verify.mjs` (khuôn cn3/cn4). CẤM tự apply SQL
+  (PAT sbp_ bị RBAC chặn ghi, cấm thử CLI/db push). Xong khi DỪNG và báo
+  chủ dự án dán tay qua SQL Editor; code tiếp chỉ sau `VERIFY_PASS`.
+  FR: FR-34 (nền).
+- [ ] CN5-02: `src/features/scan/{api.ts,schemas.ts,queries.ts,errors.ts}`
+  (pick/camera bằng `expo-image-picker`: `mediaTypes: ['images']`,
+  `result.canceled`/`assets[0]`, `base64: true`; lọc mime nhận
+  png/jpeg/webp/heic/heif + từ chối gif tiếng Việt; quyền camera +
+  `canAskAgain === false` → Settings + `getPendingResultAsync()` Android;
+  user hủy → về cũ im lặng) + unit test mock picker/quyền (không gọi mạng).
+  FR: FR-31, FR-32.
+- [ ] CN5-03: OCR qua transport dùng lại ở `src/lib/ai` (prompt text TRƯỚC
+  ảnh, mime `image/jpeg` cố định cho base64 picker, `responseMimeType` +
+  `responseSchema`; parser JSON 3 nhánh đủ/dở/rỗng như CN3-PDF; giữ nguyên
+  map 429/5xx, không retry; CẤM temperature/top_p/top_k/candidate_count/
+  thinking_budget; model từ `models.ts`, cấm hardcode) + lưu `documents`
+  (ảnh lên storage, `extracted_text` + `done` gộp; rỗng → `failed`, không
+  ghi đè cũ) + unit test parser/quyền/sở hữu (không gọi mạng).
+  FR: FR-33, FR-34.
+- [ ] CN5-04: Màn quét (`app/(app)/scan.tsx` push từ thẻ CN5 dashboard,
+  back qua `goBackOrReplace`): xem trước ảnh + nút “Quét”, 4 trạng thái
+  (spinner/OCR/empty/lỗi + “Thử lại”, testID `scan-pick`/`scan-capture`/
+  `scan-run`/`scan-retry`), banner hạn mức khi 429, chặn gọi lặp khi
+  `processing`, thu hồi treo 15 phút; icon lấy từ `AppIcons` (thêm tên mới
+  phải qua cổng glyphMap); thẻ CN5 dashboard sang `done`. FR: FR-35, FR-36.
+- [ ] CN5-05: Proof RLS A/B `documents` cho row ảnh quét (khuôn FR-05) +
+  unit full tầng scan + cập nhật traceability (FR-31→FR-37 “đạt”),
+  checklist tay CN5, devlog, báo cáo theo code cuối; rà `git diff --cached`
+  không có key. FR: FR-37 (+ đóng gói).
+
 ## App shell — vỏ tabs + lối lùi (fix/app-shell)
 
 - [x] APP-SHELL: `(app)` sang bottom Tabs (Trang chủ/Tài liệu/Tài khoản),

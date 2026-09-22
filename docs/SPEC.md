@@ -228,6 +228,112 @@ hỏi đáp trên tài liệu (việc của CN4), model khác ngoài `gemini-3.5
 - Sửa/xóa từng câu hỏi, stream câu trả lời, gợi ý câu hỏi, đánh giá chất
   lượng đáp, RAG/chunking/vector DB, cache đáp chung giữa các user.
 
+### CN5 — Quét hình ảnh đề bài bằng AI (FR-31 → FR-37, session docs đề xuất)
+
+> Lưu ý nguồn: đề gốc trong repo chỉ liệt kê tên Chức năng 5 (“Quét hình ảnh
+> đề bài bằng AI”, FR-31 → FR-37) mà không kèm nội dung từng FR. Bảng dưới là
+> diễn giải do session `docs/cn5-spec` đề xuất từ lệnh chi tiết của chủ dự án
+> (image-picker phủ FR-31+FR-32, luồng quyền camera, Gemini multimodal OCR,
+> cắt cụt hai nhánh) và hạ tầng CN2/CN3 (`documents` + `extracted_text` +
+> `extraction_status`, transport duy nhất ở `src/lib/ai`). Nếu đề gốc khác,
+> sửa bảng này trước, không sửa code theo bảng cũ.
+
+| FR | Yêu cầu | Acceptance criteria (Given / When / Then) |
+|----|---------|-------------------------------------------|
+| FR-31 | Chọn ảnh đề bài từ thư viện | **Given** đã đăng nhập và đang ở màn quét, **When** chọn một ảnh (đúng định dạng, còn hiệu lực), **Then** ảnh được nạp để OCR, UI hiện xem trước. **Given** ảnh sai định dạng (GIF) hoặc user bấm hủy, **When** chọn, **Then** bị từ chối kèm thông báo tiếng Việt (GIF) hoặc quay lại im lặng (hủy), không tạo request nào. |
+| FR-32 | Chụp ảnh đề bài bằng camera | **Given** đã đăng nhập và đã cấp quyền camera, **When** bấm chụp và xác nhận ảnh, **Then** ảnh được nạp để OCR như FR-31. **Given** chưa cấp quyền, **When** bấm chụp, **Then** app xin quyền trước; từ chối vĩnh viễn (`canAskAgain === false`) thì hiện hướng dẫn mở Settings, không để nút bấm chết. Trên Android, ảnh mất do hệ thống kill picker được cứu bằng `getPendingResultAsync()`. |
+| FR-33 | OCR ảnh bằng Gemini multimodal (không ML Kit) | **Given** đã có ảnh hợp lệ, **When** bấm “Quét”, **Then** app gửi đúng một request cho model trong `src/lib/ai/models.ts` (prompt text TRƯỚC ảnh, JSON qua `responseMimeType` + `responseSchema`) và nhận chuỗi OCR tiếng Việt. **Given** mất mạng hoặc Gemini lỗi 429/5xx, **When** gọi, **Then** báo lỗi tiếng Việt rõ ràng, cho thử lại, giữ nguyên mapping 429/5xx của CN3, không retry tự động. |
+| FR-34 | Lưu kết quả quét vào bảng `documents` | **Given** OCR thành công, **When** ghi, **Then** một row `documents` mới được tạo (ảnh lên bucket, `extracted_text` = toàn văn OCR, `extraction_status = 'done'`). Cắt cụt có hai nhánh như CN3-PDF: (a) còn chuỗi dở cứu được → lưu phần dở với `done` tái dùng rồi báo user biết bị cắt (cấm giả vờ thành công); (b) rỗng hoàn toàn → `failed`, không ghi đè dữ liệu cũ bằng rỗng. |
+| FR-35 | Hiển thị kết quả quét ở màn quét | **Given** đang ở màn quét, **When** xem, **Then** thấy đúng một trong: đang quét (spinner + nút disabled), văn bản OCR mới nhất, empty (“Chưa có kết quả — chọn/chụp ảnh để quét”), lỗi kèm “Thử lại”. Ảnh mờ/không có chữ/không phải đề bài → thông báo tiếng Việt rõ ràng, không để màn hình đứng im. |
+| FR-36 | Chặn gọi lặp và báo khi chạm hạn mức miễn phí | **Given** đang có request quét chạy (`processing`), **When** bấm nút lần nữa, **Then** bị chặn (nút disabled), không gửi request thứ hai. **Given** Gemini trả lỗi quota/429, **When** gọi, **Then** UI báo hạn mức như CN3, không tự retry. |
+| FR-37 | Kết quả quét cách ly theo tài khoản | **Given** hai tài khoản A/B mỗi người lịch sử quét riêng, **When** A select/insert/update/delete qua Supabase client, **Then** A chỉ thao tác row có `user_id = auth.uid()`; truy cập row B bị RLS chặn (kế thừa 4 policy `documents` đã có, kiểm chứng A/B như FR-05). |
+
+### Luật validate và hành vi CN5
+
+- Chọn/chụp bằng `expo-image-picker` (đã cài `~57.0.19`, KHÔNG thêm
+  `expo-camera`, KHÔNG config plugin trong `app.json` vì dự án không
+  prebuild): `mediaTypes: ['images']` (mảng chuỗi; CẤM `MediaTypeOptions`
+  deprecated); đọc `result.canceled` và `result.assets[0]` (CẤM
+  `result.cancelled` 2 chữ L, CẤM `result.uri`); `base64: true`.
+- `asset.base64` LUÔN là dữ liệu JPEG theo doc Expo nên gửi Gemini với mime
+  `image/jpeg` — CẤM đoán mime từ đuôi tên file (iOS SDK 54+ mặc định
+  `allowsEditing: false` nên `fileName` có thể là `.HEIC` trong khi ruột là
+  JPEG).
+- Lọc định dạng Gemini không đọc: chỉ nhận png/jpeg/webp/heic/heif; GIF bị
+  từ chối kèm thông báo tiếng Việt (Android cho chọn GIF). Dừng ở lỗi đầu
+  tiên với một thông báo rõ ràng, không tạo object hay bản ghi nào.
+- Đọc ảnh gửi Gemini: base64 → ArrayBuffer (`base64-arraybuffer`) +
+  contentType; CẤM `fetch(uri).blob()` (trả file 0 byte). Chỉ API mới
+  (`File`, `Directory`, `Paths`); CẤM `expo-file-system/legacy`.
+- Quyền camera: `requestCameraPermissionsAsync()` trước
+  `launchCameraAsync()`; `canAskAgain === false` → hướng dẫn mở Settings,
+  CẤM để nút bấm không có gì xảy ra; Android gọi `getPendingResultAsync()`
+  để cứu ảnh khi hệ thống kill MainActivity lúc picker đang mở.
+- User bấm hủy picker → quay lại trạng thái cũ, không báo lỗi, không request.
+- OCR: prompt text TRƯỚC ảnh trong mảng input (doc Gemini yêu cầu); núm duy
+  nhất được phép xoay khi chữ nhỏ/mờ đọc sai là `media_resolution` (và
+  `thinking_level` nếu cần); CẤM temperature/top_p/top_k/candidate_count/
+  thinking_budget (Gemini 3.x trả HTTP 400).
+- Cắt cụt hai nhánh (với `responseSchema` bật, chạm MAX_TOKENS thường trả
+  parts/text null, không có mẩu JSON để cứu): (a) còn chuỗi dở → cứu phần
+  lấy được + BÁO user biết bị cắt; (b) rỗng hoàn toàn → báo thất bại rõ,
+  KHÔNG ghi đè dữ liệu cũ bằng rỗng, CẤM giả vờ thành công.
+- Không retry tự động (kể cả lỗi mạng transient — user bấm “Thử lại”); mỗi
+  lần bấm tối đa một request; lỗi 429/quota không retry, chỉ báo.
+- Mỗi lần quét một ảnh duy nhất; không quét hàng loạt, không stream, không
+  chỉnh sửa/cắt ảnh trong app (`allowsEditing` giữ mặc định false).
+
+### Quy tắc dữ liệu CN5
+
+- Mỗi lần quét = một row `documents` mới (không ghi đè, khác CN3): `user_id`
+  của chủ, `display_name` tái dùng luật CN2 (chuẩn hóa trim/gộp khoảng trắng,
+  1–120 ký tự; mặc định gợi ý theo thời gian quét khi user không đặt tên),
+  `storage_path` `{user_id}/{uuid}.{ext}` (UUID bằng `Crypto.randomUUID()`
+  của `expo-crypto`), `extracted_text` = toàn văn OCR, `extraction_status`
+  tái dùng máy `pending → processing → done/failed` (thu hồi treo 15 phút
+  theo `updated_at` như CN3; không có giá trị mới).
+- Ảnh gốc lên bucket `documents` (private, tái dùng 4 Storage policy theo
+  `{user_id}/` đã có); DB chỉ lưu path, xem bằng signed URL TTL 3600s.
+- RLS: tái dùng 4 policy `documents` (`auth.uid() = user_id`); không bảng
+  mới nên không policy mới. Đổi tên/xóa row quét tái dùng FR-10/FR-11
+  (đổi nhãn DB, xóa storage-trước-DB-sau).
+- Migration `0006_cn5_scan_images.sql` (session code soạn, DÁN TAY qua SQL
+  Editor, CẤM `db push`): MỞ RỘNG whitelist `file_ext` và
+  `allowed_mime_types` của bucket cho ảnh (png/jpg/jpeg/webp/heic/heif;
+  KHÔNG gif vì Gemini không đọc — gif chặn ở client), trần kích thước ảnh
+  10 MB như tài liệu. Không bảng mới, không cột mới, không giá trị
+  `extraction_status` mới. Kèm `scripts/cn5-schema-verify.mjs` (khuôn
+  cn3/cn4); soạn xong DỪNG chờ apply rồi verify `VERIFY_PASS` mới code tiếp.
+
+### OUT OF SCOPE của CN5 (đề không yêu cầu)
+
+ML Kit/thư viện OCR native, development build, prebuild, `expo-camera`,
+migrate sang Interactions API, đổi model sang 3.6/3.7/3.8-flash, Edge
+Function proxy (đã bỏ hẳn), quét hàng loạt nhiều ảnh, streaming OCR, chỉnh
+sửa/cắt ảnh trong app, lịch sử nhiều bản OCR cho một lần quét, xuất
+file/share kết quả, đánh giá chất lượng OCR, cache OCR chung giữa các user,
+cron dọn `processing` treo phía server, gợi ý lời giải (việc của CN6).
+
+### Quyết định CN5 đã chốt (mỗi cái kèm lý do)
+
+- CN5-MODEL: dùng lại model trong `src/lib/ai/models.ts` (không hardcode nơi
+  khác, không thêm model mới nếu cùng `gemini-3.5-flash`). Lý do: bẫy bất
+  biến — model là hằng số duy nhất, hardcode rời là drift.
+- CN5-TRANSPORT: dùng lại transport ở `src/lib/ai` (mở rộng `postGenerate`
+  dùng chung như CN4 đã làm), CẤM đường gọi Gemini thứ hai. Lý do: một đường
+  gọi duy nhất giữ mapping lỗi 429/5xx nhất quán, không phân mảnh.
+- CN5-SCHEMA: không bảng/cột mới, chỉ mở rộng whitelist ảnh qua 0006. Lý do:
+  `documents` + `extracted_text` + `extraction_status` đã đủ vòng đời quét;
+  bảng riêng là phình schema ngoài đề.
+- CN5-STORAGE: ảnh quét vào chung bucket `documents` (mở rộng MIME), không
+  bucket mới. Lý do: 4 Storage policy theo `{user_id}/` tái dùng nguyên vẹn,
+  bucket mới đồng nghĩa policy mới ngoài đề.
+- CN5-TRIGGER: kích hoạt quét bằng nút user bấm, KHÔNG tự động sau chọn/chụp.
+  Lý do: mỗi lần quét tốn 1 request quota (~1.500/ngày); auto đốt quota cho
+  ảnh user chưa cần đọc.
+- CN5-SINGLE: mỗi lần quét đúng một ảnh. Lý do: đề là quét đề bài đơn lẻ;
+  nhiều ảnh là quét hàng loạt ngoài đề.
+
 ## CẦN CHỦ DỰ ÁN QUYẾT ĐỊNH
 
 Không còn câu hỏi mở. Chủ dự án đã chốt:
