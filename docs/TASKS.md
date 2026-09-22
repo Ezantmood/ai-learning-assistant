@@ -290,7 +290,7 @@ staged diff phải không có secret/key. Push ngay sau commit. Đặc tả ở
 `docs/SPEC.md` mục CN5 (diễn giải do session `docs/cn5-spec` đề xuất — đề
 gốc khác thì sửa SPEC trước, không sửa code).
 
-- [ ] CN5-01: Soạn `supabase/migrations/0006_cn5_scan_images.sql`
+- [x] CN5-01: Soạn `supabase/migrations/0006_cn5_scan_images.sql`
   (idempotent, CHỈ mở rộng whitelist `file_ext` + `allowed_mime_types`
   bucket `documents` cho ảnh png/jpg/jpeg/webp/heic/heif, KHÔNG gif; trần
   10 MB; không bảng/cột/giá trị status mới) +
@@ -298,6 +298,8 @@ gốc khác thì sửa SPEC trước, không sửa code).
   (PAT sbp_ bị RBAC chặn ghi, cấm thử CLI/db push). Xong khi DỪNG và báo
   chủ dự án dán tay qua SQL Editor; code tiếp chỉ sau `VERIFY_PASS`.
   FR: FR-34 (nền).
+  (2026-09-22: file và script đã commit/push; chờ chủ dự án dán SQL và
+  chạy verify đạt trước CN5-02.)
 - [ ] CN5-02: `src/features/scan/{api.ts,schemas.ts,queries.ts,errors.ts}`
   (pick/camera bằng `expo-image-picker`: `mediaTypes: ['images']`,
   `result.canceled`/`assets[0]`, `base64: true`; lọc mime nhận

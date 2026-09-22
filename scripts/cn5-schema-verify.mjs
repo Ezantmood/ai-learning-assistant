@@ -90,7 +90,17 @@ if (pngError) {
   }
   process.exit(1);
 }
-await supabase.from('documents').delete().eq('id', pngRow.id);
+const { error: pngDeleteError } = await supabase
+  .from('documents')
+  .delete()
+  .eq('id', pngRow.id)
+  .select('id')
+  .single();
+if (pngDeleteError) {
+  console.log(`VERIFY_FAIL cleanup code=${pngDeleteError.code ?? 'n/a'} message=${pngDeleteError.message}`);
+  console.log(`Can xoa row thu id=${pngRow.id} thu cong truoc khi chay lai.`);
+  process.exit(1);
+}
 console.log('PNG_OK (whitelist da mo anh, row thu da xoa)');
 
 // 3. Insert thu gif: phai THAT BAI 23514 (gif khong mo). Lot la sai.
@@ -109,7 +119,17 @@ const { data: gifRow, error: gifError } = await supabase
   .select('id')
   .single();
 if (!gifError) {
-  await supabase.from('documents').delete().eq('id', gifRow.id);
+  const { error: gifDeleteError } = await supabase
+    .from('documents')
+    .delete()
+    .eq('id', gifRow.id)
+    .select('id')
+    .single();
+  if (gifDeleteError) {
+    console.log(`VERIFY_FAIL cleanup code=${gifDeleteError.code ?? 'n/a'} message=${gifDeleteError.message}`);
+    console.log(`Can xoa row thu id=${gifRow.id} thu cong.`);
+    process.exit(1);
+  }
   console.log('VERIFY_FAIL (gif lot whitelist — migration 0006 mo thua, phai KHONG co gif)');
   process.exit(1);
 }

@@ -20,6 +20,7 @@ File này chỉ ghi kết quả đã xảy ra; không chép lại backlog, secre
 ---
 
 
+
 ### Docs CN2 — Đặc tả quản lý tài liệu FR-06 → FR-13 — 2026-09-19
 
 **Đã làm gì**
@@ -1773,5 +1774,22 @@ https://supabase.com/docs/guides/platform/access-control`
 - Cổng: `npx tsc --noEmit` exit 0; `npm run lint` 0 errors, 2 warning
   `watch()` kế thừa; `npm test` 30 suites, 277/277 PASS (trên sàn 274);
   `npm run check:functions` exit 0.
+
+---
+
+### CN5-01 — Soạn migration ảnh và verify — 2026-09-22
+
+- Branch `feat/cn5-scan-image`; commit `ae72befffeae81993de4c7f3271c64036a5306af`
+  đã push: `0006_cn5_scan_images.sql` chỉ mở rộng CHECK `file_ext` và MIME
+  bucket `documents`, giữ private và trần 10 MB. Không thêm bảng, cột,
+  status hay policy. `cn5-schema-verify.mjs` thử PNG được nhận và GIF bị
+  CHECK chặn qua session authenticated, rồi dọn row thử.
+- Rà lại script: kiểm tra kết quả DELETE và báo rõ ID nếu dọn row thử lỗi,
+  tránh báo `VERIFY_PASS` giả. Cổng local: `node --check` đạt; `npx tsc
+  --noEmit` đạt; `npm run lint` 0 lỗi, 2 warning `watch()` cũ; `npm test
+  -- --runInBand` 30 suites, 277/277 đạt. Chưa chạy verify remote.
+- Dừng tại cổng thủ công CN5-01: chủ dự án dán toàn bộ SQL qua Supabase
+  Dashboard SQL Editor, kiểm tra bucket có đủ 8 MIME và không GIF, chạy
+  `cn5-schema-verify.mjs` đến `VERIFY_PASS`. Chỉ sau đó mới làm CN5-02.
 
 ---
