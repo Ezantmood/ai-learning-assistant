@@ -371,3 +371,22 @@ Dashboard từ source mới (SETUP 5d mục 7) tới khi probe kèm JWT trả 20
 - Q&A nhồi toàn văn `extracted_text` thẳng vào prompt (không RAG): tài liệu
   dài sau trích xuất có thể nặng prompt, chạm quota/giới hạn token khi hỏi —
   hỏi câu hẹp hơn khi gặp lỗi.
+
+### CN5 — Quét hình ảnh đề bài bằng AI (2026-09-22)
+
+- Màn `/scan` cho chọn ảnh hoặc chụp camera, xem trước rồi user bấm “Quét”.
+  `expo-image-picker` trả base64 JPEG; ảnh gốc HEIC cũng lưu lên Storage
+  bằng `.jpg` + `image/jpeg` để path/contentType khớp. GIF bị chặn.
+- App gửi một request Gemini multimodal (prompt trước ảnh) qua transport
+  chung với CN3/CN4, JSON schema một trường `extracted_text`. Kết quả lưu
+  vào row mới `documents`, trạng thái `pending → processing → done/failed`.
+  Cắt cụt cứu text và cảnh báo; rỗng để `failed`, không ghi rỗng đè lên dữ liệu.
+- Migration 0006 đã apply tay + `VERIFY_PASS`; bucket private 10 MB, 8 MIME,
+  không GIF. RLS Data API A/B cho row ảnh: `RLS_PROOF_PASS 8/8` (chi tiết
+  `docs/RLS-PROOF.md`). Unit 301/301 và bundle Android đạt. Ảnh chụp báo cáo
+  cần chủ dự án bấm Expo Go theo checklist mục 17 ở light/dark.
+
+- Smoke OCR thật (không qua thiết bị) ngày 2026-09-22: ảnh JPEG mẫu ở `/tmp`
+  có chữ `Bai 1: 2 + 3 = ?`, Gemini trả đúng chuỗi qua JSON schema.
+  Đây chỉ xác nhận model/key/payload; kiểm giao diện camera và Expo Go vẫn
+  chờ chủ dự án bấm theo checklist mục 17.

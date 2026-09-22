@@ -1843,3 +1843,18 @@ https://supabase.com/docs/guides/platform/access-control`
   301/301 test đạt; `npx expo export --platform android` bundle thành công.
   Chưa bấm tay trên Expo Go: checklist mục 17 dành cho chủ dự án. CN5-05
   còn proof RLS A/B, traceability tổng kết và báo cáo.
+
+---
+
+### CN5-05 — Proof RLS remote và OCR smoke; chờ test tay — 2026-09-22
+
+- `scripts/cn5-rls-proof.mjs` tạo hai user A/B tạm, gọi Data API bằng hai
+  session thật, kiểm SELECT/INSERT/UPDATE/DELETE chéo và row B còn nguyên:
+  `RLS_PROOF_PASS 8/8`. Script xóa hai user trong `finally`; ID rút gọn,
+  kết quả ở `docs/RLS-PROOF.md`. FR-37 chuyển `đạt`.
+- OCR smoke trực tiếp với ảnh JPEG chữ `Bai 1: 2 + 3 = ?` tạo ở `/tmp`,
+  một request Gemini với prompt trước ảnh + JSON schema:
+  `OCR_SMOKE_PASS`, trích đúng chữ. Không commit ảnh mẫu hoặc key.
+- Không có Android `adb` hay iOS `simctl` trên máy này để bấm Expo Go.
+  Checklist CN5 mục 17 còn trống; FR-31→FR-36 giữ `đang làm` và CN5-05
+  chưa tick. Chưa merge/tag vì chưa có kiểm tay thiết bị và cổng cuối.

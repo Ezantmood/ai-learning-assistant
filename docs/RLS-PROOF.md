@@ -175,3 +175,19 @@ study_notes`, đã fix trong migration); lần 2 thiếu trigger do schema chưa
 apply (`profiles của A: 0 dòng`); lần 3 thiếu toggle Email provider
 (`Đăng nhập A thất bại: Email logins are disabled`, đã bật theo
 `docs/MANUAL-STEPS.md`).
+
+## CN5 FR-37 — Row ảnh quét trong `documents` (2026-09-22)
+
+Chạy `node --env-file=.env --env-file=.env.local scripts/cn5-rls-proof.mjs`
+trên Supabase remote. Script tạo hai user test A/B tạm bằng admin API, tạo mỗi
+user một row ảnh quét `.jpg`, đăng nhập hai client publishable key riêng,
+kiểm Data API rồi xóa hai user trong `finally`. Không dùng service-role key
+trong app; không ghi email/mật khẩu/JWT/key vào log.
+
+- User A: `5a54a631`; user B: `4c2465bc` (8 ký tự đầu ID, user tạm đã xóa).
+- A SELECT row của A: 1; A SELECT row B: 0; B SELECT row A: 0.
+- A INSERT `user_id=B`: bị RLS chặn (`42501`).
+- A UPDATE row B: 0; A đổi `user_id` row mình sang B: bị `42501`.
+- A DELETE row B: 0; B SELECT lại row B còn nguyên tên cũ.
+- Kết quả: `RLS_PROOF_PASS 8/8`, exit 0. Bốn policy `documents` từ 0002
+  được tái dùng, không tạo policy mới trong 0006.

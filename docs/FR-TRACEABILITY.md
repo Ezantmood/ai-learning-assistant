@@ -60,7 +60,7 @@ Chỉ chuyển trạng thái sau khi file/hàm tồn tại và case test tương
 | FR-29 | Bảng `document_questions` + 4 RLS policy `auth.uid() = user_id`; `askQuestion`/`listQuestions` lọc `user_id` | Cách ly theo `user_id` như FR-05/FR-22 | Unit từ chối document người khác (chưa chạm DB) PASS; proof A/B theo khuôn `rls-proof.ts` (phiên sau) | đạt |
 | FR-30 | `supabase/migrations/0005_cn4_questions.sql` + `scripts/cn4-schema-verify.mjs` + types tay trong `database.ts` | Migration idempotent dán tay qua SQL Editor (CẤM db push); verify chỉ-đọc qua PostgREST | `node --check` script đạt; remote apply tay + verify đạt (chủ dự án); kiểm tay Expo Go đạt | đạt |
 
-## Chức năng 5 — Quét hình ảnh đề bài bằng AI (chưa làm — đặc tả ở `docs/SPEC.md` mục CN5, diễn giải do session `docs/cn5-spec` đề xuất)
+## Chức năng 5 — Quét hình ảnh đề bài bằng AI (code + unit + schema/RLS remote đạt; chờ test tay Expo Go)
 
 | FR | File dự kiến | Hàm/điểm kiểm soát dự kiến | Cách kiểm thử | Trạng thái |
 |---|---|---|---|---|
@@ -70,7 +70,7 @@ Chỉ chuyển trạng thái sau khi file/hàm tồn tại và case test tương
 | FR-34 | `supabase/migrations/0006_cn5_scan_images.sql` (đã dán tay); `scripts/cn5-schema-verify.mjs`; `src/features/scan/api.ts` | Row `documents` mới mỗi lần quét (`storage_path` `{user_id}/{uuid}.{ext}`, `extracted_text` = OCR, `done`; dở → cứu + báo cắt, rỗng → `failed` không ghi đè cũ) | Remote `VERIFY_PASS` + bucket đủ 8 MIME; unit parser 3 nhánh đủ/dở/rỗng đạt; test tay sau CN5-04 | đang làm |
 | FR-35 | `app/(app)/scan.tsx` (màn quét, back qua `goBackOrReplace`) | 4 trạng thái: spinner + disabled / văn bản OCR / empty dẫn chọn-chụp / lỗi + “Thử lại” (testID `scan-run`/`scan-retry`); ảnh mờ/không chữ → câu tiếng Việt | Unit trạng thái đạt; test tay light/dark chờ chủ dự án | đang làm |
 | FR-36 | Cùng màn quét + `src/features/scan/api.ts` | Nút disabled khi `processing` (guard chặn gọi lặp); 429/quota → banner hạn mức, không retry; thu hồi treo 15 phút theo `updated_at` | Unit trạng thái + ngưỡng stale đạt; test tay bấm dồn/quota chờ chủ dự án | đang làm |
-| FR-37 | 4 RLS policy `documents` đã có (`auth.uid() = user_id`) | Row ảnh quét cách ly như tài liệu (không policy mới); proof A/B khuôn FR-05 | Proof A/B remote + unit từ chối chéo | Chưa làm |
+| FR-37 | 4 RLS policy `documents` đã có (`auth.uid() = user_id`); `scripts/cn5-rls-proof.mjs` | Row ảnh quét cách ly như tài liệu (không policy mới); proof A/B khuôn FR-05 | Remote `RLS_PROOF_PASS 8/8` (2026-09-22, xem RLS-PROOF.md); unit từ chối user chéo đạt | đạt |
 
 ## Chức năng 6 — AI gợi ý lời giải (chưa làm)
 
