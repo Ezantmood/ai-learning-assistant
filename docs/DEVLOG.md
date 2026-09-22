@@ -2119,3 +2119,5 @@ https://supabase.com/docs/guides/platform/access-control`
 - Soi JSX: `SolutionSection` và `RenameDocumentForm` đứng cạnh nhau, đều `key={doc.id}`. Hai sibling trùng key khiến React không định danh ổn định khi render lại. Đổi key vùng gợi ý thành chuỗi có tiền tố `solution-`; form đổi tên giữ key cũ.
 - Warning `Linking requires ... scheme` là cảnh báo Expo config riêng, không thuộc stack lỗi này.
 - Cổng sau sửa: tsc 0, lint 0 error/2 warning `watch()` kế thừa, Jest 315/315, check:functions exit 0. Expo Go lượt hai chưa kiểm lại trong session; chủ dự án cần xác nhận sau khi nhận bundle mới.
+- Commit fix: `11efe73f6d0f41d803a0ca7e7bef802f7201947d` trên branch `fix/cn6-solution-key` (đã push).
+- Merge `--no-ff` vào `main`: `2fe77061d6a997c4b5e6c6ab36f73d4d88f4c8f7` (đã push). Tag `cn6-solution-key-fix` trỏ merge này (đã push ngay sau tạo). Không mở PR theo quyết định G4+.
