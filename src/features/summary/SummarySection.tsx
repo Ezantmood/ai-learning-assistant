@@ -10,29 +10,29 @@ import {
 } from 'react-native-paper';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { EmptyState } from '../../../src/shared/components/EmptyState';
-import { ListSkeleton } from '../../../src/shared/components/LoadingState';
-import type { DocumentWithSubject } from '../../../src/features/documents/api';
-import { getExtractionStatusLabel } from '../../../src/features/documents/storage';
+import { EmptyState } from '../../shared/components/EmptyState';
+import { ListSkeleton } from '../../shared/components/LoadingState';
+import type { DocumentWithSubject } from '../documents/api';
+import { getExtractionStatusLabel } from '../documents/storage';
 import {
   isStaleProcessing,
   reclaimStaleProcessing,
   type SummaryDocument,
-} from '../../../src/features/summary/api';
+} from './api';
 import {
   isSummaryQuotaError,
   isSummaryTruncatedError,
   toSummaryErrorMessage,
-} from '../../../src/features/summary/errors';
+} from './errors';
 import {
   documentDetailKey,
   useRequestSummary,
   useSummary,
-} from '../../../src/features/summary/queries';
-import { loadSummarySource } from '../../../src/features/summary/source';
-import { AppIcons } from '../../../src/shared/theme/icons';
-import { spacing } from '../../../src/shared/theme/spacing';
-import type { AppTheme } from '../../../src/shared/theme/theme';
+} from './queries';
+import { loadSummarySource } from './source';
+import { AppIcons } from '../../shared/theme/icons';
+import { spacing } from '../../shared/theme/spacing';
+import type { AppTheme } from '../../shared/theme/theme';
 
 function toSummaryDocument(doc: DocumentWithSubject): SummaryDocument {
   return {

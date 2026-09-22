@@ -1,13 +1,13 @@
 import { StyleSheet, View } from 'react-native';
 import { Banner, Button, Card, List, Text, useTheme } from 'react-native-paper';
-import type { DocumentWithSubject } from '../../../src/features/documents/api';
-import { isSolverQuotaError, toSolverErrorMessage } from '../../../src/features/solver/errors';
-import { useRequestSolution, useSolution } from '../../../src/features/solver/queries';
-import { EmptyState } from '../../../src/shared/components/EmptyState';
-import { ListSkeleton } from '../../../src/shared/components/LoadingState';
-import { AppIcons } from '../../../src/shared/theme/icons';
-import { spacing } from '../../../src/shared/theme/spacing';
-import type { AppTheme } from '../../../src/shared/theme/theme';
+import type { DocumentWithSubject } from '../documents/api';
+import { isSolverQuotaError, toSolverErrorMessage } from './errors';
+import { useRequestSolution, useSolution } from './queries';
+import { EmptyState } from '../../shared/components/EmptyState';
+import { ListSkeleton } from '../../shared/components/LoadingState';
+import { AppIcons } from '../../shared/theme/icons';
+import { spacing } from '../../shared/theme/spacing';
+import type { AppTheme } from '../../shared/theme/theme';
 
 /** Cùng một vùng cho PDF/TXT đã tóm tắt và ảnh CN5 đã quét. */
 export function SolutionSection({ doc, userId }: {

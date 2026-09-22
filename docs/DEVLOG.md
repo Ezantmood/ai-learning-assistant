@@ -2152,3 +2152,50 @@ https://supabase.com/docs/guides/platform/access-control`
   merge `--no-ff` vào `main`: `bab9d7abed7392469160cf5c96a01987ac811f67`
   (đã push); tag `fix-tabbar-icons` trỏ merge này, push cùng lệnh với main.
   Không mở PR theo quyết định G4+.)
+
+### FIX — Component/test trong app/ + scheme + cổng routeExports — 2026-09-22
+
+- Chủ dự án dán LogBox 5 log: 3 warning thiếu default export ở
+  `qa/solution/summary-section.tsx`, 1 render error "got undefined" tại
+  `AppTabsLayout`, 1 thiếu `scheme` trong app.json.
+- Soi cơ chế (build expo-router đã cài, không đoán): `expo-router/_ctx.js`
+  require.context nhận MỌI `.ts/.tsx` dưới `app/` (chỉ trừ `+api`/`+html`);
+  dev + sync mode `getRoutes()` gọi `validateRouteTreeExports` require từng
+  node lúc khởi động — file không default export → warning vàng đúng Log 1-3.
+- Audit từng import của `app/(app)/_layout.tsx`: `LoadingState`,
+  `useSession`, `useThemeMode`, `TAB_BAR_ICONS` đều trỏ runtime export có
+  thật (tsc 0, 0 circular import, default import duy nhất là AsyncStorage
+  từ package) → giả thuyết "lẫn default/named trong file tab" KHÔNG tái
+  hiện ở code hiện tại.
+- Thủ phạm render error tìm thấy ở chỗ khác: `app/(app)/documents/__tests__/
+  solution-section.test.tsx` cũng bị coi là route; require nó ngoài Jest
+  NỔ ngay (`Do not import @jest/globals outside of the Jest test
+  environment` — chạy thật bằng node, lỗi nguyên văn), đúng lúc validation
+  cây route của tabs → redbox khởi động. Đây mới là "import ra undefined/
+  crash" làm sai cả cây tabs (kèm tofu tab bar session trước).
+- Quét toàn `app/`: ngoài 3 section + 1 file test trên, mọi file còn lại
+  đều có default export, không còn component trá hình (liệt kê hết: chỉ 4
+  file này được chuyển, không thêm).
+- Đã làm (branch `fix/route-exports`, logic CN1..CN6 và bảng màu giữ nguyên,
+  code component y nguyên chỉ đổi độ sâu import tương đối):
+  `qa-section` → `src/features/chat/QaSection.tsx`;
+  `summary-section` → `src/features/summary/SummarySection.tsx`;
+  `solution-section` → `src/features/solver/SolutionSection.tsx`;
+  test → `src/features/solver/__tests__/solution-section.test.tsx`;
+  `[id].tsx` trỏ 3 import mới (PascalCase theo `ProfileView`/`EmptyState`).
+  `app.json` thêm `"scheme": "ai-learning-assistant"` (trùng slug).
+  FR-TRACEABILITY cập nhật đường dẫn mới (DEVLOG/TASKS/TEST-CHECKLIST là bản
+  ghi lịch sử dated nên giữ nguyên tên cũ).
+- Cổng chặn tái phát: mới `src/shared/lib/__tests__/routeExports.test.ts`
+  (mọi file trong `app/` phải có default export; cố tình để `__tests__`
+  trong `app/` cũng FAIL để ép dời ra). Chứng minh: thả tạm
+  `app/(app)/documents/probe-section.tsx` (named export, không default) →
+  FAIL thật (missing = [probe-section...], 1 failed); xóa → PASS.
+- Mô phỏng validation dev của expo-router trên cây mới (đúng regex ctx +
+  check default + `@jest/globals`): 20 route nodes, 0 warning, 0 throw →
+  tương đương LogBox SẠCH 0 log. Không có thiết bị ở session này nên chủ
+  dự án xác nhận lại trên Expo Go sau khi nhận bundle mới.
+- Cổng sau sửa: tsc 0, lint 0 error/2 warning `watch()` kế thừa, Jest
+  318/318 (giữ mốc 317 + 1 mới; test solution-section vẫn chạy ở nhà mới),
+  check:functions exit 0.
+- (Mốc Git điền sau merge: commit, merge `--no-ff`, tag `fix-route-exports`.)
