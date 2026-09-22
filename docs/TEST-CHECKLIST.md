@@ -258,6 +258,8 @@ Theo đúng khuôn `scripts/rls-proof.ts` của FR-05 (2 user test A/B, tự d�
 > Gemini trả HTTP 503. Chạy lại bản code sau tối ưu OCR (`thinkingLevel`
 > minimal, `mediaResolution` medium) và ghi thời gian + độ chính xác chữ
 > nhỏ ở ảnh thật trước khi tick các case liên quan.
+> Bản tiếp theo cho update `processing` và request AI chạy đồng thời sau
+> khi tạo row; đo lại thời gian tổng, nhất là khi Supabase phản hồi chậm.
 
 - [ ] Dashboard CN5 “Hoàn thành” → mở `/scan`; nút back về Trang chủ,
   mở `/scan` trực tiếp vẫn có đường về. Icon hiển thị đủ ở light/dark.

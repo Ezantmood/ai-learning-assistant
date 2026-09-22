@@ -332,7 +332,8 @@ gốc khác thì sửa SPEC trước, không sửa code).
   checklist tay CN5, devlog, báo cáo theo code cuối; rà `git diff --cached`
   không có key. FR: FR-37 (+ đóng gói).
   (2026-09-22: proof remote 8/8 đã đạt; kiểm tay chủ dự án thấy 503 ngắt
-  quãng. Đã tối ưu riêng OCR, chờ bấm lại ảnh thật rồi mới đóng checkbox.)
+  quãng. Đã tối ưu riêng OCR và cho update `processing` chạy đồng thời
+  với request AI; chờ bấm lại ảnh thật rồi mới đóng checkbox.)
 
 ## App shell — vỏ tabs + lối lùi (fix/app-shell)
 

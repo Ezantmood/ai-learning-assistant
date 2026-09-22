@@ -1881,3 +1881,21 @@ https://supabase.com/docs/guides/platform/access-control`
 - Cổng: `npx tsc --noEmit` đạt; lint 0 lỗi, 2 warning `watch()` cũ;
   `npm test -- --runInBand` 34 suites, 302/302 đạt. Chờ chủ dự án bấm
   lại Expo Go với ảnh thật để chốt FR-31→FR-36/CN5-05.
+
+---
+
+### CN5 — Đo thời gian từng tầng và gối update trạng thái với OCR — 2026-09-22
+
+- Chủ dự án xác nhận quét vẫn được nhưng độ trễ thay đổi giữa các lượt.
+  Google mô tả 503 là dịch vụ tạm quá tải; chưa có bằng chứng đủ để kết
+  luận do giờ trong ngày. Đo một lượt cùng JPEG mẫu trên remote, có dọn
+  row và object thử sau đó: Auth 1,2s, Storage upload 5,6s, DB insert
+  1,5s, DB `processing` 8,5s, Gemini 19,6s (HTTP 200), DB `done` 4,0s.
+  Tổng khoảng 40s; tất cả là một mẫu, tải mạng/server có thể đổi.
+- Sau khi row `pending` được tạo, update `processing` và một request
+  Gemini độc lập được chạy đồng thời bằng `Promise.allSettled`; chỉ ghi
+  `done` sau khi cả hai thành công. Lỗi ở một nhánh vẫn đưa row về
+  `failed`, không tự retry, không thêm request AI. Unit khóa việc Gemini
+  bắt đầu khi update status vẫn đang chờ.
+- Chờ chủ dự án đo lại ảnh thật trên Expo Go. Nếu Gemini vẫn chiếm phần
+  lớn, phần đó phụ thuộc tải dịch vụ; không đổi model ngoài phạm vi CN5.

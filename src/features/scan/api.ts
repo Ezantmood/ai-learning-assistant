@@ -144,17 +144,21 @@ export async function runScan(input: {
     throw insertError ?? new ScanGuardError('Không lưu được ảnh quét. Hãy thử lại.');
   }
 
-  const { error: processingError } = await supabase
-    .from('documents')
-    .update({ extraction_status: 'processing' })
-    .eq('id', document.id)
-    .eq('user_id', input.userId);
-  if (processingError) {
-    throw processingError;
-  }
-
   try {
-    const result = await ocrWithGemini(input.image.base64);
+    // Hai việc độc lập sau khi row đã tạo: báo processing cho DB và gửi
+    // ảnh tới Gemini. Chạy đồng thời để không cộng dồn thời gian mạng;
+    // allSettled vẫn chờ cả hai và giữ đúng một request AI.
+    const [processing, ocr] = await Promise.allSettled([
+      supabase.from('documents')
+        .update({ extraction_status: 'processing' })
+        .eq('id', document.id)
+        .eq('user_id', input.userId),
+      ocrWithGemini(input.image.base64),
+    ]);
+    if (processing.status === 'rejected') throw processing.reason;
+    if (processing.value.error) throw processing.value.error;
+    if (ocr.status === 'rejected') throw ocr.reason;
+    const result = ocr.value;
     const { data: saved, error: doneError } = await supabase
       .from('documents')
       .update({ extracted_text: result.extractedText, extraction_status: 'done' })

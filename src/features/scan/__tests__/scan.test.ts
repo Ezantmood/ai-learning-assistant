@@ -25,7 +25,7 @@ const document = {
 };
 const ocrMock = jest.mocked(ocrWithGemini);
 
-function setupDb() {
+function setupDb(processingGate?: Promise<void>) {
   const updates: Record<string, unknown>[] = [];
   const upload = jest.fn(async () => ({ error: null }));
   const remove = jest.fn(async () => ({ error: null }));
@@ -38,7 +38,10 @@ function setupDb() {
       const chain = {
         eq: () => chain,
         select: () => ({ single: async () => ({ data: { ...document, ...payload }, error: null }) }),
-        then: (resolve: (value: unknown) => void) => resolve({ error: null }),
+        then: (resolve: (value: unknown) => void) =>
+          payload.extraction_status === 'processing' && processingGate
+            ? processingGate.then(() => resolve({ error: null }))
+            : resolve({ error: null }),
       };
       return chain;
     }),
@@ -74,6 +77,21 @@ describe('runScan', () => {
       { extraction_status: 'processing' },
       { extraction_status: 'failed' },
     ]);
+  });
+
+  it('gọi Gemini khi update processing vẫn đang chờ, không cộng dồn hai độ trễ', async () => {
+    let releaseProcessing!: () => void;
+    const processingGate = new Promise<void>((resolve) => {
+      releaseProcessing = resolve;
+    });
+    setupDb(processingGate);
+    ocrMock.mockResolvedValue({ extractedText: 'Câu 1', truncated: false });
+
+    const scan = runScan({ image, userId: 'user-1' });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(ocrMock).toHaveBeenCalledTimes(1);
+    releaseProcessing();
+    await expect(scan).resolves.toMatchObject({ extractedText: 'Câu 1' });
   });
 
   it('OCR cắt cụt → cứu text, lưu done và báo lỗi cắt', async () => {

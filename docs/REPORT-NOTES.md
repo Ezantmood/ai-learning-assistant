@@ -397,3 +397,9 @@ Dashboard từ source mới (SETUP 5d mục 7) tới khi probe kèm JWT trả 20
   17 giây so với một lượt mặc định timeout 60 giây; phép đo ít mẫu,
   không khẳng định tốc độ cố định. 503 là quá tải phía Gemini, app giữ
   nút “Thử lại” do đặc tả cấm retry tự động. Ảnh chữ nhỏ cần kiểm tay.
+
+- Đo một lượt toàn luồng trên remote: Gemini ~20 giây và các bước
+  Auth/Storage/DB cộng ~20 giây. Vì vậy sau khi tạo row, app gối update
+  `processing` với request Gemini để giảm thời gian chờ tổng mà vẫn giữ
+  đúng một request OCR và trạng thái cuối. Đây là tối ưu code; tải
+  Supabase/Gemini vẫn có thể biến động từng lượt.
