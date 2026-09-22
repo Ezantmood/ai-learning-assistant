@@ -2121,3 +2121,31 @@ https://supabase.com/docs/guides/platform/access-control`
 - Cổng sau sửa: tsc 0, lint 0 error/2 warning `watch()` kế thừa, Jest 315/315, check:functions exit 0. Expo Go lượt hai chưa kiểm lại trong session; chủ dự án cần xác nhận sau khi nhận bundle mới.
 - Commit fix: `11efe73f6d0f41d803a0ca7e7bef802f7201947d` trên branch `fix/cn6-solution-key` (đã push).
 - Merge `--no-ff` vào `main`: `2fe77061d6a997c4b5e6c6ab36f73d4d88f4c8f7` (đã push). Tag `cn6-solution-key-fix` trỏ merge này (đã push ngay sau tạo). Không mở PR theo quyết định G4+.
+
+### FIX — Icon tab bar + cổng test phủ tab bar — 2026-09-22
+
+- Chủ dự án báo tab bar hiện tofu box (chữ nhật có 2 đường chéo), nghi tên
+  icon họ khác (Ionicons/Feather...) nhét vào MaterialCommunityIcons và
+  tabBarIcon render trực tiếp nên lọt lưới cổng glyphMap cũ.
+- Audit thật (không đoán): file tab chỉ import đúng 1 họ icon
+  (`MaterialCommunityIcons` từ `@expo/vector-icons`, không Ionicons/Feather);
+  cả 3 tabBarIcon đều trỏ `AppIcons` (0 literal tên icon trong file tab);
+  đối chiếu từng tên với glyphMap MCI thật (7448 glyph) + cmap TTF đóng gói:
+  `home`, `file-document-outline`, `account` — 3/3 CÓ, 0 tên missing. Giả
+  thuyết "sai tên/họ khác" KHÔNG tái hiện ở code hiện tại.
+- Lỗ hổng thật (đúng phần "lọt lưới"): cổng cũ chỉ duyệt `ALL_APP_ICONS`;
+  một literal/tên lạ viết trực tiếp trong `tabBarIcon` không làm test đỏ.
+  Vá đúng chỗ đó, không đụng logic CN1..CN6, bảng màu, test cũ.
+- Đã làm (branch `fix/tabbar-icons`): mới `TAB_BAR_ICONS` trong
+  `src/shared/theme/icons.ts` (3 tên trỏ `AppIcons`); `app/(app)/_layout.tsx`
+  chuyển 3 tabBarIcon sang `TAB_BAR_ICONS.*`, vẫn 0 literal; mới
+  `src/shared/theme/__tests__/tabBarIcons.test.ts` (2 test: giá trị tab tồn
+  tại trong glyphMap đúng họ + quét source file tab, cấm literal trong
+  callback tabBarIcon). Test cũ giữ nguyên.
+- Chứng minh cổng mới: chèn tạm `probeJunk: 'icon-khong-ton-tai-xyz'` vào
+  `TAB_BAR_ICONS` → `npx jest tabBarIcons` FAIL thật (`Expected: 3,
+  Received: 4`, 1 failed/1 passed); hoàn nguyên → 2/2 PASS.
+- Cổng sau sửa: tsc 0, lint 0 error/2 warning `watch()` kế thừa, Jest
+  317/317 (giữ mốc 315 + 2 mới), check:functions exit 0. Kiểm tay Expo Go
+  (tab bar hết tofu) thuộc chủ dự án.
+- (Mốc Git điền sau merge: commit, merge `--no-ff`, tag `fix-tabbar-icons`.)

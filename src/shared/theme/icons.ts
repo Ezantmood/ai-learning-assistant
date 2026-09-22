@@ -65,3 +65,21 @@ export type AppIconName = (typeof AppIcons)[keyof typeof AppIcons];
 
 /** Mọi icon app dùng — test cổng gác duyệt mảng này. */
 export const ALL_APP_ICONS: readonly AppIconName[] = Object.values(AppIcons);
+
+/**
+ * Icon 3 tab bottom navigation (fix-tabbar-icons).
+ *
+ * tabBarIcon của expo-router render MaterialCommunityIcons TRỰC TIẾP,
+ * không qua `settings.icon` của Paper nên tên lạ đặt ngoài AppIcons lọt
+ * lưới cổng ALL_APP_ICONS (tên sai hiện tofu box thay vì rỗng im lặng).
+ * File tab chỉ được trỏ hằng này, CẤM literal tên icon.
+ * Test: `src/shared/theme/__tests__/tabBarIcons.test.ts`.
+ */
+export const TAB_BAR_ICONS = {
+  home: AppIcons.home,
+  documents: AppIcons.fileDocumentOutline,
+  profile: AppIcons.account,
+} as const;
+
+export type TabBarIconName =
+  (typeof TAB_BAR_ICONS)[keyof typeof TAB_BAR_ICONS];

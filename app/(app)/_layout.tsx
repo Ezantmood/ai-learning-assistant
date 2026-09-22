@@ -4,7 +4,7 @@ import { Redirect, Tabs } from 'expo-router';
 import { LoadingState } from '../../src/shared/components/LoadingState';
 import { useSession } from '../../src/features/auth/useSession';
 import { useThemeMode } from '../../src/shared/theme/ThemeContext';
-import { AppIcons } from '../../src/shared/theme/icons';
+import { TAB_BAR_ICONS } from '../../src/shared/theme/icons';
 
 type TabIconProps = {
   color: React.ComponentProps<typeof MaterialCommunityIcons>['color'];
@@ -51,7 +51,7 @@ export default function AppTabsLayout() {
         options={{
           tabBarAccessibilityLabel: 'Trang chủ, lưới 6 chức năng',
           tabBarIcon: ({ color, size }) => (
-            <TabIcon color={color} name={AppIcons.home} size={size} />
+            <TabIcon color={color} name={TAB_BAR_ICONS.home} size={size} />
           ),
           title: 'Trang chủ',
         }}
@@ -63,7 +63,7 @@ export default function AppTabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <TabIcon
               color={color}
-              name={AppIcons.fileDocumentOutline}
+              name={TAB_BAR_ICONS.documents}
               size={size}
             />
           ),
@@ -75,7 +75,7 @@ export default function AppTabsLayout() {
         options={{
           tabBarAccessibilityLabel: 'Tài khoản của tôi',
           tabBarIcon: ({ color, size }) => (
-            <TabIcon color={color} name={AppIcons.account} size={size} />
+            <TabIcon color={color} name={TAB_BAR_ICONS.profile} size={size} />
           ),
           title: 'Tài khoản',
         }}
