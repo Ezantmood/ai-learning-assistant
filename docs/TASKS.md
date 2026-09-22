@@ -343,3 +343,67 @@ gốc khác thì sửa SPEC trước, không sửa code).
   push cho màn con + replace chỉ ở biên (auth)↔(app), unit test
   `decideRouteTarget`/`goBackOrReplace`, checklist tay mục 15.
   (2026-09-20: xong code + test, chờ bấm tay Expo Go.) FR: FR-01..FR-05 (vỏ).
+
+---
+
+# Backlog CN6 — AI gợi ý lời giải (FR-38 → FR-45)
+
+Chia BA session code như CN5 (docs → schema → code), một branch code duy
+nhất `feat/cn6-solver`, merge `--no-ff` và tag `cn6-hoan-thanh` sau khi
+cổng xanh (quyết định chủ dự án cho G4+, áp tiếp cho CN6). Mỗi checkbox là
+một commit độc lập và phải để app chạy được. Trước commit chạy
+`npx tsc --noEmit`, `npm run lint`, `npm test` và test tay phần liên quan;
+staged diff phải không có secret/key. Push ngay sau commit. Đặc tả ở
+`docs/SPEC.md` mục CN6 (diễn giải do session `docs/cn6-spec` đề xuất — đề
+gốc khác thì sửa SPEC trước, không sửa code).
+
+- Session docs — branch `docs/cn6-spec`, tag `docs-cn6`: SPEC + backlog +
+  traceability skeleton (không code app, không SQL).
+- Session schema — trong `feat/cn6-solver`: CN6-01 soạn 0007 + verify rồi
+  DỪNG chờ chủ dự án dán tay (PAT sbp_ bị RBAC chặn ghi như CN5-01).
+- Session code — cùng branch: CN6-02 → CN6-04 sau `VERIFY_PASS`.
+
+- [x] CN6-00 (docs): SPEC mục CN6 (bảng FR-38→FR-45 diễn giải đề xuất +
+  luật/validate + quy tắc dữ liệu + out of scope + 7 quyết định chốt) +
+  backlog này + FR-TRACEABILITY FR-38→FR-45 (file/hàm dự kiến, giữ “chưa
+  làm”) + 2 dòng ARCHITECTURE (solver SPEC, transport dùng lại). Không code
+  app, không migration 0007, không verify script, không apply SQL — tất cả
+  thuộc CN6-01→CN6-04. FR: FR-38..FR-45 (đặc tả).
+- [ ] CN6-01: Soạn `supabase/migrations/0007_cn6_solutions.sql`
+  (idempotent, bảng `document_solutions`: `document_id` UNIQUE + CASCADE,
+  `user_id` denormalized + CASCADE, `solution_text` 1–20000, `model` 1–100
+  default `'gemini-3.5-flash'`, trigger `set_updated_at()` tái dùng, index
+  `(user_id)`, RLS 4 lệnh khuôn CN3/CN4, grants authenticated/service_role/
+  revoke anon; KHÔNG đụng cột/bảng cũ, KHÔNG giá trị status mới — CHECK
+  `extraction_status` giữ nguyên 5 giá trị `pending/processing/done/failed/
+  unsupported` đã đọc nguyên văn ở `0002`) +
+  `scripts/cn6-schema-verify.mjs` (khuôn cn4/cn5: thiếu bảng/cột → mã lỗi
+  PostgREST rõ). CẤM tự apply SQL (PAT sbp_ bị RBAC chặn ghi, cấm thử
+  CLI/db push). Xong khi DỪNG và báo chủ dự án dán tay qua SQL Editor; code
+  tiếp chỉ sau `VERIFY_PASS`. FR: FR-45 (nền).
+- [ ] CN6-02: `solveWithGemini` trong `src/lib/ai/transport.ts` (mở rộng
+  `postGenerate` dùng chung như CN4/CN5: prompt giải bài cố định +
+  `responseMimeType` + `responseSchema` JSON một trường `solution_text`;
+  parser 3 nhánh đủ/dở/rỗng khuôn `parseOcrJson`; giữ nguyên map 429/5xx,
+  không retry; CẤM temperature/top_p/top_k/candidate_count/
+  thinking_budget; model từ `models.ts`, cấm hardcode) +
+  `src/features/solver/{api.ts,schemas.ts,queries.ts,errors.ts}`
+  (`requestSolution` guard sở hữu + DOCX/thiếu-text → chặn trước mạng,
+  1 request → validate 1–20000 → upsert ghi đè theo `UNIQUE(document_id)`;
+  dở → lưu phần cứu được + báo cắt; rỗng → không ghi đè cũ;
+  `getSolution`/`retrySolution`; key `['solution', documentId]`) + unit
+  test mock transport/supabase (không gọi mạng). FR: FR-38, FR-39, FR-40,
+  FR-41.
+- [ ] CN6-03: Vùng gợi ý lời giải trong `/documents/[id]`
+  (`solution-section.tsx` khuôn `qa-section.tsx`/`summary-section.tsx`):
+  nút “Gợi ý lời giải” (DOCX/thiếu text ẩn nút + Banner dẫn tóm tắt/quét
+  trước), spinner + disabled khi chạy, empty/lỗi + “Thử lại”, banner hạn
+  mức khi 429 (không retry); thẻ CN6 dashboard sang `done` (trỏ tab Tài
+  liệu như CN3/CN4; `featureStatus` lật ở commit này, icon mới phải qua
+  cổng glyphMap). FR: FR-42, FR-43.
+  (Không route mới: row quét CN5 cũng là row `documents` nên một vùng phục
+  vụ cả hai nguồn.)
+- [ ] CN6-04 (CUỐI CÙNG): Proof RLS A/B `document_solutions` (khuôn FR-05/
+  `cn5-rls-proof.mjs`) + unit full tầng solver + cập nhật traceability
+  (FR-38→FR-45 “đạt”), checklist tay CN6, devlog, báo cáo theo code cuối;
+  rà `git diff --cached` không có key. FR: FR-44 (+ đóng gói).
