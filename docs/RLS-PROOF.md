@@ -191,3 +191,6 @@ trong app; không ghi email/mật khẩu/JWT/key vào log.
 - A DELETE row B: 0; B SELECT lại row B còn nguyên tên cũ.
 - Kết quả: `RLS_PROOF_PASS 8/8`, exit 0. Bốn policy `documents` từ 0002
   được tái dùng, không tạo policy mới trong 0006.
+- Kiểm tra Storage bổ sung bằng session user test có sẵn: upload JPEG mẫu
+  tới `{user_id}/cn5-verify-<uuid>.jpg` với `image/jpeg` → `JPEG_UPLOAD_OK`,
+  xóa ngay → `STORAGE_PASS`. Không còn object thử.

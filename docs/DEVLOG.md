@@ -1855,6 +1855,8 @@ https://supabase.com/docs/guides/platform/access-control`
 - OCR smoke trực tiếp với ảnh JPEG chữ `Bai 1: 2 + 3 = ?` tạo ở `/tmp`,
   một request Gemini với prompt trước ảnh + JSON schema:
   `OCR_SMOKE_PASS`, trích đúng chữ. Không commit ảnh mẫu hoặc key.
+- Storage smoke với session user test: JPEG `.jpg` + `image/jpeg` upload
+  vào folder riêng thành công rồi xóa ngay: `STORAGE_PASS`.
 - Không có Android `adb` hay iOS `simctl` trên máy này để bấm Expo Go.
   Checklist CN5 mục 17 còn trống; FR-31→FR-36 giữ `đang làm` và CN5-05
   chưa tick. Chưa merge/tag vì chưa có kiểm tay thiết bị và cổng cuối.
