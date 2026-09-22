@@ -2102,3 +2102,13 @@ https://supabase.com/docs/guides/platform/access-control`
 - Chạy lại `scripts/cn6-schema-verify.mjs` sau khi chủ dự án apply: `SIGNIN_OK`, `READ_OK`, `VERIFY_PASS rows=0`, exit 0.
 - Unit solver bổ sung ca quá 20.000 ký tự và lỗi upsert; traceability FR-38→FR-45 cập nhật `đạt`, checklist Expo Go mục 18 và REPORT-NOTES theo code cuối.
 - Cổng trước commit: tsc 0; lint 0 error, 2 warning `watch()` kế thừa; Jest 315/315; check:functions exit 0; Android bundle export đạt. Kiểm tay Expo Go chưa thực hiện trong session này, để các ô mục 18 chưa tick.
+
+**Mốc Git CN6**
+
+- Branch code: `feat/cn6-solver` (đã push sau từng checkbox).
+- CN6-02: `b5dd381eb703b9da3e52a228af6a8bd753be029f`.
+- CN6-03: `df87696717c4f29bf05797194ae4ed3ee5eea157`.
+- CN6-04: `d05f15fbe255453e799a31027068e12fc50353b2`.
+- Merge `--no-ff` vào `main`: `ad391ecc8c9a1a8bba2ceef2db11769ace84795c` (đã push).
+- Tag `cn6-hoan-thanh` trỏ merge trên (đã push ngay sau tạo).
+- PR: không mở theo quyết định tự merge từ G4 trở đi.
