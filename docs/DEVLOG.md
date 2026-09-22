@@ -1913,3 +1913,8 @@ https://supabase.com/docs/guides/platform/access-control`
   FR-31→FR-37 chuyển `đạt` theo nghiệm thu với khoảng trống ghi rõ.
 - Cổng đóng: `npx tsc --noEmit` đạt; `npm run lint` 0 lỗi, 2 warning
   `watch()` cũ; `npm test -- --runInBand` 34 suites, 303/303 đạt.
+- Release: branch `feat/cn5-scan-image`, commit đóng task
+  `906b4addbbe6e3b611ab3aaa7510907be53b4195`, merge `--no-ff`
+  vào `main` tại `86a08cea5638b11c96317fca7b083f23e7d9db80`,
+  tag `cn5-hoan-thanh` (tạo sau commit ghi log này). Không mở PR theo
+  quy tắc G4+ đã chốt.
