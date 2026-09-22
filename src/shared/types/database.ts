@@ -225,6 +225,44 @@ export type Database = {
           },
         ]
       }
+      document_solutions: {
+        Row: {
+          created_at: string
+          document_id: string
+          id: string
+          model: string
+          solution_text: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          id?: string
+          model?: string
+          solution_text: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          id?: string
+          model?: string
+          solution_text?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'document_solutions_document_id_fkey'
+            columns: ['document_id']
+            isOneToOne: true
+            referencedRelation: 'documents'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -401,3 +439,9 @@ export type DocumentQuestionInsert =
   Database['public']['Tables']['document_questions']['Insert'];
 export type DocumentQuestionUpdate =
   Database['public']['Tables']['document_questions']['Update'];
+export type DocumentSolutionRow =
+  Database['public']['Tables']['document_solutions']['Row'];
+export type DocumentSolutionInsert =
+  Database['public']['Tables']['document_solutions']['Insert'];
+export type DocumentSolutionUpdate =
+  Database['public']['Tables']['document_solutions']['Update'];

@@ -369,7 +369,7 @@ gốc khác thì sửa SPEC trước, không sửa code).
   làm”) + 2 dòng ARCHITECTURE (solver SPEC, transport dùng lại). Không code
   app, không migration 0007, không verify script, không apply SQL — tất cả
   thuộc CN6-01→CN6-04. FR: FR-38..FR-45 (đặc tả).
-- [ ] CN6-01: Soạn `supabase/migrations/0007_cn6_solutions.sql`
+- [x] CN6-01: Soạn `supabase/migrations/0007_cn6_solutions.sql`
   (idempotent, bảng `document_solutions`: `document_id` UNIQUE + CASCADE,
   `user_id` denormalized + CASCADE, `solution_text` 1–20000, `model` 1–100
   default `'gemini-3.5-flash'`, trigger `set_updated_at()` tái dùng, index
@@ -384,7 +384,7 @@ gốc khác thì sửa SPEC trước, không sửa code).
   (2026-09-22: file và script đã commit/push; verify chạy thật trước apply
   FAIL đúng (`PGRST205` bảng chưa tồn tại, xem DEVLOG CN6-01); chờ chủ dự án
   dán SQL và chạy verify đạt `VERIFY_PASS` trước CN6-02.)
-- [ ] CN6-02: `solveWithGemini` trong `src/lib/ai/transport.ts` (mở rộng
+- [x] CN6-02: `solveWithGemini` trong `src/lib/ai/transport.ts` (mở rộng
   `postGenerate` dùng chung như CN4/CN5: prompt giải bài cố định +
   `responseMimeType` + `responseSchema` JSON một trường `solution_text`;
   parser 3 nhánh đủ/dở/rỗng khuôn `parseOcrJson`; giữ nguyên map 429/5xx,
