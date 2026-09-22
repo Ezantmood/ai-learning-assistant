@@ -300,13 +300,15 @@ gốc khác thì sửa SPEC trước, không sửa code).
   FR: FR-34 (nền).
   (2026-09-22: file và script đã commit/push; chờ chủ dự án dán SQL và
   chạy verify đạt trước CN5-02.)
-- [ ] CN5-02: `src/features/scan/{api.ts,schemas.ts,queries.ts,errors.ts}`
+- [x] CN5-02: `src/features/scan/{api.ts,schemas.ts,queries.ts,errors.ts}`
   (pick/camera bằng `expo-image-picker`: `mediaTypes: ['images']`,
   `result.canceled`/`assets[0]`, `base64: true`; lọc mime nhận
   png/jpeg/webp/heic/heif + từ chối gif tiếng Việt; quyền camera +
   `canAskAgain === false` → Settings + `getPendingResultAsync()` Android;
   user hủy → về cũ im lặng) + unit test mock picker/quyền (không gọi mạng).
   FR: FR-31, FR-32.
+  (2026-09-22: picker/camera + unit hoàn thành; test tay Expo Go thực hiện
+  sau khi CN5-04 có màn quét.)
 - [ ] CN5-03: OCR qua transport dùng lại ở `src/lib/ai` (prompt text TRƯỚC
   ảnh, mime `image/jpeg` cố định cho base64 picker, `responseMimeType` +
   `responseSchema`; parser JSON 3 nhánh đủ/dở/rỗng như CN3-PDF; giữ nguyên

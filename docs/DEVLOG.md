@@ -1793,3 +1793,19 @@ https://supabase.com/docs/guides/platform/access-control`
   `cn5-schema-verify.mjs` đến `VERIFY_PASS`. Chỉ sau đó mới làm CN5-02.
 
 ---
+
+---
+
+### CN5-01 remote đạt; CN5-02 chọn/chụp ảnh — 2026-09-22
+
+- Chủ dự án đã dán 0006; chạy `cn5-schema-verify.mjs` với tài khoản test:
+  `SIGNIN_OK`, `READ_OK`, `PNG_OK`, `GIF_OK`, `VERIFY_PASS`. Đọc bucket
+  `documents` qua Storage API bằng quyền quản trị: `BUCKET_PASS` (private,
+  10 MB, đúng 8 MIME, không GIF). Không ghi credential/token vào nhật ký.
+- CN5-02: thêm `pickScanImage`, `captureScanImage`, `recoverPendingScanImage`
+  Android; chọn/chụp một ảnh, hủy im lặng, xin quyền camera trước khi mở,
+  trả `canAskAgain` cho màn hướng dẫn Settings. Kiểm tra MIME/đuôi nguồn,
+  từ chối GIF, ảnh rỗng hoặc JPEG base64 quá 10 MB. HEIC nguồn vẫn chuẩn hóa
+  base64 picker thành `.jpg` + `image/jpeg` để ext/contentType khớp bucket.
+- Unit mock picker/quyền, không gọi mạng. Kiểm tay Expo Go để sau CN5-04 khi
+  có màn quét; FR-31/FR-32 còn `đang làm` cho đến lúc UI và test tay đạt.
