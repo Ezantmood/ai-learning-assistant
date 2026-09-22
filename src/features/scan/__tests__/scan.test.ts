@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
-import { GeminiEmptyError, ocrWithGemini } from '../../../lib/ai/transport';
+import { GeminiEmptyError, GeminiServerError, ocrWithGemini } from '../../../lib/ai/transport';
 import { supabase } from '../../../shared/lib/supabase';
 import { runScan } from '../api';
-import { ScanTruncatedError } from '../errors';
+import { ScanTruncatedError, toScanErrorMessage } from '../errors';
 import type { ScanImage } from '../schemas';
 
 jest.mock('../../../shared/lib/supabase', () => ({
@@ -99,5 +99,10 @@ describe('runScan', () => {
     expect(supabase.storage.from).not.toHaveBeenCalled();
     expect(supabase.from).not.toHaveBeenCalled();
     expect(ocrMock).not.toHaveBeenCalled();
+  });
+
+  it('503 báo quá tải và hướng dẫn user bấm thử lại', () => {
+    expect(toScanErrorMessage(new GeminiServerError(503))).toContain('quá tải (503)');
+    expect(toScanErrorMessage(new GeminiServerError(503))).toContain('Thử lại');
   });
 });

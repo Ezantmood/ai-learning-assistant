@@ -390,3 +390,10 @@ Dashboard từ source mới (SETUP 5d mục 7) tới khi probe kèm JWT trả 20
   có chữ `Bai 1: 2 + 3 = ?`, Gemini trả đúng chuỗi qua JSON schema.
   Đây chỉ xác nhận model/key/payload; kiểm giao diện camera và Expo Go vẫn
   chờ chủ dự án bấm theo checklist mục 17.
+
+- Sau khi chủ dự án gặp 503 ngắt quãng và OCR chậm trên Expo Go, bản CN5
+  giảm suy luận Gemini 3.5 Flash xuống `minimal` và độ phân giải xử lý
+  ảnh xuống `medium` chỉ cho OCR. Smoke cùng ảnh mẫu đọc đúng, thời gian
+  17 giây so với một lượt mặc định timeout 60 giây; phép đo ít mẫu,
+  không khẳng định tốc độ cố định. 503 là quá tải phía Gemini, app giữ
+  nút “Thử lại” do đặc tả cấm retry tự động. Ảnh chữ nhỏ cần kiểm tay.

@@ -40,6 +40,9 @@ export function toScanErrorMessage(error: unknown): string {
     return 'AI không đọc được chữ trong ảnh. Hãy chụp ảnh rõ hơn hoặc chọn đề bài khác.';
   }
   if (error instanceof GeminiConfigError || error instanceof GeminiQuotaError || error instanceof GeminiServerError) {
+    if (error instanceof GeminiServerError && error.status === 503) {
+      return 'Máy chủ AI đang quá tải (503). Đợi một lát rồi bấm “Thử lại”.';
+    }
     return error.message;
   }
   if (error instanceof GeminiNetworkError) {

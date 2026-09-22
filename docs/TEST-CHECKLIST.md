@@ -254,6 +254,10 @@ Theo đúng khuôn `scripts/rls-proof.ts` của FR-05 (2 user test A/B, tự d�
 > Migration 0006 đã `VERIFY_PASS` và bucket đủ 8 MIME. Các case dưới đây
 > cần bấm trên Expo Go (Android, thêm iOS nếu có); ghi ngày, thiết bị và
 > light/dark theo quy ước đầu file. Không chụp key/token.
+> 2026-09-22: chủ dự án đã bấm camera và quét; có lượt thành công, có lượt
+> Gemini trả HTTP 503. Chạy lại bản code sau tối ưu OCR (`thinkingLevel`
+> minimal, `mediaResolution` medium) và ghi thời gian + độ chính xác chữ
+> nhỏ ở ảnh thật trước khi tick các case liên quan.
 
 - [ ] Dashboard CN5 “Hoàn thành” → mở `/scan`; nút back về Trang chủ,
   mở `/scan` trực tiếp vẫn có đường về. Icon hiển thị đủ ở light/dark.

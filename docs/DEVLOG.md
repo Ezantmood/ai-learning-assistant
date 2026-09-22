@@ -1860,3 +1860,24 @@ https://supabase.com/docs/guides/platform/access-control`
 - Không có Android `adb` hay iOS `simctl` trên máy này để bấm Expo Go.
   Checklist CN5 mục 17 còn trống; FR-31→FR-36 giữ `đang làm` và CN5-05
   chưa tick. Chưa merge/tag vì chưa có kiểm tay thiết bị và cổng cuối.
+
+---
+
+### CN5 — OCR chậm và 503 ngắt quãng, tối ưu có đo — 2026-09-22
+
+- Chủ dự án bấm tay camera/quét: có lượt thành công, có lượt Gemini trả
+  HTTP 503 và cảm giác chậm. Theo tài liệu Gemini, 503 là dịch vụ tạm
+  quá tải; app không thể bảo đảm xóa 503. SPEC CN5 cấm retry tự động,
+  nên giữ một request mỗi lần bấm và thông báo 503 rõ kèm “Thử lại”.
+- Chỉ đổi cấu hình OCR (không đổi model/nhánh CN3-CN4):
+  `thinkingConfig.thinkingLevel = minimal` và
+  `mediaResolution = MEDIA_RESOLUTION_MEDIUM`. Cả hai được Gemini 3.5
+  Flash hỗ trợ; không đặt các núm bị cấm. Mức ảnh medium có thể kém hơn
+  với chữ quá nhỏ nên checklist yêu cầu kiểm ảnh thật sau đổi.
+- Đo bằng cùng JPEG mẫu và JSON schema (mỗi cấu hình một request):
+  mặc định timeout 60 giây; minimal + mặc định 35 giây/200/đọc đúng;
+  minimal + medium 17 giây/200/đọc đúng. Đây là quan sát ít mẫu trên
+  dịch vụ tải biến động, không cam kết cải thiện cố định.
+- Cổng: `npx tsc --noEmit` đạt; lint 0 lỗi, 2 warning `watch()` cũ;
+  `npm test -- --runInBand` 34 suites, 302/302 đạt. Chờ chủ dự án bấm
+  lại Expo Go với ảnh thật để chốt FR-31→FR-36/CN5-05.

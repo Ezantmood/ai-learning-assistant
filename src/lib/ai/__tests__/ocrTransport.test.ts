@@ -63,6 +63,8 @@ describe('OCR transport', () => {
       { inline_data: { mime_type: 'image/jpeg', data: 'JPEGBASE64' } },
     ]);
     expect(body.generationConfig).toEqual(OCR_GENERATION_CONFIG);
+    expect(body.generationConfig.thinkingConfig).toEqual({ thinkingLevel: 'minimal' });
+    expect(body.generationConfig.mediaResolution).toBe('MEDIA_RESOLUTION_MEDIUM');
     expect(JSON.stringify(body)).not.toMatch(/temperature|top_p|top_k|candidate_count|thinking_budget/);
   });
   it('429 và 5xx giữ mapping chung, không retry', async () => {

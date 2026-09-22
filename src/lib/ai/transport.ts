@@ -193,6 +193,10 @@ export const OCR_PROMPT =
   'hoặc không phải đề bài, trả extracted_text là chuỗi rỗng. Không giải bài.';
 
 export const OCR_GENERATION_CONFIG = {
+  // OCR la chep chu, khong can suy luan dai. Gemini 3.5 Flash ho tro minimal;
+  // medium giam token anh/latency, van giu du chi tiet cho anh de bai ro.
+  thinkingConfig: { thinkingLevel: 'minimal' },
+  mediaResolution: 'MEDIA_RESOLUTION_MEDIUM',
   responseMimeType: 'application/json',
   responseSchema: {
     properties: { extracted_text: { type: 'STRING' } },
