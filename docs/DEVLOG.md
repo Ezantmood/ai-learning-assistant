@@ -1899,3 +1899,17 @@ https://supabase.com/docs/guides/platform/access-control`
   bắt đầu khi update status vẫn đang chờ.
 - Chờ chủ dự án đo lại ảnh thật trên Expo Go. Nếu Gemini vẫn chiếm phần
   lớn, phần đó phụ thuộc tải dịch vụ; không đổi model ngoài phạm vi CN5.
+
+---
+
+### CN5-05 — Chủ dự án nghiệm thu và đóng chức năng 5 — 2026-09-22
+
+- Chủ dự án xác nhận đã chụp camera/quét thành công trên Expo Go, đánh giá
+  cơ bản ổn và cho đóng CN5-05; dự kiến đo lại tốc độ ngày 2026-09-23.
+  503 ngắt quãng và thời gian biến động vẫn được ghi nhận, không hứa thời
+  gian cố định.
+- RLS A/B remote 8/8, `VERIFY_PASS`, OCR/Storage smoke và unit là bằng
+  chứng bổ sung. Các ca tay chưa chạy giữ ô trống ở checklist mục 17;
+  FR-31→FR-37 chuyển `đạt` theo nghiệm thu với khoảng trống ghi rõ.
+- Cổng đóng: `npx tsc --noEmit` đạt; `npm run lint` 0 lỗi, 2 warning
+  `watch()` cũ; `npm test -- --runInBand` 34 suites, 303/303 đạt.

@@ -327,13 +327,14 @@ gốc khác thì sửa SPEC trước, không sửa code).
   phải qua cổng glyphMap); thẻ CN5 dashboard sang `done`. FR: FR-35, FR-36.
   (2026-09-22: screen + route/dashboard + unit trạng thái/stale hoàn thành;
   kiểm tay Expo Go cần chủ dự án chạy sau khi mở bản code mới.)
-- [ ] CN5-05: Proof RLS A/B `documents` cho row ảnh quét (khuôn FR-05) +
+- [x] CN5-05: Proof RLS A/B `documents` cho row ảnh quét (khuôn FR-05) +
   unit full tầng scan + cập nhật traceability (FR-31→FR-37 “đạt”),
   checklist tay CN5, devlog, báo cáo theo code cuối; rà `git diff --cached`
   không có key. FR: FR-37 (+ đóng gói).
-  (2026-09-22: proof remote 8/8 đã đạt; kiểm tay chủ dự án thấy 503 ngắt
-  quãng. Đã tối ưu riêng OCR và cho update `processing` chạy đồng thời
-  với request AI; chờ bấm lại ảnh thật rồi mới đóng checkbox.)
+  (2026-09-22: proof remote 8/8, OCR smoke và unit đạt; chủ dự án đã chụp
+  camera, quét thành công và chấp nhận đóng CN5-05. Lỗi 503 và độ trễ
+  biến động đã được ghi nhận, tối ưu; đo lại ngày sau và các ca tay chưa
+  chạy vẫn để mở trong checklist, không coi là bằng chứng đã kiểm.)
 
 ## App shell — vỏ tabs + lối lùi (fix/app-shell)
 

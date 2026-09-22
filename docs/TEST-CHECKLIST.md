@@ -260,6 +260,10 @@ Theo đúng khuôn `scripts/rls-proof.ts` của FR-05 (2 user test A/B, tự d�
 > nhỏ ở ảnh thật trước khi tick các case liên quan.
 > Bản tiếp theo cho update `processing` và request AI chạy đồng thời sau
 > khi tạo row; đo lại thời gian tổng, nhất là khi Supabase phản hồi chậm.
+> 2026-09-22: chủ dự án xác nhận đã chụp camera và quét thành công trên
+> Expo Go, đồng ý đóng CN5-05. Chưa ghi nhận loại thiết bị, theme hay thời
+> gian từng lượt. Các ô dưới đây chưa được tick vì chưa có kết quả đầy đủ
+> từng ca; dự kiến đo lại tốc độ và kiểm độ chính xác ảnh thật ngày 2026-09-23.
 
 - [ ] Dashboard CN5 “Hoàn thành” → mở `/scan`; nút back về Trang chủ,
   mở `/scan` trực tiếp vẫn có đường về. Icon hiển thị đủ ở light/dark.

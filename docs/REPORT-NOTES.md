@@ -403,3 +403,8 @@ Dashboard từ source mới (SETUP 5d mục 7) tới khi probe kèm JWT trả 20
   `processing` với request Gemini để giảm thời gian chờ tổng mà vẫn giữ
   đúng một request OCR và trạng thái cuối. Đây là tối ưu code; tải
   Supabase/Gemini vẫn có thể biến động từng lượt.
+
+- Chủ dự án đã chụp/quét thành công trên Expo Go và chấp nhận đóng CN5-05
+  ngày 2026-09-22. Bằng chứng thiết bị mới phủ luồng camera thành công và
+  thông báo 503; các ca thư viện/GIF, quyền lỗi, mạng/quota, light/dark,
+  độ chính xác chữ nhỏ và thời gian sau tối ưu vẫn để mở ở checklist mục 17.
