@@ -248,3 +248,30 @@ Theo đúng khuôn `scripts/rls-proof.ts` của FR-05 (2 user test A/B, tự d�
 - [ ] Android và iOS/Expo Go mục tiêu: mở app, điều hướng toàn luồng không crash.
 - [ ] Không thấy warning nghiêm trọng, secret, token hoặc password trong console/UI.
 - [ ] `git diff --cached` không chứa key/token/password trước commit.
+
+## 17. Quét hình ảnh đề bài bằng AI (`/scan`, CN5)
+
+> Migration 0006 đã `VERIFY_PASS` và bucket đủ 8 MIME. Các case dưới đây
+> cần bấm trên Expo Go (Android, thêm iOS nếu có); ghi ngày, thiết bị và
+> light/dark theo quy ước đầu file. Không chụp key/token.
+
+- [ ] Dashboard CN5 “Hoàn thành” → mở `/scan`; nút back về Trang chủ,
+  mở `/scan` trực tiếp vẫn có đường về. Icon hiển thị đủ ở light/dark.
+- [ ] Empty “Chưa có kết quả” → chọn PNG/JPEG/WEBP/HEIC từ thư viện:
+  xem trước ảnh, chưa gửi AI cho tới khi bấm “Quét”. Hủy picker im lặng.
+- [ ] Chọn GIF → thông báo tiếng Việt, không tạo row `documents`/request AI.
+  Chọn ảnh quá 10 MB hoặc không đọc được → báo rõ, không upload.
+- [ ] Camera: cấp quyền → chụp → xem trước → quét. Từ chối tạm → có thông
+  báo; từ chối vĩnh viễn → nút “Mở Cài đặt”. Android bật “Don't keep
+  activities” rồi chụp để kiểm tra `getPendingResultAsync()` cứu ảnh.
+- [ ] Bấm “Quét” với ảnh đề bài rõ → spinner + nút disabled; bấm dồn không
+  có request thứ hai; xong hiện toàn văn OCR tiếng Việt. Kiểm tra row mới
+  `documents` có `.jpg`, `image/jpeg`, `extracted_text`, `done`.
+- [ ] Ảnh mờ/không chữ/không phải đề bài → thông báo tiếng Việt + “Thử lại”,
+  row `failed` không ghi text rỗng đè lên bản cũ. OCR cắt cụt (nếu tái hiện
+  được) → phần cứu được hiện kèm cảnh báo, row `done`.
+- [ ] Bật chế độ máy bay rồi quét → lỗi mạng + “Thử lại”; quota 429 (nếu gặp)
+  → banner hạn mức, không tự retry. Kill app lúc `processing`, sau 15 phút
+  mở lại → row chuyển `failed`.
+- [ ] A quét ảnh → đăng nhập B không thấy kết quả của A; proof Data API A/B
+  trong CN5-05 kiểm đủ SELECT/INSERT/UPDATE/DELETE.

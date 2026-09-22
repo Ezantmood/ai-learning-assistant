@@ -33,6 +33,7 @@ export const AppIcons = {
   folderOutline: 'folder-outline',
   formatTitle: 'format-title',
   history: 'history',
+  imageOutline: 'image-outline',
   home: 'home',
   information: 'information',
   lightbulbOutline: 'lightbulb-outline',

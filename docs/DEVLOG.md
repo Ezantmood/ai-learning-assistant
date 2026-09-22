@@ -1826,3 +1826,20 @@ https://supabase.com/docs/guides/platform/access-control`
 - Unit mock fetch và Supabase: payload, 429/5xx không retry, parser ba
   nhánh, thứ tự upload/row/status, từ chối user chéo và dữ liệu ảnh hỏng.
   Test tay OCR thật đợi màn CN5-04; FR-33/FR-34 còn `đang làm`.
+
+---
+
+### CN5-04 — Màn quét và dashboard — 2026-09-22
+
+- Thêm `/scan` từ thẻ CN5, giữ route con ẩn khỏi tab bar, back dùng
+  `goBackOrReplace`. Màn cho xem trước ảnh, nút chọn/chụp/quét, bốn trạng
+  thái processing/result/empty/error, quyền camera vĩnh viễn dẫn Settings,
+  quota 429 báo banner. Ref chặn bấm Quét lặp ngay cùng một tick; mutation
+  pending khóa các nút. Android đọc pending result sau khi activity bị kill.
+- `getLatestScan` lấy row ảnh mới nhất của user; `reclaimStaleScan` chuyển
+  `processing` quá 15 phút theo `updated_at` về `failed`. Dashboard CN5
+  sang `done`; icon ảnh mới qua cổng glyphMap.
+- Cổng local: TypeScript đạt, lint 0 lỗi/2 warning `watch()` cũ, 34 suites
+  301/301 test đạt; `npx expo export --platform android` bundle thành công.
+  Chưa bấm tay trên Expo Go: checklist mục 17 dành cho chủ dự án. CN5-05
+  còn proof RLS A/B, traceability tổng kết và báo cáo.

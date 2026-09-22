@@ -189,8 +189,8 @@ type GeminiPart = { text: string } | { inline_data: { mime_type: string; data: s
 
 export const OCR_PROMPT =
   'Hãy đọc ảnh đề bài và chép lại toàn bộ chữ nhìn thấy bằng tiếng Việt. ' +
-  'Giữ nguyên công thức, ký hiệu và thứ tự dòng. Nếu ảnh không có chữ đọc được, ' +
-  'trả extracted_text là chuỗi rỗng. Không giải bài.';
+  'Giữ nguyên công thức, ký hiệu và thứ tự dòng. Nếu ảnh không có chữ đọc được ' +
+  'hoặc không phải đề bài, trả extracted_text là chuỗi rỗng. Không giải bài.';
 
 export const OCR_GENERATION_CONFIG = {
   responseMimeType: 'application/json',

@@ -69,6 +69,37 @@ export async function recoverPendingScanImage(): Promise<ScanPickOutcome | null>
 
 export type ScanResult = { document: DocumentRow; extractedText: string };
 
+export const STALE_SCAN_MS = 15 * 60 * 1000;
+
+export function isStaleScan(document: Pick<DocumentRow, 'extraction_status' | 'updated_at'>, now = Date.now()): boolean {
+  const updatedAt = new Date(document.updated_at).getTime();
+  return document.extraction_status === 'processing' &&
+    Number.isFinite(updatedAt) && now - updatedAt > STALE_SCAN_MS;
+}
+
+export async function getLatestScan(userId: string): Promise<DocumentRow | null> {
+  const { data, error } = await supabase.from('documents')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('file_ext', 'jpg')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function reclaimStaleScan(document: DocumentRow, userId: string): Promise<boolean> {
+  if (document.user_id !== userId || !isStaleScan(document)) return false;
+  const { error } = await supabase.from('documents')
+    .update({ extraction_status: 'failed' })
+    .eq('id', document.id)
+    .eq('user_id', userId)
+    .eq('extraction_status', 'processing');
+  if (error) throw error;
+  return true;
+}
+
 /** Mỗi lần bấm Quét tạo một row mới; ảnh gốc JPEG lên Storage trước DB. */
 export async function runScan(input: {
   image: ScanImage;

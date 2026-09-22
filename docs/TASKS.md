@@ -319,12 +319,14 @@ gốc khác thì sửa SPEC trước, không sửa code).
   FR: FR-33, FR-34.
   (2026-09-22: transport, parser, lưu Storage/DB và unit hoàn thành;
   test OCR thật trên Expo Go thuộc CN5-04/05.)
-- [ ] CN5-04: Màn quét (`app/(app)/scan.tsx` push từ thẻ CN5 dashboard,
+- [x] CN5-04: Màn quét (`app/(app)/scan.tsx` push từ thẻ CN5 dashboard,
   back qua `goBackOrReplace`): xem trước ảnh + nút “Quét”, 4 trạng thái
   (spinner/OCR/empty/lỗi + “Thử lại”, testID `scan-pick`/`scan-capture`/
   `scan-run`/`scan-retry`), banner hạn mức khi 429, chặn gọi lặp khi
   `processing`, thu hồi treo 15 phút; icon lấy từ `AppIcons` (thêm tên mới
   phải qua cổng glyphMap); thẻ CN5 dashboard sang `done`. FR: FR-35, FR-36.
+  (2026-09-22: screen + route/dashboard + unit trạng thái/stale hoàn thành;
+  kiểm tay Expo Go cần chủ dự án chạy sau khi mở bản code mới.)
 - [ ] CN5-05: Proof RLS A/B `documents` cho row ảnh quét (khuôn FR-05) +
   unit full tầng scan + cập nhật traceability (FR-31→FR-37 “đạt”),
   checklist tay CN5, devlog, báo cáo theo code cuối; rà `git diff --cached`

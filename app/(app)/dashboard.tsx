@@ -84,8 +84,8 @@ const FEATURES: FeatureCard[] = FEATURE_META.map((meta) => ({
 
 /**
  * Tab Trang chủ: lưới 6 thẻ CN1→CN6, chỗ cắm các CN sau.
- * CN5/CN6 chưa khả dụng: bấm báo "đang phát triển", không điều hướng.
- * CN1→CN4 bấm vào route trong FEATURE_STATUS (nguồn duy nhất).
+ * CN6 chưa khả dụng: bấm báo "đang phát triển", không điều hướng.
+ * CN1→CN5 bấm vào route trong FEATURE_STATUS (nguồn duy nhất).
  */
 export default function DashboardScreen() {
   const theme = useTheme<AppTheme>();
