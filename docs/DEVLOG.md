@@ -1685,5 +1685,7 @@ https://supabase.com/docs/guides/platform/access-control`
 - Còn nợ (khai thẳng): proof RLS A/B cho `document_summaries`
   (TASKS CN3-05) và `document_questions` (FR-29) vẫn chưa viết — cách ly hiện
   chỉ chứng minh qua verify schema + unit từ chối chéo + kiểm tay.
+- Mốc Git: commit tính năng `6a6dcc5`, merge `--no-ff` `24bccc1`,
+  branch `fix/cn3-cn4-status`, tag `cn3-cn4-status` (push cùng lệnh với main).
 
 ---
