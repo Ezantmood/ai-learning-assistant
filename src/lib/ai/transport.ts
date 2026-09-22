@@ -63,7 +63,7 @@ export class GeminiError extends Error {
 export class GeminiConfigError extends GeminiError {
   constructor() {
     super(
-      'Chưa cấu hình EXPO_PUBLIC_GEMINI_API_KEY. Xem docs/SETUP.md mục 4 rồi khởi động lại Expo.',
+      'Chưa cấu hình EXPO_PUBLIC_GEMINI_API_KEY. Điền key vào .env.local (xem docs/SETUP.md mục 4), rồi dừng và chạy lại Expo.',
     );
     this.name = 'GeminiConfigError';
   }

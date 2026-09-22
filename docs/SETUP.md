@@ -46,15 +46,36 @@ cả ba cài đúng line SDK 57 bằng `npx expo install`.
    - `EXPO_PUBLIC_SUPABASE_URL`
    - `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
    - `EXPO_PUBLIC_REQUIRE_EMAIL_CONFIRMATION=false` khi dev (`true` khi demo).
-   - `EXPO_PUBLIC_GEMINI_API_KEY` — CHỈ cho bản demo CN3 sau probe 2026-09-20
-     (deploy proxy 403 thiếu quyền): GIỚI HẠN ĐÃ BIẾT, key trong bundle giải
-     nén ra được; phải restrict riêng Gemini API trong Google Cloud Console;
-     không commit, không chụp ảnh, xem REPORT-NOTES.
 2. Tạo `.env.local` (đã gitignore), điền:
+   - `EXPO_PUBLIC_GEMINI_API_KEY=<key Gemini>` cho CN3/CN4. App hiện gọi
+     Gemini trực tiếp; **đây là chỗ cắm key đang dùng**, không dùng secret
+     `GEMINI_API_KEY` của Edge Function. Giá trị trong `.env.local` ưu tiên hơn
+     `.env` nếu cả hai có cùng tên biến trong file; biến đã `export` sẵn ở
+     shell sẽ được Expo giữ nguyên, kể cả khi rỗng. Key nằm trong bundle nên đây là
+     giới hạn của bản demo; restrict riêng Gemini API trong Google Cloud
+     Console, không commit/chụp ảnh (xem REPORT-NOTES).
    - `SUPABASE_PROJECT_REF`, `SUPABASE_ACCESS_TOKEN`
    - `SUPABASE_DB_PASSWORD`, `SUPABASE_DB_URL`
    - `SUPABASE_SERVICE_ROLE_KEY` (chỉ `scripts/*-proof.ts` đọc).
 3. Liệt kê tên biến xem `.env.example`; không commit `.env`/`.env.local`.
+   Sau khi thêm/sửa key, **dừng hẳn Metro** rồi chạy `npx expo start --clear`
+   từ gốc repo và mở lại app trong Expo Go. Dòng `env: load` phải có
+   `.env.local`; dòng `env: export` phải có tên
+   `EXPO_PUBLIC_GEMINI_API_KEY`. Hai dòng này chỉ hiện tên biến, không hiện
+   giá trị. Có thể kiểm tra shell mà không in key:
+
+   ```bash
+   set -a
+   source .env
+   source .env.local
+   set +a
+   test -n "$EXPO_PUBLIC_GEMINI_API_KEY" && echo "Gemini key đã nạp" || echo "Thiếu Gemini key"
+   ```
+
+   Chỉ `source .env` sẽ báo thiếu nếu key nằm ở `.env.local`. Trong code Expo,
+   đọc bằng `process.env.EXPO_PUBLIC_GEMINI_API_KEY` (dot notation); không
+   destructure hoặc dùng dấu `[]`. Lỗi 403 từ curl thiếu key chỉ chứng minh
+   request curl đó không có danh tính; nó không xác nhận key trong app.
 
 ## 5. Apply SQL theo thứ tự (SQL Editor, paste tay)
 
@@ -113,7 +134,10 @@ DEVLOG G2). Thứ tự:
    Dòng nào `KHÔNG DAT` thì migration chưa áp đúng — báo chủ dự án, không sửa
    tay lẻ tẻ.
 
-## 5d. Đường proxy Gemini (secret + deploy LÀM TAY qua Dashboard)
+## 5d. Lịch sử probe proxy Gemini (không phải bước cấu hình app hiện tại)
+
+CN3/CN4 hiện dùng key client ở mục 4. Các bước dưới đây lưu lại kết quả probe
+cũ để đối chiếu, **không cần deploy proxy hay nạp secret** để bấm tóm tắt.
 
 Nguyên nhân phải làm tay: token PAT bị RBAC tầng organization chặn ghi —
 `GET /v1/projects/{ref}/functions` trả 200 (đường đọc hoạt động) nhưng `POST
