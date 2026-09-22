@@ -2198,4 +2198,8 @@ https://supabase.com/docs/guides/platform/access-control`
 - Cổng sau sửa: tsc 0, lint 0 error/2 warning `watch()` kế thừa, Jest
   318/318 (giữ mốc 317 + 1 mới; test solution-section vẫn chạy ở nhà mới),
   check:functions exit 0.
-- (Mốc Git điền sau merge: commit, merge `--no-ff`, tag `fix-route-exports`.)
+- (Mốc Git: commit fix `5fc84904df6badc434638718343137ed5ed86f0d` trên branch
+  `fix/route-exports` (đã push); merge `--no-ff` vào `main`:
+  `eb937f0bb3a3149a097f07ef9332cbf8e8fba3b3` (đã push); tag
+  `fix-route-exports` trỏ merge này, push cùng lệnh với main. Không mở PR
+  theo quyết định G4+.)
