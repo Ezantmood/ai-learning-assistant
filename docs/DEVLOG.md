@@ -1689,3 +1689,70 @@ https://supabase.com/docs/guides/platform/access-control`
   branch `fix/cn3-cn4-status`, tag `cn3-cn4-status` (push cùng lệnh với main).
 
 ---
+
+### Docs CN5 — Đặc tả quét ảnh FR-31 → FR-37 + backlog (chưa code) — 2026-09-22
+
+**Bối cảnh**
+
+- Lệnh session yêu cầu đọc SPEC FR-31..FR-37 rồi code trên
+  `feat/cn5-scan-image`. Kiểm tra thật: SPEC 240 dòng DỪNG ở FR-30 (CN4);
+  `grep FR-31|CN5` toàn repo chỉ ra placeholder (`scan/.gitkeep`) + 7 hàng
+  trống TRACEABILITY + nhắc “ngoài phạm vi” trong DEVLOG cũ — KHÔNG có
+  acceptance criteria nào. AGENTS.md cấm thêm chức năng ngoài FR đã chốt và
+  cấm code khi chưa có checkbox TASKS nên DỪNG ở bước đọc, báo chủ dự án.
+- Chủ dự án chọn hướng docs-trước (theo đúng tiền lệ CN3/CN4: SPEC gốc thiếu
+  thì session docs viết diễn giải đề xuất, ghi rõ nguồn, code sau).
+
+**Số sàn trước khi sửa (branch `docs/cn5-spec` từ `main`)**
+
+- `npx tsc --noEmit` → exit 0; `npm run lint` → 0 errors, 2 warning
+  `watch()` cũ; `npm test` → 30 suites, **277/277 PASS**; `npm run
+  check:functions` → exit 0. Đủ sàn (jest ≥ 260).
+
+**CHECK constraint `extraction_status` (đọc trước khi chạm)**
+
+- `0002_cn2_documents.sql` (`documents_extraction_status_rules`):
+  `check (extraction_status in ('pending', 'processing', 'done', 'failed',
+  'unsupported'))` — đúng 5 giá trị, không có giá trị mới cho quét ảnh.
+- `0004_cn3_summaries.sql` không chứa cột `extraction_status`.
+- Kết luận: tái dùng máy trạng thái cũ, KHÔNG bịa giá trị mới, KHÔNG
+  migration cho status.
+
+**Đã làm gì (docs only, không chạm code app)**
+
+- SPEC thêm mục CN5: bảng FR-31→FR-37 (diễn giải đề xuất — đề gốc chỉ có tên
+  Chức năng 5, nếu đề gốc khác thì sửa bảng trước, không sửa code), luật
+  validate (image-picker `['images']`/`canceled`/`assets[0]`/base64 JPEG cố
+  định, nhận png/jpeg/webp/heic/heif + từ chối gif, quyền camera +
+  `canAskAgain` → Settings + `getPendingResultAsync()`, prompt text trước
+  ảnh, cắt cụt hai nhánh, không retry), quy tắc dữ liệu (mỗi quét = một row
+  `documents` mới + ảnh vào chung bucket `documents`; 0006 CHỈ mở rộng
+  whitelist ảnh, không bảng/cột mới), out of scope, 6 quyết định chốt
+  (MODEL/TRANSPORT/SCHEMA/STORAGE/TRIGGER/SINGLE) mỗi cái kèm lý do.
+- TASKS thêm backlog CN5-01→CN5-05 (một branch `feat/cn5-scan-image`, tag
+  `cn5-hoan-thanh`); CN5-01 soạn 0006 + verify rồi DỪNG chờ dán tay.
+- FR-TRACEABILITY FR-31→FR-37 điền file/hàm dự kiến, giữ “chưa làm”.
+- ARCHITECTURE: 2 dòng (scan có SPEC, transport dùng lại cho CN5).
+
+**Cố tình không làm và lý do**
+
+- Không code app, không migration 0006, không verify script, không cài/gỡ
+  package (`expo-image-picker ~57.0.19` đã có; `app.json` không plugin ảnh —
+  đúng vì không prebuild), không apply SQL — tất cả thuộc session code
+  CN5-01→CN5-05. Docs session viết SQL là dồn việc, trái Quy tắc Git.
+- Không sửa FR-01→FR-30, theme/bảng màu, icon, `supabase/functions/**`.
+- Không tick checkbox CN5 nào (chưa có code + test tương ứng).
+
+**Đã kiểm thử**
+
+- `npx tsc --noEmit` → exit 0; `npm run lint` → 0 errors, 2 warning cũ;
+  `npm test` → 30 suites, **277/277 PASS** (giữ nguyên, docs không đụng test);
+  `npm run check:functions` → exit 0.
+
+**Mốc Git**
+
+- Branch: `docs/cn5-spec`
+- Tag: `docs-cn5` (tạo + push cùng lệnh với push main)
+- PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
+
+---
