@@ -296,6 +296,9 @@ Theo đúng khuôn `scripts/rls-proof.ts` của FR-05 (2 user test A/B, tự d�
 - [ ] PDF/TXT đã tóm tắt có `extracted_text`: mở chi tiết → vùng “Gợi ý lời giải”
   empty; bấm một lần → spinner, nút disabled; xong hiện gợi ý tiếng Việt
   từng bước. Bấm “Gợi ý lại” → row cũ được cập nhật, không tạo row thứ hai.
+- [ ] Sau hotfix CN6-HF-01: bấm “Gợi ý lại” ít nhất hai lần liên tiếp trên
+  cùng tài liệu; terminal không còn `ERROR` trỏ `RenameDocumentForm`, gợi ý
+  mới vẫn hiện và form đổi tên vẫn hoạt động.
 - [ ] Ảnh đã quét CN5: mở cùng màn chi tiết → bấm “Gợi ý lời giải” và thấy
   gợi ý từ chữ OCR; không cần tải lại ảnh.
 - [ ] DOCX hoặc PDF/TXT chưa tóm tắt: chỉ hiện Banner dẫn tóm tắt/quét trước;

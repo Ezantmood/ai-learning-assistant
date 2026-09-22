@@ -2112,3 +2112,10 @@ https://supabase.com/docs/guides/platform/access-control`
 - Merge `--no-ff` vào `main`: `ad391ecc8c9a1a8bba2ceef2db11769ace84795c` (đã push).
 - Tag `cn6-hoan-thanh` trỏ merge trên (đã push ngay sau tạo).
 - PR: không mở theo quyết định tự merge từ G4 trở đi.
+
+### CN6-HF-01 — Key trùng khi gợi ý lần hai — 2026-09-22
+
+- Chủ dự án báo Expo Go lượt gợi ý đầu mượt, lượt sau terminal in `ERROR` lặp và code frame trỏ `RenameDocumentForm` ở `/documents/[id]`. Log không kèm message gốc.
+- Soi JSX: `SolutionSection` và `RenameDocumentForm` đứng cạnh nhau, đều `key={doc.id}`. Hai sibling trùng key khiến React không định danh ổn định khi render lại. Đổi key vùng gợi ý thành chuỗi có tiền tố `solution-`; form đổi tên giữ key cũ.
+- Warning `Linking requires ... scheme` là cảnh báo Expo config riêng, không thuộc stack lỗi này.
+- Cổng sau sửa: tsc 0, lint 0 error/2 warning `watch()` kế thừa, Jest 315/315, check:functions exit 0. Expo Go lượt hai chưa kiểm lại trong session; chủ dự án cần xác nhận sau khi nhận bundle mới.

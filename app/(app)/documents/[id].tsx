@@ -290,7 +290,7 @@ export default function DocumentDetailScreen() {
 
       <QaSection doc={doc} userId={userId ?? ''} />
 
-      <SolutionSection doc={doc} key={doc.id} userId={userId ?? ''} />
+      <SolutionSection doc={doc} key={`solution-${doc.id}`} userId={userId ?? ''} />
 
       <RenameDocumentForm
         documentId={doc.id}
