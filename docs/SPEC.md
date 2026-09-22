@@ -334,6 +334,118 @@ cron dọn `processing` treo phía server, gợi ý lời giải (việc của C
 - CN5-SINGLE: mỗi lần quét đúng một ảnh. Lý do: đề là quét đề bài đơn lẻ;
   nhiều ảnh là quét hàng loạt ngoài đề.
 
+### CN6 — AI gợi ý lời giải (FR-38 → FR-45, session docs đề xuất)
+
+> Lưu ý nguồn: đề gốc trong repo chỉ liệt kê tên Chức năng 6 (“AI gợi ý
+> lời giải”, FR-38 → FR-45) mà không kèm nội dung từng FR. Bảng dưới là
+> diễn giải do session `docs/cn6-spec` đề xuất từ lệnh chi tiết của chủ dự
+> án (đầu vào là `extracted_text` sẵn có của CN3/CN5 nhồi thẳng, tái dùng
+> transport `src/lib/ai`, cắt cụt hai nhánh, giữ xử lý 429/5xx của CN3) và
+> hạ tầng hiện có (`documents` + `extracted_text`, 3 đường gọi Gemini đã
+> có: tóm tắt/hỏi đáp/OCR). Nếu đề gốc khác, sửa bảng này trước, không sửa
+> code theo bảng cũ.
+
+| FR | Yêu cầu | Acceptance criteria (Given / When / Then) |
+|----|---------|-------------------------------------------|
+| FR-38 | Gợi ý lời giải cho tài liệu của mình đã có `extracted_text` | **Given** đã đăng nhập và đang ở chi tiết một tài liệu của mình có `extracted_text` (PDF/TXT đã tóm tắt ở CN3 hoặc ảnh đã quét ở CN5 — cả hai đều là row `documents`), **When** bấm “Gợi ý lời giải”, **Then** app gửi toàn văn cho model trong `src/lib/ai/models.ts` đúng một lần và lưu gợi ý tiếng Việt. **Given** mất mạng hoặc Gemini lỗi, **When** gọi, **Then** báo lỗi tiếng Việt rõ ràng, cho thử lại, không tạo gợi ý nửa vời. |
+| FR-39 | Thiếu `extracted_text` / DOCX không gọi AI | **Given** tài liệu DOCX (`extraction_status = 'unsupported'`) hoặc chưa có `extracted_text` (rỗng sau trim), **When** mở chi tiết, **Then** nút gợi ý bị ẩn/vô hiệu hóa, UI dẫn đi tóm tắt (CN3) hoặc quét (CN5) trước, không có request nào gửi đi. |
+| FR-40 | Gọi Gemini qua transport dùng lại, cấm đường gọi thứ hai | **Given** đã có `extracted_text` hợp lệ, **When** gọi, **Then** app dùng đúng transport ở `src/lib/ai` (hàm mới `solveWithGemini` mở rộng `postGenerate` dùng chung như CN4/CN5 đã làm: prompt giải bài + `responseMimeType` + `responseSchema` JSON) và nhận gợi ý tiếng Việt. **Given** Gemini trả 429/5xx/mất mạng, **When** gọi, **Then** giữ nguyên mapping 429/5xx của CN3, không retry tự động. CẤM temperature/top_p/top_k/candidate_count/thinking_budget (Gemini 3.x trả HTTP 400); model đọc từ `models.ts`, cấm hardcode. |
+| FR-41 | Lưu gợi ý vào bảng `document_solutions` (ghi đè 1-1) | **Given** gọi thành công, **When** ghi, **Then** một row `document_solutions` được upsert theo `UNIQUE(document_id)` (gợi ý lại = ghi đè, không tạo row thứ hai; xóa tài liệu kéo theo mất gợi ý qua `CASCADE`). Cắt cụt hai nhánh như CN3-PDF/CN5: (a) còn chuỗi dở cứu được → lưu phần dở rồi báo user biết bị cắt (cấm giả vờ thành công); (b) rỗng hoàn toàn (parts/text null khi chạm MAX_TOKENS) → báo thất bại rõ, KHÔNG ghi đè gợi ý cũ bằng rỗng. |
+| FR-42 | Hiển thị vùng gợi ý lời giải ở màn chi tiết | **Given** đang ở chi tiết tài liệu của mình, **When** xem vùng gợi ý lời giải, **Then** thấy đúng một trong bốn trạng thái: đang gợi ý (spinner + nút disabled), gợi ý mới nhất, empty (“Chưa có gợi ý — bấm nút để tạo”), lỗi kèm “Thử lại”. |
+| FR-43 | Chặn gọi lặp và báo khi chạm hạn mức miễn phí | **Given** đang có request gợi ý chạy (mutation pending), **When** bấm nút lần nữa, **Then** bị chặn (nút disabled + guard), không gửi request thứ hai. **Given** Gemini trả lỗi quota/429, **When** gọi, **Then** UI báo hạn mức như CN3, không tự retry. Không có trạng thái treo cần thu hồi (khác CN3/CN5): trạng thái suy từ row `document_solutions` + mutation client, không lật cột `extraction_status` của `documents` (đang `done`, lật là phá ngữ nghĩa CN3/CN5). |
+| FR-44 | Gợi ý lời giải cách ly theo tài khoản | **Given** hai tài khoản A/B mỗi người gợi ý riêng, **When** A select/insert/update/delete qua Supabase client, **Then** A chỉ thao tác row có `user_id = auth.uid()`; truy cập row B bị RLS chặn (bảng mới `document_solutions` mang RLS 4 lệnh khuôn CN3/CN4, kiểm chứng A/B như FR-05). |
+| FR-45 | Migration và verify CN6 | **Given** migration `0007_cn6_solutions.sql` (idempotent, bảng `document_solutions` + RLS 4 lệnh + CASCADE + CHECK + trigger tái dùng, KHÔNG đụng cột/bảng cũ), **When** dán tay qua SQL Editor rồi chạy `scripts/cn6-schema-verify.mjs`, **Then** `VERIFY_PASS`; types tay trong `database.ts` khớp. CẤM `db push` (PAT sbp_ bị RBAC chặn ghi như CN5-01). |
+
+### Luật validate và hành vi CN6
+
+- Đầu vào gợi ý: chỉ tài liệu của chính user có `extracted_text` non-empty
+  (sau trim); DOCX/`unsupported`/thiếu text chặn ở UI lẫn guard trong
+  `requestSolution`, KHÔNG bao giờ tới được hàm gọi Gemini (FR-39).
+- Nhồi thẳng toàn văn `extracted_text` vào prompt trong MỘT request duy
+  nhất; CẤM vector DB/RAG/chunking (đề bài ≤ 10 MB nguồn nên prompt luôn
+  gọn; vượt ngưỡng thì từ chối rõ, không tự chia nhỏ).
+- `solveWithGemini(source: { contextText: string })` sống trong
+  `src/lib/ai/transport.ts`, gọi qua `postGenerate` dùng chung (giữ mapping
+  429/quota/5xx/mạng của CN3, `emptyMessage` riêng ngữ cảnh gợi ý). Prompt
+  cố định: đọc đề bài, gợi ý lời giải/hướng giải từng bước bằng tiếng
+  Việt, chỉ dựa trên đề bài, không bịa dữ kiện; `responseMimeType` +
+  `responseSchema` JSON một trường `solution_text` (khuôn OCR CN5).
+- Parser JSON 3 nhánh tái dùng mẫu CN5 (`parseOcrJson`): đủ → lưu;
+  dở → cứu chuỗi dở + `truncated: true` (lưu phần cứu được rồi báo cắt);
+  rỗng hoàn toàn → ném `GeminiEmptyError` (không upsert rỗng, giữ gợi ý cũ).
+- Gợi ý lưu ở `document_solutions.solution_text`, tối đa 20.000 ký tự
+  (CHECK ở DB mirror `document_summaries`/`document_questions`; vượt thì
+  báo lỗi rõ thay vì cắt im lặng).
+- Vòng đời 1-1 ghi đè như CN3 (không append-only như CN4): gợi ý lại =
+  UPDATE cùng row theo `UNIQUE(document_id)`; không sửa/xóa từng bản.
+- Chống đốt quota: không gợi ý tự động sau tóm tắt/quét; không retry tự
+  động (kể cả lỗi mạng transient — user bấm “Thử lại”); mỗi lần bấm = tối
+  đa một request; lỗi 429/quota không retry, chỉ báo.
+- Không đặt `max_output_tokens` nhỏ; không temperature/top_p/top_k/
+  candidate_count/thinking_budget; núm duy nhất được phép là
+  `thinking_level`/`media_resolution` nếu cần (khuôn CN5).
+
+### Quy tắc dữ liệu CN6
+
+- Bảng mới `document_solutions` (session schema soạn `0007`, DÁN TAY qua
+  SQL Editor, CẤM `db push`; soạn xong DỪNG chờ apply rồi verify
+  `VERIFY_PASS` mới code tiếp — khuôn CN5-01): `id` (uuid pk), `document_id`
+  (uuid not null UNIQUE, FK về `documents(id) ON DELETE CASCADE`),
+  `user_id` (uuid not null, denormalized để RLS viết trực tiếp
+  `auth.uid() = user_id`, FK về `auth.users(id) CASCADE`), `solution_text`
+  (1–20.000 ký tự, mirror `document_summaries_summary_rules`),
+  `model` (1–100 ký tự, default `'gemini-3.5-flash'` như CN4),
+  `created_at`/`updated_at` (trigger `set_updated_at()` tái dùng, không
+  function mới); index `(user_id)`; RLS 4 lệnh khuôn CN3/CN4; grants
+  `authenticated` CRUD, `service_role` full, `revoke anon`.
+- Vì sao bảng mới thay vì tái dùng (đã soi cả 3 đường gọi + schema):
+  `document_summaries` là bản tóm tắt 1-1 (ghi đè là mất tóm tắt);
+  `document_questions` là lịch sử hỏi đáp append-only (nhét gợi ý vào là
+  trộn lịch sử); `documents` không còn cột trạng thái trống (lật
+  `extraction_status` đang `done` là phá ngữ nghĩa CN3/CN5, và CHECK chỉ có
+  đúng 5 giá trị `pending/processing/done/failed/unsupported` — đọc nguyên
+  văn `0002`, CẤM bịa giá trị mới). Bảng riêng là phình tối thiểu có lý do,
+  mirror CN3-SCHEMA.
+- Xóa tài liệu (FR-11) kéo theo xóa gợi ý qua CASCADE; không bước xóa riêng.
+- UI là một vùng trong `/documents/[id]` (không route mới — row quét CN5
+  cũng là row `documents` nên một vùng phục vụ cả hai nguồn); thẻ CN6 trên
+  dashboard trỏ về tab Tài liệu như CN3/CN4 sau khi code xong (docs session
+  chưa lật `featureStatus`, giữ `'soon'`).
+
+### OUT OF SCOPE của CN6 (đề không yêu cầu)
+
+Chấm điểm bài làm, chữa bài tự luận chi tiết từng dòng, gợi ý hàng loạt
+nhiều tài liệu, streaming từng đoạn, chọn độ dài/phong cách gợi ý, lịch sử
+nhiều bản gợi ý, xuất file/share gợi ý, đánh giá chất lượng gợi ý, cache
+gợi ý chung giữa các user, cron dọn trạng thái treo phía server, RAG/
+chunking/vector DB, File API upload, model khác ngoài hằng số ở
+`models.ts`, Edge Function proxy (đã bỏ hẳn từ CN5), migrate sang
+Interactions API.
+
+### Quyết định CN6 đã chốt (mỗi cái kèm lý do)
+
+- CN6-INPUT: đầu vào là `extracted_text` sẵn có (CN3 cho PDF, CN5 cho ảnh),
+  nhồi thẳng một request. Lý do: đề bài đã nằm gọn trong DB sau CN3/CN5;
+  RAG/chunking là ôm việc ngoài đề cho input ≤ 10 MB nguồn.
+- CN6-TRANSPORT: mở rộng `postGenerate` dùng chung bằng `solveWithGemini`,
+  CẤM đường gọi Gemini thứ hai. Lý do: một đường gọi duy nhất giữ mapping
+  lỗi 429/5xx nhất quán (đã có 3 chỗ gọi: tóm tắt/hỏi đáp/OCR — soi cả 3,
+  không copy).
+- CN6-MODEL: dùng lại hằng số duy nhất ở `src/lib/ai/models.ts`, cấm
+  hardcode nơi khác. Lý do: bẫy bất biến như CN5-MODEL.
+- CN6-SCHEMA: bảng mới `document_solutions` 1-1 ghi đè (mirror CN3-SCHEMA),
+  không cột mới trên `documents`, không giá trị status mới. Lý do: hai bảng
+  cũ chứa không vừa (tóm tắt/lịch sử hỏi đáp), CHECK cũ không có chỗ cho
+  trạng thái gợi ý.
+- CN6-STATUS: không máy trạng thái persistent cho gợi ý (khác CN3/CN5).
+  Lý do: CN4 đã chứng minh hỏi đáp chạy tốt không cần status; trạng thái
+  suy từ row + mutation client, không còn kẹt `processing` để phải thu hồi.
+- CN6-TRIGGER: kích hoạt bằng nút user bấm, KHÔNG tự động sau tóm tắt/quét.
+  Lý do: mỗi lần gợi ý tốn 1 request quota (~1.500/ngày); auto đốt quota
+  cho đề user chưa cần giải.
+- CN6-SINGLE: mỗi lần gợi ý cho đúng một tài liệu. Lý do: đề là gợi ý theo
+  đề bài đơn lẻ; nhiều tài liệu là gợi ý hàng loạt ngoài đề.
+
 ## CẦN CHỦ DỰ ÁN QUYẾT ĐỊNH
 
 Không còn câu hỏi mở. Chủ dự án đã chốt:

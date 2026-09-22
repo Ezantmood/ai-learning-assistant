@@ -64,12 +64,14 @@ Kiến trúc theo feature, ít tầng và đủ rõ để sinh viên giải thí
 │   │   │   └── chat/__tests__/chat.test.ts (mock transport/supabase, không gọi mạng)
 │   │   ├── scan/{api.ts,schemas.ts,queries.ts,errors.ts,viewState.ts} (FR-31 → FR-37:
 │   │   │   picker/camera, OCR + row documents, trạng thái màn quét)
-│   │   └── solver/.gitkeep (FR-38 → FR-45, chưa code)
+│   │   └── solver/.gitkeep (FR-38 → FR-45, SPEC ở docs/SPEC.md mục CN6 từ
+│   │       session docs/cn6-spec; code ở session CN6-02→CN6-04)
 │   ├── lib/ai/{models.ts,transport.ts} (CN3-G1 + CN4, theo lệnh session — ngoại lệ
 │   │   có chủ đích so với quy ước "dùng chung lên shared": hằng số
 │   │   SUMMARY_MODEL duy nhất `gemini-3.5-flash` + hai hàm transport
 │   │   `summarizeWithGemini`/`answerWithGemini` nhánh key trực tiếp; cấm viết sẵn nhánh proxy
-│   │   bật/tắt bằng cờ; CN5 dùng lại transport này, CẤM đường gọi thứ hai)
+│   │   bật/tắt bằng cờ; CN5 dùng lại transport này, CẤM đường gọi thứ hai;
+│   │   CN6 mở rộng `postGenerate` bằng `solveWithGemini`, CẤM đường gọi thứ hai)
 │   │   ├── lib/ai/__tests__/transport.test.ts (mock fetch, không gọi mạng)
 │   │   └── lib/ai/__tests__/askTransport.test.ts (mock fetch, không gọi mạng)
 ├── supabase/migrations/

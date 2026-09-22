@@ -1918,3 +1918,86 @@ https://supabase.com/docs/guides/platform/access-control`
   vào `main` tại `86a08cea5638b11c96317fca7b083f23e7d9db80`,
   tag `cn5-hoan-thanh` (tạo sau commit ghi log này). Không mở PR theo
   quy tắc G4+ đã chốt.
+
+---
+
+### Docs cn6-spec — đặc tả FR-38→FR-45 trước khi code — 2026-09-22
+
+**Bối cảnh**
+
+- Lệnh session CN6 yêu cầu kiểm SPEC FR-38..FR-45 trước khi code; trống
+  thì viết SPEC + backlog trước rồi mới code, chia session như CN5
+  (docs → schema → code). Kiểm tra thật: SPEC DỪNG ở FR-37 (CN5);
+  `solver/.gitkeep` + 8 hàng trống TRACEABILITY + thẻ CN6 "Sắp có" trên
+  dashboard — KHÔNG có acceptance criteria nào. Cổng vào đạt:
+  `feat/cn5-scan-image` đã merge vào `main`, tag `cn5-hoan-thanh` đã push
+  (cùng hash `16e8149` với `origin/main`).
+- Đã soi cả 3 đường gọi Gemini (`summarizeWithGemini` + PDF 2-trường,
+  `answerWithGemini` nhồi text, `ocrWithGemini` JSON 1-trường) và schema
+  hiện có trước khi viết (lệnh session: dùng lại, đừng copy).
+
+**Số sàn trước khi sửa (branch `docs/cn6-spec` từ `main`)**
+
+- `npx tsc --noEmit` → exit 0; `npm run lint` → 0 errors, 2 warning
+  `watch()` kế thừa; `npm test` → 34 suites, **303/303 PASS** (sàn lệnh
+  ghi jest 301 — số thật đo được là 303, lấy số thật); `npm run
+  check:functions` → exit 0.
+
+**CHECK constraint đọc nguyên văn trước khi chạm**
+
+- `0002_cn2_documents.sql`: `check (extraction_status in ('pending',
+  'processing', 'done', 'failed', 'unsupported'))` — đúng 5 giá trị, không
+  có chỗ cho trạng thái gợi ý; `check (char_length(display_name) between 1
+  and 120)`; `check (file_size > 0 and file_size <= 10485760)`.
+- `0004_cn3_summaries.sql`: `check (char_length(summary_text) between 1 and
+  20000)` (`document_summaries_summary_rules`); `check (char_length(model)
+  between 1 and 100)` (`document_summaries_model_rules`).
+- `0005_cn4_questions.sql`: `check (char_length(question) between 1 and 500
+  and char_length(answer) between 1 and 20000)`
+  (`document_questions_qa_rules`); `check (char_length(model) between 1 and
+  100)` (`document_questions_model_rules`).
+- Kết luận: 0007 mirror nguyên văn các ngưỡng trên cho
+  `document_solutions`; CẤM bịa giá trị status mới; không lật
+  `extraction_status` đang `done` cho vòng đời gợi ý.
+
+**Đã làm gì (docs only, không chạm code app)**
+
+- SPEC thêm mục CN6: bảng FR-38→FR-45 (diễn giải đề xuất — đề gốc chỉ có
+  tên Chức năng 6, nếu đề gốc khác thì sửa bảng trước, không sửa code),
+  luật validate (guard DOCX/thiếu-text trước mạng, nhồi thẳng
+  `extracted_text` một request, `solveWithGemini` mở rộng `postGenerate`,
+  parser 3 nhánh khuôn OCR, cắt cụt hai nhánh, không retry, cấm
+  temperature/top_p/top_k/candidate_count/thinking_budget), quy tắc dữ
+  liệu (bảng mới `document_solutions` 1-1 ghi đè + lý do không tái dùng
+  được 2 bảng cũ; UI là một vùng trong `/documents/[id]`, không route
+  mới), out of scope, 7 quyết định chốt (INPUT/TRANSPORT/MODEL/SCHEMA/
+  STATUS/TRIGGER/SINGLE) mỗi cái kèm lý do.
+- TASKS thêm backlog CN6-00→CN6-04 (docs session này tick CN6-00; một
+  branch code `feat/cn6-solver`, tag `cn6-hoan-thanh`); CN6-01 soạn 0007 +
+  verify rồi DỪNG chờ dán tay (PAT sbp_ bị RBAC chặn ghi như CN5-01).
+- FR-TRACEABILITY FR-38→FR-45 điền file/hàm dự kiến, giữ “Chưa làm”.
+- ARCHITECTURE: 2 dòng (solver SPEC, transport dùng lại cho CN6).
+
+**Cố tình không làm và lý do**
+
+- Không code app, không migration 0007, không verify script, không apply
+  SQL — tất cả thuộc session schema/code CN6-01→CN6-04. Docs session viết
+  SQL là dồn việc, trái Quy tắc Git (tiền lệ `docs/cn5-spec`).
+- Không sửa FR-01→FR-37, theme/bảng màu, icon, `featureStatus` (CN6 giữ
+  `'soon'` tới commit code CN6-03), `supabase/functions/**`,
+  `src/lib/ai/models.ts`.
+- Không tick checkbox CN6-01→CN6-04 nào (chưa có code + test tương ứng).
+
+**Đã kiểm thử**
+
+- `npx tsc --noEmit` → exit 0; `npm run lint` → 0 errors, 2 warning cũ;
+  `npm test` → 34 suites, **303/303 PASS** (giữ nguyên, docs không đụng
+  test); `npm run check:functions` → exit 0.
+
+**Mốc Git**
+
+- Commit docs: (branch `docs/cn6-spec`, đã push)
+- Branch: `docs/cn6-spec`
+- Tag: `docs-cn6` (tạo + push cùng lệnh với push main)
+- PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng
+  xanh (tiền lệ `docs-cn5`).
