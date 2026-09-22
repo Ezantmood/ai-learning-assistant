@@ -68,4 +68,14 @@ describe('solver API', () => {
     expect(eq).toHaveBeenCalledWith('document_id', 'doc-a');
     expect(eq).toHaveBeenCalledWith('user_id', 'a');
   });
+  it('gợi ý quá 20.000 ký tự không ghi DB; lỗi upsert được đưa lên UI', async () => {
+    solveMock.mockResolvedValueOnce({ solutionText: 'x'.repeat(20001), truncated: false });
+    await expect(requestSolution({ document: doc, userId: 'a' })).rejects.toThrow('20.000');
+    expect(fromMock).not.toHaveBeenCalled();
+
+    solveMock.mockResolvedValueOnce({ solutionText: 'Bước 1', truncated: false });
+    fromMock.mockImplementation((() => ({ upsert: () => ({ select: () => ({ single: async () => ({ data: null, error: new Error('db down') }) }) }) })) as unknown as typeof supabase.from);
+    await expect(requestSolution({ document: doc, userId: 'a' })).rejects.toThrow('db down');
+    expect(toSolverErrorMessage(new Error('db down'))).toMatch(/Không tạo được/);
+  });
 });

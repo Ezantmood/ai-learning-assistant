@@ -285,3 +285,27 @@ Theo đúng khuôn `scripts/rls-proof.ts` của FR-05 (2 user test A/B, tự d�
   mở lại → row chuyển `failed`.
 - [ ] A quét ảnh → đăng nhập B không thấy kết quả của A; proof Data API A/B
   trong CN5-05 kiểm đủ SELECT/INSERT/UPDATE/DELETE.
+
+## 18. Gợi ý lời giải CN6 (`/documents/[id]`, Expo Go)
+
+> 2026-09-22: migration 0007 được chủ dự án xác nhận `VERIFY_PASS`; unit
+> và proof Data API A/B đạt. Các ô dưới đây **chưa kiểm tay trên Expo Go**.
+> Dùng điện thoại phát hotspot cho Mac, chạy `npx expo start -c`, quét QR mới;
+> không dùng `--tunnel` (Wi-Fi trường/công cộng có client isolation).
+
+- [ ] PDF/TXT đã tóm tắt có `extracted_text`: mở chi tiết → vùng “Gợi ý lời giải”
+  empty; bấm một lần → spinner, nút disabled; xong hiện gợi ý tiếng Việt
+  từng bước. Bấm “Gợi ý lại” → row cũ được cập nhật, không tạo row thứ hai.
+- [ ] Ảnh đã quét CN5: mở cùng màn chi tiết → bấm “Gợi ý lời giải” và thấy
+  gợi ý từ chữ OCR; không cần tải lại ảnh.
+- [ ] DOCX hoặc PDF/TXT chưa tóm tắt: chỉ hiện Banner dẫn tóm tắt/quét trước;
+  không có nút gửi Gemini.
+- [ ] Bật chế độ máy bay rồi bấm: lỗi tiếng Việt + “Thử lại”, gợi ý cũ còn
+  nguyên; bật mạng rồi bấm thử lại mới gửi request. Nếu gặp 429: banner
+  hạn mức, không tự retry.
+- [ ] Gemini trả rỗng khi tài liệu dài: báo thất bại, gợi ý cũ không bị
+  ghi đè rỗng. Nếu có phần JSON cứu được: hiện phần dở và cảnh báo cắt cụt.
+- [ ] Light/dark: card, spinner, Banner, nút, chữ lời giải dễ đọc; thẻ CN6
+  dashboard ghi “Hoàn thành” và mở tab Tài liệu.
+- [ ] Xóa tài liệu đã có lời giải → row `document_solutions` mất theo CASCADE.
+  A đăng nhập không thấy row của B; proof Data API A/B đã đạt 11/11.

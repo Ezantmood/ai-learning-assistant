@@ -408,3 +408,18 @@ Dashboard từ source mới (SETUP 5d mục 7) tới khi probe kèm JWT trả 20
   ngày 2026-09-22. Bằng chứng thiết bị mới phủ luồng camera thành công và
   thông báo 503; các ca thư viện/GIF, quyền lỗi, mạng/quota, light/dark,
   độ chính xác chữ nhỏ và thời gian sau tối ưu vẫn để mở ở checklist mục 17.
+
+### CN6 — Gợi ý lời giải từ văn bản đã trích xuất (2026-09-22)
+
+- PDF/TXT sau CN3 hoặc ảnh sau CN5 đều là row `documents` có
+  `extracted_text`. User bấm tại chi tiết tài liệu; app gửi một request
+  Gemini qua `postGenerate` chung, dùng JSON schema một trường
+  `solution_text`. Không có route AI, status hay đường gọi Gemini mới.
+- Gợi ý lưu 1-1 trong `document_solutions`, upsert theo `document_id`;
+  xóa tài liệu kéo theo xóa gợi ý. DOCX/thiếu text bị chặn ở UI và API.
+- Khi JSON bị cắt nhưng còn chuỗi: lưu phần cứu được rồi báo cắt. Khi
+  `parts`/`text` null hoặc rỗng: báo thất bại, giữ row cũ. 429/5xx/mạng
+  dùng mapping chung, không retry tự động; không dùng các tham số Gemini
+  3.x bị cấm.
+- Schema 0007 đã được chủ dự án xác nhận `VERIFY_PASS`. Proof RLS remote
+  cho bảng mới đạt `11/11`; kiểm tay Expo Go theo checklist mục 18 còn chờ.

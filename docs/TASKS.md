@@ -406,7 +406,7 @@ gốc khác thì sửa SPEC trước, không sửa code).
   cổng glyphMap). FR: FR-42, FR-43.
   (Không route mới: row quét CN5 cũng là row `documents` nên một vùng phục
   vụ cả hai nguồn.)
-- [ ] CN6-04 (CUỐI CÙNG): Proof RLS A/B `document_solutions` (khuôn FR-05/
+- [x] CN6-04 (CUỐI CÙNG): Proof RLS A/B `document_solutions` (khuôn FR-05/
   `cn5-rls-proof.mjs`) + unit full tầng solver + cập nhật traceability
   (FR-38→FR-45 “đạt”), checklist tay CN6, devlog, báo cáo theo code cuối;
   rà `git diff --cached` không có key. FR: FR-44 (+ đóng gói).
