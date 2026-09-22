@@ -2148,4 +2148,7 @@ https://supabase.com/docs/guides/platform/access-control`
 - Cổng sau sửa: tsc 0, lint 0 error/2 warning `watch()` kế thừa, Jest
   317/317 (giữ mốc 315 + 2 mới), check:functions exit 0. Kiểm tay Expo Go
   (tab bar hết tofu) thuộc chủ dự án.
-- (Mốc Git điền sau merge: commit, merge `--no-ff`, tag `fix-tabbar-icons`.)
+- (Mốc Git: commit fix `aa41b34` trên branch `fix/tabbar-icons` (đã push);
+  merge `--no-ff` vào `main`: `bab9d7abed7392469160cf5c96a01987ac811f67`
+  (đã push); tag `fix-tabbar-icons` trỏ merge này, push cùng lệnh với main.
+  Không mở PR theo quyết định G4+.)
