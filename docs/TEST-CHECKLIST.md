@@ -11,6 +11,16 @@ Trước khi chụp: `npx tsc --noEmit`, `npm run lint`, `npm test` xanh.
 Quy ước: Expo Go trên 1–2 máy thật; tài khoản demo A (và B cho case cách ly);
 mỗi màn chụp cả light lẫn dark trừ khi ghi rõ.
 
+## 0. Tiền-kiểm trước buổi bảo vệ (làm trước khi bấm bất kỳ case nào)
+
+- [ ] Mạng: KHÔNG dùng wifi trường/công cộng (client isolation chặn Expo Go
+  thấy dev server dù "cùng mạng"). Điện thoại phát hotspot, Mac nối vào
+  hotspot đó, rồi `npx expo start -c` và quét QR mới. KHÔNG dùng `--tunnel`.
+- [ ] Supabase còn thức: free tier tự pause sau ~7 ngày không dùng. Mở
+  Dashboard project còn responding, hoặc chạy `GET <SUPABASE_URL>/auth/v1/health`
+  (thức = trả HTTP 401 nhanh; pause = timeout/503). Pause thì bấm Resume trong
+  Dashboard rồi đợi sẵn sàng mới demo.
+
 ## 1. Khởi động và dashboard
 
 - [ ] Kill app → mở lại (chưa login) → dừng ở `/sign-in`, không nháy màn khác.
