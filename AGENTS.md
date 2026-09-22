@@ -42,6 +42,7 @@
 - Không gọi Supabase trực tiếp từ screen; screen gọi API/query của feature.
 - Không tự thay stack, package hoặc kiến trúc đã chốt trong docs.
 - `expo-file-system` chỉ dùng API mới (`File`, `Directory`, `Paths`); cấm import `expo-file-system/legacy`, cấm `readAsStringAsync`, `getInfoAsync`, `documentDirectory`, `copyAsync`.
+- Wifi trường/công cộng bật client isolation → Expo Go không thấy dev server dù máy tính và điện thoại "cùng mạng". Triệu chứng: scan QR không vào, nhập URL tay cũng không vào, hiện "Something went wrong" — đã mất một lượt debug vì đi soi code trong khi bundle/Metro/Supabase đều sạch. Cách đi vòng: điện thoại phát hotspot, Mac nối vào hotspot đó, rồi `npx expo start -c` và quét QR mới. KHÔNG dùng `--tunnel`.
 - Không force-push, rebase branch chia sẻ hay sửa lịch sử nếu chưa được chủ dự án yêu cầu. Không tự merge vào `main` ở G1–G3; từ G4 trở đi agent tự merge sau khi cổng chất lượng xanh theo quyết định của chủ dự án (xem Quy tắc Git).
 
 ## Quy trình task

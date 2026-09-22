@@ -1627,7 +1627,7 @@ https://supabase.com/docs/guides/platform/access-control`
 **Mốc Git**
 
 - Branch: `feat/cn3-pdf-extract-text`
-- Commit merge: (điền sau merge `--no-ff` vào `main`, tra `git log --oneline --grep cn3-pdf`)
+- Commit merge: `0044cd3` (merge `--no-ff` vào `main`)
 - Tag: `cn3-pdf-text` (tạo + push cùng lệnh với push main)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
 
@@ -1756,5 +1756,22 @@ https://supabase.com/docs/guides/platform/access-control`
 - Branch: `docs/cn5-spec`
 - Tag: `docs-cn5` (tạo + push cùng lệnh với push main)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
+
+---
+
+### Docs expo-go-hotspot-trap — bẫy client isolation + sàn 274 — 2026-09-22
+
+- Branch `docs/expo-go-hotspot-trap`, chỉ sửa tài liệu, không đụng code/test.
+  AGENTS.md mục Điều cấm thêm bẫy: wifi trường/công cộng bật client
+  isolation → Expo Go không thấy dev server dù "cùng mạng" (QR + URL tay đều
+  không vào, "Something went wrong"); đi vòng bằng hotspot điện thoại + Mac
+  nối vào + `npx expo start -c`, cấm `--tunnel`.
+- `docs/TEST-CHECKLIST.md` thêm mục 0 tiền-kiểm buổi bảo vệ (hotspot +
+  Supabase còn thức, free tier pause ~7 ngày). Sàn hiện tại ghi ở
+  README + SETUP (`npm test`): 29 suites, 274/274 PASS (sàn 260 cũ lạc hậu).
+  DEVLOG entry CN3-PDF điền hash merge `0044cd3` (đã verify tồn tại local).
+- Cổng: `npx tsc --noEmit` exit 0; `npm run lint` 0 errors, 2 warning
+  `watch()` kế thừa; `npm test` 30 suites, 277/277 PASS (trên sàn 274);
+  `npm run check:functions` exit 0.
 
 ---
