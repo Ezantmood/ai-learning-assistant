@@ -194,3 +194,17 @@ trong app; không ghi email/mật khẩu/JWT/key vào log.
 - Kiểm tra Storage bổ sung bằng session user test có sẵn: upload JPEG mẫu
   tới `{user_id}/cn5-verify-<uuid>.jpg` với `image/jpeg` → `JPEG_UPLOAD_OK`,
   xóa ngay → `STORAGE_PASS`. Không còn object thử.
+
+## CN6 FR-44 — `document_solutions` (2026-09-22)
+
+Chạy `node --env-file=.env --env-file=.env.local scripts/cn6-rls-proof.mjs`
+trên Supabase remote. Script tạo hai user A/B và hai row `documents` tạm,
+đăng nhập hai client publishable key, kiểm CRUD của `document_solutions`,
+rồi xóa user trong `finally` (CASCADE dọn row). Không in key/token/password.
+
+- A/B INSERT row của mình: đạt; A SELECT row mình: 1, row B: 0;
+  B SELECT row A: 0.
+- A INSERT với `user_id=B`: bị `42501`.
+- A UPDATE/DELETE row B: 0; A chuyển row mình sang `user_id=B`: bị `42501`.
+- B đọc lại row mình nguyên vẹn; A UPDATE và DELETE row mình: đạt.
+- `RLS_PROOF_PASS 11/11`, exit 0.

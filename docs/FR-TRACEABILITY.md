@@ -72,18 +72,18 @@ Chỉ chuyển trạng thái sau khi file/hàm tồn tại và case test tương
 | FR-36 | Cùng màn quét + `src/features/scan/api.ts` | Nút disabled khi `processing` (guard chặn gọi lặp); 429/quota → banner hạn mức, không retry; thu hồi treo 15 phút theo `updated_at` | Unit chặn gọi lặp, quota và stale đạt; chưa tái hiện quota/bấm dồn trên thiết bị | đạt |
 | FR-37 | 4 RLS policy `documents` đã có (`auth.uid() = user_id`); `scripts/cn5-rls-proof.mjs` | Row ảnh quét cách ly như tài liệu (không policy mới); proof A/B khuôn FR-05 | Remote `RLS_PROOF_PASS 8/8` (2026-09-22, xem RLS-PROOF.md); unit từ chối user chéo đạt | đạt |
 
-## Chức năng 6 — AI gợi ý lời giải (đặc tả xong ở session docs/cn6-spec; chưa code)
+## Chức năng 6 — AI gợi ý lời giải (code và proof hoàn thành; kiểm tay Expo Go còn chờ)
 
 | FR | File dự kiến | Hàm/điểm kiểm soát dự kiến | Cách kiểm thử | Trạng thái |
 |---|---|---|---|---|
-| FR-38 | Vùng gợi ý trong `app/(app)/documents/[id]`; `src/features/solver/{api.ts,schemas.ts,queries.ts,errors.ts}` | `requestSolution` (guard sở hữu + DOCX/thiếu-text → 1 request Gemini → validate → upsert); nút “Gợi ý lời giải”; key `['solution', documentId]` | Unit mock transport/supabase (không gọi mạng) + test tay Expo Go PDF đã tóm tắt + ảnh đã quét | Chưa làm |
-| FR-39 | Cùng vùng + `src/features/solver/api.ts` (guard) | DOCX/`unsupported`/thiếu `extracted_text` → `SolverGuardError`, KHÔNG gọi Gemini; UI ẩn nút + Banner dẫn tóm tắt/quét trước | Unit guard (transport không chạy) + test tay DOCX | Chưa làm |
-| FR-40 | `src/lib/ai/transport.ts` (dùng lại, cấm đường gọi thứ hai); `src/lib/ai/models.ts` (hằng số duy nhất, cấm hardcode) | `solveWithGemini` (mở rộng `postGenerate` dùng chung: prompt giải bài + JSON schema một trường `solution_text`; giữ map 429/5xx CN3, không retry; cấm temperature/top_p/top_k/candidate_count/thinking_budget) | Unit payload/parser/map lỗi (mock fetch) | Chưa làm |
-| FR-41 | `supabase/migrations/0007_cn6_solutions.sql` (chờ dán tay); `scripts/cn6-schema-verify.mjs`; `src/features/solver/api.ts` | Upsert `document_solutions` theo `UNIQUE(document_id)` (ghi đè, CASCADE theo tài liệu); dở → cứu + báo cắt, rỗng → không ghi đè cũ | `VERIFY_PASS` remote + unit parser đủ/dở/rỗng | Chưa làm |
-| FR-42 | Vùng gợi ý trong `/documents/[id]` (`solution-section.tsx`, không route mới) | 4 trạng thái: spinner + disabled / gợi ý mới nhất / empty dẫn bấm nút / lỗi + “Thử lại” | Unit trạng thái + test tay light/dark | Chưa làm |
-| FR-43 | Cùng vùng + `src/features/solver/api.ts` | Nút disabled khi mutation pending (guard chặn gọi lặp); 429/quota → banner hạn mức, không retry; không trạng thái treo (không lật `extraction_status`) | Unit chặn gọi lặp + quota | Chưa làm |
-| FR-44 | Bảng `document_solutions` + 4 RLS policy `auth.uid() = user_id` | Cách ly theo `user_id` như FR-05/FR-22/FR-37; proof A/B khuôn `cn5-rls-proof.mjs` | Proof remote đạt 100% + unit từ chối user chéo | Chưa làm |
-| FR-45 | `supabase/migrations/0007_cn6_solutions.sql` + `scripts/cn6-schema-verify.mjs` + types tay trong `database.ts` | Migration idempotent dán tay qua SQL Editor (CẤM db push); verify chỉ-đọc qua PostgREST | `node --check` script + remote `VERIFY_PASS` (chủ dự án) | Chưa làm |
+| FR-38 | Vùng gợi ý trong `app/(app)/documents/[id]`; `src/features/solver/{api.ts,schemas.ts,queries.ts,errors.ts}` | `requestSolution` (guard sở hữu + DOCX/thiếu-text → 1 request Gemini → validate → upsert); nút “Gợi ý lời giải”; key `['solution', documentId]` | Unit mock transport/Supabase đạt; Expo Go PDF/ảnh chờ mục 18 checklist | đạt |
+| FR-39 | Cùng vùng + `src/features/solver/api.ts` (guard) | DOCX/`unsupported`/thiếu `extracted_text` → `SolverGuardError`, KHÔNG gọi Gemini; UI ẩn nút + Banner dẫn tóm tắt/quét trước | Unit guard + UI đạt; Expo Go DOCX chờ | đạt |
+| FR-40 | `src/lib/ai/transport.ts` (dùng lại); `src/lib/ai/models.ts` (hằng số duy nhất) | `solveWithGemini` qua `postGenerate` chung, JSON schema `solution_text`, giữ map 429/5xx, không retry/tham số cấm | Unit mock fetch payload/parser/429/503 đạt | đạt |
+| FR-41 | `supabase/migrations/0007_cn6_solutions.sql`; `scripts/cn6-schema-verify.mjs`; `src/features/solver/api.ts` | Upsert `document_solutions` theo `UNIQUE(document_id)`; dở → cứu + báo cắt, rỗng → giữ row cũ | Remote `VERIFY_PASS` + unit đủ/dở/rỗng đạt; CASCADE theo DDL | đạt |
+| FR-42 | Vùng gợi ý trong `/documents/[id]` (`solution-section.tsx`, không route mới) | Spinner + disabled / gợi ý mới nhất / empty / lỗi + “Thử lại” | Unit UI đạt; Expo Go light/dark chờ | đạt |
+| FR-43 | Cùng vùng + `src/features/solver/api.ts` | Nút disabled khi pending + guard chặn lặp; 429 → banner hạn mức, không retry; không lật `extraction_status` | Unit concurrent/429/UI đạt; Expo Go 429 nếu gặp | đạt |
+| FR-44 | Bảng `document_solutions` + 4 RLS policy `auth.uid() = user_id`; `scripts/cn6-rls-proof.mjs` | Cách ly theo `user_id`; proof A/B Data API | Remote `RLS_PROOF_PASS 11/11`, unit guard user chéo đạt | đạt |
+| FR-45 | `supabase/migrations/0007_cn6_solutions.sql` + `scripts/cn6-schema-verify.mjs` + types tay trong `database.ts` | Migration idempotent dán tay qua SQL Editor; verify chỉ đọc PostgREST | Chủ dự án xác nhận apply; script chạy lại remote `VERIFY_PASS` ngày 2026-09-22 | đạt |
 
 ## Bằng chứng cần lưu khi chuyển sang “đạt”
 

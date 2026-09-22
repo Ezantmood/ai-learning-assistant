@@ -2078,3 +2078,27 @@ https://supabase.com/docs/guides/platform/access-control`
 - Commit merge: `b6df642` (merge --no-ff vào `main`)
 - Branch: `feat/cn6-solver`
 - Tag: `cn6-schema` (tạo + push cùng lệnh với push main)
+
+---
+
+### CN6-02 — Transport và tầng dữ liệu solver — 2026-09-22
+
+- Chủ dự án xác nhận migration 0007 đã dán SQL Editor và verify `VERIFY_PASS`.
+- `solveWithGemini` dùng `postGenerate` chung, JSON schema `solution_text`, model từ `models.ts`; parser cứu chuỗi dở, còn parts null/rỗng ném `GeminiEmptyError` và không ghi đè row cũ.
+- `requestSolution` guard sở hữu, DOCX, thiếu text và gọi lặp; upsert một row theo `document_id`, báo cắt sau khi lưu phần cứu được. `getSolution`, `retrySolution`, query key và types tay đã thêm.
+- Test mock transport/DB: 8 test mới. Cổng: tsc 0, lint 0 error/2 warning watch() cũ, Jest 311/311, check:functions exit 0.
+- Chưa test tay Expo Go ở bước này; kiểm cùng vùng UI CN6-03/04.
+
+### CN6-03 — Vùng gợi ý trên chi tiết tài liệu — 2026-09-22
+
+- `solution-section.tsx` hiển thị empty, pending, row mới nhất và lỗi + thử lại. DOCX/thiếu text có Banner hướng dẫn, không có nút gửi. 429 hiện Banner hạn mức, không tự retry.
+- Chi tiết tài liệu dùng chung cho PDF/TXT và row ảnh CN5. Dashboard CN6 sang `done`, route `/documents`; icon `lightbulb-outline` đã có trong `AppIcons` và glyphMap gate hiện có.
+- Chủ dự án cho phép cập nhật assertion cũ `featureStatus.test.ts` từ `soon` sang `done`/`/documents` để phản ánh chức năng mới; các test cũ khác giữ nguyên.
+- Unit UI mới phủ guard, empty, pending, kết quả, lỗi/quota. Cổng: tsc 0, lint 0 error/2 warning cũ, Jest 315/315, check:functions exit 0; Android bundle export đạt. Chưa kiểm tay Expo Go; checklist mục 18 ghi rõ các bước còn chờ.
+
+### CN6-04 — Proof RLS và đóng CN6 — 2026-09-22
+
+- `scripts/cn6-rls-proof.mjs` tạo hai session A/B thật, thử SELECT/INSERT/UPDATE/DELETE sở hữu và chéo user trên `document_solutions`, dọn user test trong `finally`. Remote `RLS_PROOF_PASS 11/11`, exit 0; bằng chứng ở `docs/RLS-PROOF.md`.
+- Chạy lại `scripts/cn6-schema-verify.mjs` sau khi chủ dự án apply: `SIGNIN_OK`, `READ_OK`, `VERIFY_PASS rows=0`, exit 0.
+- Unit solver bổ sung ca quá 20.000 ký tự và lỗi upsert; traceability FR-38→FR-45 cập nhật `đạt`, checklist Expo Go mục 18 và REPORT-NOTES theo code cuối.
+- Cổng trước commit: tsc 0; lint 0 error, 2 warning `watch()` kế thừa; Jest 315/315; check:functions exit 0; Android bundle export đạt. Kiểm tay Expo Go chưa thực hiện trong session này, để các ô mục 18 chưa tick.

@@ -369,7 +369,7 @@ gốc khác thì sửa SPEC trước, không sửa code).
   làm”) + 2 dòng ARCHITECTURE (solver SPEC, transport dùng lại). Không code
   app, không migration 0007, không verify script, không apply SQL — tất cả
   thuộc CN6-01→CN6-04. FR: FR-38..FR-45 (đặc tả).
-- [ ] CN6-01: Soạn `supabase/migrations/0007_cn6_solutions.sql`
+- [x] CN6-01: Soạn `supabase/migrations/0007_cn6_solutions.sql`
   (idempotent, bảng `document_solutions`: `document_id` UNIQUE + CASCADE,
   `user_id` denormalized + CASCADE, `solution_text` 1–20000, `model` 1–100
   default `'gemini-3.5-flash'`, trigger `set_updated_at()` tái dùng, index
@@ -384,7 +384,7 @@ gốc khác thì sửa SPEC trước, không sửa code).
   (2026-09-22: file và script đã commit/push; verify chạy thật trước apply
   FAIL đúng (`PGRST205` bảng chưa tồn tại, xem DEVLOG CN6-01); chờ chủ dự án
   dán SQL và chạy verify đạt `VERIFY_PASS` trước CN6-02.)
-- [ ] CN6-02: `solveWithGemini` trong `src/lib/ai/transport.ts` (mở rộng
+- [x] CN6-02: `solveWithGemini` trong `src/lib/ai/transport.ts` (mở rộng
   `postGenerate` dùng chung như CN4/CN5: prompt giải bài cố định +
   `responseMimeType` + `responseSchema` JSON một trường `solution_text`;
   parser 3 nhánh đủ/dở/rỗng khuôn `parseOcrJson`; giữ nguyên map 429/5xx,
@@ -397,7 +397,7 @@ gốc khác thì sửa SPEC trước, không sửa code).
   `getSolution`/`retrySolution`; key `['solution', documentId]`) + unit
   test mock transport/supabase (không gọi mạng). FR: FR-38, FR-39, FR-40,
   FR-41.
-- [ ] CN6-03: Vùng gợi ý lời giải trong `/documents/[id]`
+- [x] CN6-03: Vùng gợi ý lời giải trong `/documents/[id]`
   (`solution-section.tsx` khuôn `qa-section.tsx`/`summary-section.tsx`):
   nút “Gợi ý lời giải” (DOCX/thiếu text ẩn nút + Banner dẫn tóm tắt/quét
   trước), spinner + disabled khi chạy, empty/lỗi + “Thử lại”, banner hạn
@@ -406,7 +406,7 @@ gốc khác thì sửa SPEC trước, không sửa code).
   cổng glyphMap). FR: FR-42, FR-43.
   (Không route mới: row quét CN5 cũng là row `documents` nên một vùng phục
   vụ cả hai nguồn.)
-- [ ] CN6-04 (CUỐI CÙNG): Proof RLS A/B `document_solutions` (khuôn FR-05/
+- [x] CN6-04 (CUỐI CÙNG): Proof RLS A/B `document_solutions` (khuôn FR-05/
   `cn5-rls-proof.mjs`) + unit full tầng solver + cập nhật traceability
   (FR-38→FR-45 “đạt”), checklist tay CN6, devlog, báo cáo theo code cuối;
   rà `git diff --cached` không có key. FR: FR-44 (+ đóng gói).

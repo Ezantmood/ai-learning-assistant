@@ -64,8 +64,7 @@ Kiến trúc theo feature, ít tầng và đủ rõ để sinh viên giải thí
 │   │   │   └── chat/__tests__/chat.test.ts (mock transport/supabase, không gọi mạng)
 │   │   ├── scan/{api.ts,schemas.ts,queries.ts,errors.ts,viewState.ts} (FR-31 → FR-37:
 │   │   │   picker/camera, OCR + row documents, trạng thái màn quét)
-│   │   └── solver/.gitkeep (FR-38 → FR-45, SPEC ở docs/SPEC.md mục CN6 từ
-│   │       session docs/cn6-spec; code ở session CN6-02→CN6-04)
+│   │   └── solver/ (FR-38 → FR-45: API, query, schema, lỗi)
 │   ├── lib/ai/{models.ts,transport.ts} (CN3-G1 + CN4, theo lệnh session — ngoại lệ
 │   │   có chủ đích so với quy ước "dùng chung lên shared": hằng số
 │   │   SUMMARY_MODEL duy nhất `gemini-3.5-flash` + hai hàm transport
@@ -144,7 +143,7 @@ Khởi động `/` (decideRouteTarget trong src/shared/lib/navigation.ts)
    │  ├─ CN2 → tab Tài liệu (chuyển tab, giữ lịch sử để back)
    │  ├─ CN3/CN4 → tab Tài liệu (tóm tắt + hỏi đáp nằm trong `/documents/[id]`)
    │  ├─ CN5 → `/scan` (chọn/chụp ảnh + OCR)
-   │  └─ CN6 "Sắp có", bấm báo "đang phát triển" (chỗ cắm CN sau)
+   │  └─ CN6 mở tab Tài liệu; vùng gợi ý nằm trong chi tiết tài liệu
    ├─ tab Tài liệu `/documents` (+ `/documents/upload`, `/documents/[id]`,
    │  `/subjects` push đè lên, back về tab, tab bar ẩn ở màn con)
    └─ tab Tài khoản `/profile` (CN1 nằm trong tab này: nút “Ghi chú học tập”
@@ -200,7 +199,7 @@ ScrollView theo token `src/shared/theme`); tiêu đề `headlineSmall`, phụ đ
 | Route | Mục đích | Component chính | Loading / empty / error / success |
 |---|---|---|---|
 | `/` | Chọn nhánh theo session | `LoadingState` | Loading khi khôi phục session; lỗi cấu hình hiển thị rõ; thành công redirect |
-| `/dashboard` | Tab Trang chủ sau login: lưới 6 thẻ CN | `Card` + `Chip` (testID `dashboard-card-<id>`, trạng thái từ nguồn duy nhất `src/shared/config/featureStatus.ts`) | Không loading (không fetch); CN1 bấm tới `/notes`; CN2→CN4 tới tab Tài liệu; CN5 tới `/scan`; CN6 "Sắp có" |
+| `/dashboard` | Tab Trang chủ sau login: lưới 6 thẻ CN | `Card` + `Chip` (testID `dashboard-card-<id>`, trạng thái từ nguồn duy nhất `src/shared/config/featureStatus.ts`) | Không loading (không fetch); CN1 bấm tới `/notes`; CN2→CN4 và CN6 tới tab Tài liệu; CN5 tới `/scan` |
 | `/sign-in` | FR-02 đăng nhập | `FormTextInput` (email `email-outline`), `PasswordInput`, `Button` icon `login` (testID `login-submit`), link đăng ký/quên mật khẩu | Button spinner; không có empty; lỗi field/API; thành công về `/dashboard` |
 | `/sign-up` | FR-01 đăng ký | Full name (`account`)/student code (`badge-account-horizontal-outline`)/email (`email-outline`) + 2 `PasswordInput` (testID `password-toggle`, `password-confirm-toggle`), nút icon `account-plus` (testID `register-submit`) | Spinner; lỗi Zod/email hoặc student code trùng; dev vào app ngay, demo yêu cầu kiểm tra email theo env |
 | `/forgot-password` | FR-03 gửi email reset | Email form icon `email-outline`, nút icon `send` (testID `forgot-submit`) | Spinner; luôn dùng thông báo success trung tính; offline cho retry |

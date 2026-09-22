@@ -207,6 +207,38 @@ export const OCR_GENERATION_CONFIG = {
 
 export type OcrResult = { extractedText: string; truncated: boolean };
 
+export const SOLUTION_PROMPT =
+  'Bạn là trợ lý học tập. Đọc đề bài và gợi ý hướng giải từng bước bằng tiếng Việt. ' +
+  'Chỉ dựa trên nội dung đề bài, không bịa dữ kiện. Nêu cách làm rõ ràng để sinh viên tự hiểu.';
+
+export const SOLUTION_GENERATION_CONFIG = {
+  responseMimeType: 'application/json',
+  responseSchema: {
+    properties: { solution_text: { type: 'STRING' } },
+    required: ['solution_text'],
+    type: 'OBJECT',
+  },
+} as const;
+
+export type SolutionResult = { solutionText: string; truncated: boolean };
+
+export function parseSolutionJson(raw: string): SolutionResult {
+  const value = raw.trim();
+  if (!value) throw new GeminiEmptyError();
+  try {
+    const parsed = JSON.parse(value) as Record<string, unknown>;
+    const solutionText = typeof parsed.solution_text === 'string'
+      ? parsed.solution_text.trim() : '';
+    if (!solutionText) throw new GeminiEmptyError();
+    return { solutionText, truncated: false };
+  } catch (error) {
+    if (error instanceof GeminiEmptyError) throw error;
+    const solutionText = rescueTruncatedField(value, 'solution_text');
+    if (!solutionText) throw new GeminiEmptyError();
+    return { solutionText, truncated: true };
+  }
+}
+
 export function parseOcrJson(raw: string): OcrResult {
   const text = raw.trim();
   if (!text) {
@@ -275,7 +307,8 @@ function extractText(data: GeminiGenerateResponse): string {
 async function postGenerate(
   parts: GeminiPart[],
   emptyMessage: string,
-  generationConfig?: typeof EXTRACTION_GENERATION_CONFIG | typeof OCR_GENERATION_CONFIG,
+  generationConfig?: typeof EXTRACTION_GENERATION_CONFIG | typeof OCR_GENERATION_CONFIG | typeof SOLUTION_GENERATION_CONFIG,
+  emptyAsGeminiEmpty = false,
 ): Promise<string> {
   const apiKey = readApiKey();
 
@@ -311,6 +344,7 @@ async function postGenerate(
   const data = (await res.json()) as GeminiGenerateResponse;
   const text = extractText(data);
   if (!text) {
+    if (emptyAsGeminiEmpty) throw new GeminiEmptyError();
     throw new GeminiError(emptyMessage);
   }
   return text;
@@ -384,4 +418,15 @@ export async function ocrWithGemini(base64Data: string): Promise<OcrResult> {
     OCR_GENERATION_CONFIG,
   );
   return parseOcrJson(raw);
+}
+
+/** CN6: toàn văn đã trích xuất vào đúng một request qua postGenerate. */
+export async function solveWithGemini(source: { contextText: string }): Promise<SolutionResult> {
+  const raw = await postGenerate(
+    [{ text: `${SOLUTION_PROMPT}\n\n--- ĐỀ BÀI ---\n${source.contextText}` }],
+    'Gemini không trả về gợi ý lời giải. Hãy thử với tài liệu ngắn hơn.',
+    SOLUTION_GENERATION_CONFIG,
+    true,
+  );
+  return parseSolutionJson(raw);
 }
