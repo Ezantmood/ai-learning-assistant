@@ -397,7 +397,7 @@ gốc khác thì sửa SPEC trước, không sửa code).
   `getSolution`/`retrySolution`; key `['solution', documentId]`) + unit
   test mock transport/supabase (không gọi mạng). FR: FR-38, FR-39, FR-40,
   FR-41.
-- [ ] CN6-03: Vùng gợi ý lời giải trong `/documents/[id]`
+- [x] CN6-03: Vùng gợi ý lời giải trong `/documents/[id]`
   (`solution-section.tsx` khuôn `qa-section.tsx`/`summary-section.tsx`):
   nút “Gợi ý lời giải” (DOCX/thiếu text ẩn nút + Banner dẫn tóm tắt/quét
   trước), spinner + disabled khi chạy, empty/lỗi + “Thử lại”, banner hạn

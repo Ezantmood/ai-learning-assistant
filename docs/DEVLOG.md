@@ -2088,3 +2088,10 @@ https://supabase.com/docs/guides/platform/access-control`
 - `requestSolution` guard sở hữu, DOCX, thiếu text và gọi lặp; upsert một row theo `document_id`, báo cắt sau khi lưu phần cứu được. `getSolution`, `retrySolution`, query key và types tay đã thêm.
 - Test mock transport/DB: 8 test mới. Cổng: tsc 0, lint 0 error/2 warning watch() cũ, Jest 311/311, check:functions exit 0.
 - Chưa test tay Expo Go ở bước này; kiểm cùng vùng UI CN6-03/04.
+
+### CN6-03 — Vùng gợi ý trên chi tiết tài liệu — 2026-09-22
+
+- `solution-section.tsx` hiển thị empty, pending, row mới nhất và lỗi + thử lại. DOCX/thiếu text có Banner hướng dẫn, không có nút gửi. 429 hiện Banner hạn mức, không tự retry.
+- Chi tiết tài liệu dùng chung cho PDF/TXT và row ảnh CN5. Dashboard CN6 sang `done`, route `/documents`; icon `lightbulb-outline` đã có trong `AppIcons` và glyphMap gate hiện có.
+- Chủ dự án cho phép cập nhật assertion cũ `featureStatus.test.ts` từ `soon` sang `done`/`/documents` để phản ánh chức năng mới; các test cũ khác giữ nguyên.
+- Unit UI mới phủ guard, empty, pending, kết quả, lỗi/quota. Cổng: tsc 0, lint 0 error/2 warning cũ, Jest 315/315, check:functions exit 0; Android bundle export đạt. Chưa kiểm tay Expo Go; checklist mục 18 ghi rõ các bước còn chờ.

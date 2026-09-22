@@ -5,7 +5,7 @@
  *
  * CN3/CN4 hoàn thành (kiểm tay Expo Go PDF thật): bấm thẻ vào tab Tài liệu
  * (`/documents`), vùng tóm tắt + hỏi đáp nằm trong `/documents/[id]`.
- * CN5 có màn quét `/scan`; CN6 giữ 'soon', không route.
+ * CN5 có màn quét `/scan`; CN6 vào tab Tài liệu, vùng gợi ý ở chi tiết.
  */
 export type FeatureStatus = 'done' | 'partial' | 'soon';
 
@@ -22,5 +22,5 @@ export const FEATURE_STATUS: Record<
   '3': { route: '/documents', status: 'done' },
   '4': { route: '/documents', status: 'done' },
   '5': { route: '/scan', status: 'done' },
-  '6': { status: 'soon' },
+  '6': { route: '/documents', status: 'done' },
 };

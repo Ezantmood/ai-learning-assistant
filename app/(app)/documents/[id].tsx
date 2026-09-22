@@ -24,6 +24,7 @@ import { FormTextInput } from '../../../src/shared/components/FormTextInput';
 import { ListSkeleton } from '../../../src/shared/components/LoadingState';
 import { QaSection } from './qa-section';
 import { SummarySection } from './summary-section';
+import { SolutionSection } from './solution-section';
 import { ScreenContainer } from '../../../src/shared/components/ScreenContainer';
 import { ScreenHeader } from '../../../src/shared/components/ScreenHeader';
 import { goBackToDocuments } from '../../../src/shared/lib/navigation';
@@ -288,6 +289,8 @@ export default function DocumentDetailScreen() {
       <SummarySection doc={doc} userId={userId ?? ''} />
 
       <QaSection doc={doc} userId={userId ?? ''} />
+
+      <SolutionSection doc={doc} key={doc.id} userId={userId ?? ''} />
 
       <RenameDocumentForm
         documentId={doc.id}
