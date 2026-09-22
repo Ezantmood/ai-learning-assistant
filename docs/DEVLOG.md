@@ -1996,7 +1996,8 @@ https://supabase.com/docs/guides/platform/access-control`
 
 **Mốc Git**
 
-- Commit docs: (branch `docs/cn6-spec`, đã push)
+- Commit docs: `ae1a581` (branch `docs/cn6-spec`, đã push)
+- Commit merge: `73e4537` (merge --no-ff vào `main`)
 - Branch: `docs/cn6-spec`
 - Tag: `docs-cn6` (tạo + push cùng lệnh với push main)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng
