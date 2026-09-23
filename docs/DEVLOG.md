@@ -2203,3 +2203,43 @@ https://supabase.com/docs/guides/platform/access-control`
   `eb937f0bb3a3149a097f07ef9332cbf8e8fba3b3` (đã push); tag
   `fix-route-exports` trỏ merge này, push cùng lệnh với main. Không mở PR
   theo quyết định G4+.)
+
+---
+
+### Dọn phát hành docs (không đụng logic) — 2026-09-23
+
+- Điều kiện vào: 6 chức năng đã merge vào `main` (tag `cn6-hoan-thanh` +
+  hotfix key + 2 fix tabs/routes sau đó); cổng routeExports mô phỏng
+  LogBox 0 warning/0 throw, chủ dự án xác nhận lại trên Expo Go.
+- Số sàn trước khi sửa (ghi thật): `tsc` exit 0; `lint` 0 errors, 2 warning
+  `watch()` kế thừa; `jest` 39 suites 318/318; `check:functions` exit 0.
+  Sau khi xong giữ nguyên cả bốn số, không tụt.
+- DEVLOG CN1 đã cô đọng từ v2.0.0 (14 dòng: quyết định + bẫy + số liệu),
+  dưới 400 dòng nên KHÔNG sửa; giữ nguyên entry CN2..CN6 và mọi mục
+  "giới hạn đã biết"/bài học debug.
+- FR-TRACEABILITY: mở từng file kiểm tra tồn tại — FR-01→FR-45 đều trỏ
+  được file thật, không có FR nào mất file. Chỉ sửa đường dẫn mơ hồ
+  (`schemas.ts` → `src/features/auth/schemas.ts`,
+  `app/(app)/profile.tsx` → `app/(app)/profile/index.tsx`,
+  `notes/*.tsx` → `app/(app)/notes/*.tsx`, vùng gợi ý CN6 ghi rõ
+  `src/features/solver/SolutionSection.tsx`).
+- README viết lại cho người ngoài: 6/6 xong, yêu cầu môi trường, biến .env
+  CHỈ TÊN (cấm giá trị), lệnh chạy, bản Expo Go đúng SDK 57
+  (iOS `sign.expo.dev`, Android `expo.dev/go`; App Store dừng ở SDK 54),
+  bẫy hotspot client isolation. SETUP: mục 1 thêm bản Expo Go đúng,
+  5d đánh dấu LẠC HẬU (đã bỏ proxy, giữ key trực tiếp), mục 9 thêm bẫy
+  wifi + `npx expo start -c`; số test cập nhật 39/318.
+- Quét `01_QuanLyTaiKhoanNguoiDung` toàn repo (trừ node_modules/.git/.expo):
+  0 kết quả — không có gì để sửa.
+- Keep-alive: workflow tồn tại, cron `0 3 */2 * *`, lần chạy gần nhất
+  2026-09-21 success (2 bản tay 09-19 fail trước đó do thiếu secret, đã
+  xanh từ schedule). Không sửa, không tắt.
+- TEST-CHECKLIST thành checklist một lượt mục 0→18; tiền-kiểm thêm bản
+  Expo Go đúng + cổng tự động; mục 1 cập nhật 6/6 thẻ Hoàn thành.
+- CẤM tuân thủ: chỉ chạm README + 3 file docs; không đụng `src/`,
+  `supabase/**`, không sửa/skip/xoá test cũ, không force push.
+- (Mốc Git: commit docs `59dbe06` trên branch `chore/release-docs`
+  (đã push); merge `--no-ff` vào `main`:
+  `3f858a58bec064ac5470af2ffc07696d95d21d84` (đã push); tag
+  `release-docs` trỏ merge này, push cùng lệnh với main. Không mở PR
+  theo quyết định G4+.)
