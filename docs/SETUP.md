@@ -1,4 +1,4 @@
-# Dựng dự án từ số 0 (hoàn chỉnh CN1 + CN2; mục 5b/7b là bước CN2)
+# Dựng dự án từ số 0 (đủ 6 chức năng FR-01 → FR-45)
 
 Tài liệu duy nhất để dựng app từ clone tới chạy trên Expo Go. Dừng ngay nếu
 package được nêu bị deprecated hoặc Expo báo không tương thích SDK 57; báo chủ
@@ -7,7 +7,9 @@ dự án, không tự thay package. Không ghi secret/key/password vào repo hay
 ## 1. Điều kiện máy
 
 - Node.js tối thiểu `22.13.x` theo Expo SDK 57; Git; Expo Go tương thích SDK 57
-  trên điện thoại. Không tạo development build, không sinh `ios/`/`android/`.
+  trên điện thoại: iOS tải tại `sign.expo.dev`, Android tải tại
+  `expo.dev/go`. Bản Expo Go trên App Store hiện dừng ở SDK 54 nên KHÔNG
+  dùng được. Không tạo development build, không sinh `ios/`/`android/`.
 - Một tài khoản GitHub và một tài khoản Supabase (free tier: project có thể bị
   tự pause khi không dùng — mở Dashboard resume rồi chạy tiếp).
 
@@ -134,10 +136,17 @@ DEVLOG G2). Thứ tự:
    Dòng nào `KHÔNG DAT` thì migration chưa áp đúng — báo chủ dự án, không sửa
    tay lẻ tẻ.
 
-## 5d. Lịch sử probe proxy Gemini (không phải bước cấu hình app hiện tại)
+## 5d. Lịch sử probe proxy Gemini — LẠC HẬU, KHÔNG LÀM THEO (giữ để đối chiếu)
+
+> Đã bỏ đường proxy Edge Function: app hiện gọi Gemini trực tiếp bằng key
+> client ở mục 4 (`EXPO_PUBLIC_GEMINI_API_KEY`). Các bước deploy/nạp secret
+> `gemini-proxy` dưới đây là lịch sử probe cũ, KHÔNG cần thực hiện để bấm
+> tóm tắt/hỏi đáp/OCR/gợi ý lời giải. Source probe giữ trong
+> `supabase/functions/gemini-proxy/` chỉ để tham khảo.
 
 CN3/CN4 hiện dùng key client ở mục 4. Các bước dưới đây lưu lại kết quả probe
 cũ để đối chiếu, **không cần deploy proxy hay nạp secret** để bấm tóm tắt.
+Đường proxy đã bỏ hẳn — có deploy thành công cũng không chuyển nhánh nữa.
 
 Nguyên nhân phải làm tay: token PAT bị RBAC tầng organization chặn ghi —
 `GET /v1/projects/{ref}/functions` trả 200 (đường đọc hoạt động) nhưng `POST
@@ -266,7 +275,8 @@ quan trên Dashboard, không phải bước tạo:
 ```bash
 npx tsc --noEmit
 npm run lint
-npm test               # 29 suites, 274/274 PASS — mock supabase, không gọi mạng
+npm test               # 39 suites, 318/318 PASS — mock supabase, không gọi mạng
+npm run check:functions
 ```
 
 `npm test` bao gồm: schema/validate CN1, 64 test tầng dữ liệu documents
@@ -298,12 +308,21 @@ dựa vào verify 14/14 ở mục 5b và hai proof CN1 ở trên.
 ## 9. Chạy app trên Expo Go
 
 ```bash
-npx expo start
+npx expo start -c
 ```
 
-Quét QR bằng Expo Go (cùng Wi-Fi). Sau khi đổi env phải restart (`r` hoặc chạy
+Quét QR mới bằng đúng bản Expo Go SDK 57 (iOS: `sign.expo.dev`,
+Android: `expo.dev/go`). Sau khi đổi env phải restart (`r` hoặc chạy
 lại lệnh). Test tay theo `docs/TEST-CHECKLIST.md`; tạo 2 tài khoản A/B không
 dùng dữ liệu thật để demo cách ly.
+
+### Bẫy wifi trường/công cộng bật client isolation
+
+Wifi trường/công cộng thường bật client isolation: Expo Go không thấy dev
+server dù máy tính và điện thoại "cùng mạng" (quét QR không vào, nhập URL
+tay cũng không vào, hiện "Something went wrong"). Cách đi vòng: điện thoại
+phát hotspot, Mac nối vào hotspot đó, rồi `npx expo start -c` và quét QR
+mới. KHÔNG dùng `--tunnel`.
 
 ## Nguồn tham chiếu
 
