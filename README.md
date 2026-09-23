@@ -1,18 +1,9 @@
 # AI Learning Assistant
 
 Hệ thống học tập Expo duy nhất của môn Lập trình di động, gồm 6 chức năng lớn
-với 45 yêu cầu FR-01 → FR-45. Chức năng 1 (quản lý tài khoản, FR-01 → FR-05)
-đã hoàn thành (`v1.3.0`); Chức năng 2 (quản lý tài liệu học tập, FR-06 → FR-13)
-đã hoàn thành ở mức code + unit + verify schema (`v2.0.0`): tải lên
-PDF/DOCX/TXT (tối đa 10 MB, tối đa 100 tài liệu/30 môn), danh sách + tìm kiếm
-(phân biệt dấu) + lọc theo môn, chi tiết + mở tệp ngoài app, đổi tên, xóa
-(storage trước DB sau), CRUD môn học, hạ tầng `extraction_status` cho CN3.
+với 45 yêu cầu FR-01 → FR-45, tất cả đã merge vào `main` (code + unit +
+verify schema + kiểm tay theo TEST-CHECKLIST).
 Dữ liệu mỗi tài khoản được cách ly bằng Supabase Row Level Security.
-Chức năng 3 (AI tóm tắt, FR-14 → FR-22) và Chức năng 4 (AI hỏi đáp,
-FR-23 → FR-30) đã hoàn thành (kiểm tay Expo Go với PDF thật); 2 chức năng
-còn lại gồm CN5 đang hoàn thiện kiểm tay/RLS (FR-31 → FR-37) và CN6 chưa làm
-(FR-38 → FR-45). Màn hình tổng quan sau đăng nhập liệt kê cả 6: thẻ CN1→CN5
-bấm được; CN6 hiển thị "Sắp có".
 
 ## Stack
 
@@ -27,27 +18,44 @@ base64-arraybuffer. Chạy bằng Expo Go, không development build.
 | Chức năng | Dải FR | Nội dung | Trạng thái |
 |---|---|---|---|
 | 1. Quản lý tài khoản người dùng | FR-01 → FR-05 | Đăng ký/đăng nhập/OTP/hồ sơ/`study_notes` | Xong — unit test + `rls-proof` 7/7 + `storage-rls-proof` 5/5 |
-| 2. Quản lý tài liệu học tập | FR-06 → FR-13 | Tải lên PDF/DOCX/TXT, danh sách, chi tiết, đổi tên, xóa, môn học, hạ tầng trích xuất | Xong code + unit (64 test) + verify schema 14/14 — còn nợ test tay Expo Go và proof A/B `documents` (xem `docs/FR-TRACEABILITY.md`) |
+| 2. Quản lý tài liệu học tập | FR-06 → FR-13 | Tải lên PDF/DOCX/TXT, danh sách, chi tiết, đổi tên, xóa, môn học, hạ tầng trích xuất | Xong — code + unit + verify schema 14/14 |
 | 3. AI tóm tắt tài liệu PDF | FR-14 → FR-22 | Tóm tắt bằng Gemini trong màn chi tiết tài liệu | Xong — code + unit + kiểm tay Expo Go với PDF thật |
 | 4. AI hỏi đáp dựa trên tài liệu | FR-23 → FR-30 | Hỏi đáp trên toàn văn trích xuất trong màn chi tiết | Xong — code + unit + kiểm tay Expo Go với PDF thật |
-| 5. Quét hình ảnh đề bài bằng AI | FR-31 → FR-37 | Chọn/chụp ảnh, OCR Gemini, lưu kết quả | Code + unit xong; chờ kiểm tay Expo Go và proof RLS A/B |
-| 6. AI gợi ý lời giải | FR-38 → FR-45 | — | Chưa làm |
+| 5. Quét hình ảnh đề bài bằng AI | FR-31 → FR-37 | Chọn/chụp ảnh, OCR Gemini, lưu kết quả | Xong — code + unit + proof RLS 8/8 + nghiệm thu quét thật trên Expo Go |
+| 6. AI gợi ý lời giải | FR-38 → FR-45 | Gợi ý lời giải từng bước trong màn chi tiết | Xong — code + unit + proof RLS 11/11 + verify schema |
 
-Chi tiết file/hàm/test của FR-01 → FR-37 xem `docs/FR-TRACEABILITY.md`.
+Chi tiết file/hàm/test của FR-01 → FR-45 xem `docs/FR-TRACEABILITY.md`.
+
+## Yêu cầu môi trường
+
+- Node.js tối thiểu `22.13.x` (theo Expo SDK 57); Git.
+- Điện thoại cài đúng bản Expo Go tương thích SDK 57:
+  iOS tải tại `sign.expo.dev`, Android tải tại `expo.dev/go`.
+  Bản Expo Go trên App Store hiện dừng ở SDK 54 nên không dùng được.
+- Một project Supabase (free tier tự pause sau ~7 ngày không dùng —
+  trước buổi demo mở Dashboard resume).
+- Không tạo development build, không sinh `ios/`/`android/`.
 
 ## Cách chạy
 
 ```bash
 npm ci
-cp .env.example .env   # điền URL + publishable key + cờ xác nhận email theo docs/SETUP.md
-npx expo start         # quét QR bằng Expo Go
+cp .env.example .env   # điền theo docs/SETUP.md mục 4
+npx expo start -c      # quét QR mới bằng đúng bản Expo Go SDK 57
 ```
 
-Biến môi trường app cần có (xem `.env.example`): `EXPO_PUBLIC_SUPABASE_URL`,
-`EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `EXPO_PUBLIC_REQUIRE_EMAIL_CONFIRMATION`
-(`false` khi dev, `true` khi demo). Script proof đọc thêm `.env.local`
+Biến môi trường app cần có (CHỈ TÊN, không giá trị — xem `.env.example`):
+`EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
+`EXPO_PUBLIC_REQUIRE_EMAIL_CONFIRMATION`, `EXPO_PUBLIC_GEMINI_API_KEY`
+(key Gemini cắm ở `.env.local`, không commit).
+Script proof đọc thêm `.env.local`
 (`SUPABASE_PROJECT_REF`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_URL`,
 `SUPABASE_SERVICE_ROLE_KEY`) — không commit hai file này.
+
+Bẫy wifi trường/công cộng bật client isolation: Expo Go không thấy dev
+server dù "cùng mạng" (quét QR không vào, nhập URL tay cũng không vào).
+Cách đi vòng: điện thoại phát hotspot, Mac nối vào hotspot đó, rồi
+`npx expo start -c` và quét QR mới. KHÔNG dùng `--tunnel`.
 
 Dựng đầy đủ từ số 0 (SQL, Auth, Brevo SMTP, bucket private): `docs/SETUP.md`.
 
@@ -56,7 +64,8 @@ Dựng đầy đủ từ số 0 (SQL, Auth, Brevo SMTP, bucket private): `docs/S
 ```bash
 npx tsc --noEmit
 npm run lint
-npm test               # 29 suites, 274/274 PASS — mock supabase, không gọi mạng
+npm test               # 39 suites, 318/318 PASS — mock supabase, không gọi mạng
+npm run check:functions
 ```
 
 ## Cách chạy rls-proof (cần `.env` + `.env.local`, tự dọn user test)
@@ -90,7 +99,7 @@ NODE_PATH="$PWD/node_modules" node /tmp/storageproof-out/storage-rls-proof.js
   A/B cho `documents`/`subjects` (chỉ mới verify schema 14/14 + kế thừa proof CN1).
 - Tìm kiếm tài liệu phân biệt dấu tiếng Việt (`ilike`); không có viewer trong
   app (mở tệp bằng app ngoài); DOCX tải/xem/xóa được nhưng AI không đọc
-  (`unsupported`); FR-13 ở CN2 chỉ là hạ tầng hai cột, CN3 mới trích xuất thật.
+  (`unsupported`).
 - Không offline-first: mất mạng thì báo lỗi + retry, form giữ dữ liệu để thử lại.
 - Không social login, role/admin, realtime, push, E2E (out of scope theo `docs/SPEC.md`).
 - Migration đã apply thì không sửa file cũ; quy ước path avatar timestamp chỉ ghi

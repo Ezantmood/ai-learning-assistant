@@ -1,4 +1,7 @@
-# Checklist bấm tay chụp ảnh báo cáo (v2.0.0, theme indigo)
+# Checklist chạy một lượt trước buổi bảo vệ (6 chức năng FR-01 → FR-45)
+
+> Chạy từ mục 0 đến mục 18 theo đúng thứ tự trong một buổi duy nhất.
+> Mục 0 là tiền-kiểm bắt buộc: rớt bước nào thì dừng và xử lý xong mới bấm tiếp.
 
 ## Cách ghi kết quả
 
@@ -13,6 +16,9 @@ mỗi màn chụp cả light lẫn dark trừ khi ghi rõ.
 
 ## 0. Tiền-kiểm trước buổi bảo vệ (làm trước khi bấm bất kỳ case nào)
 
+- [ ] Đúng bản Expo Go SDK 57: iOS cài từ `sign.expo.dev`, Android cài từ
+  `expo.dev/go`. Bản trên App Store dừng ở SDK 54 — mở app bằng bản đó sẽ
+  không tải được bundle. Kiểm tra version trong Expo Go trước khi quét QR.
 - [ ] Mạng: KHÔNG dùng wifi trường/công cộng (client isolation chặn Expo Go
   thấy dev server dù "cùng mạng"). Điện thoại phát hotspot, Mac nối vào
   hotspot đó, rồi `npx expo start -c` và quét QR mới. KHÔNG dùng `--tunnel`.
@@ -20,13 +26,16 @@ mỗi màn chụp cả light lẫn dark trừ khi ghi rõ.
   Dashboard project còn responding, hoặc chạy `GET <SUPABASE_URL>/auth/v1/health`
   (thức = trả HTTP 401 nhanh; pause = timeout/503). Pause thì bấm Resume trong
   Dashboard rồi đợi sẵn sàng mới demo.
+- [ ] Cổng tự động xanh trước khi bấm tay: `npx tsc --noEmit` (exit 0),
+  `npm run lint` (0 errors), `npm test` (39 suites 318/318),
+  `npm run check:functions` (exit 0).
 
 ## 1. Khởi động và dashboard
 
 - [ ] Kill app → mở lại (chưa login) → dừng ở `/sign-in`, không nháy màn khác.
-- [ ] Đăng nhập A → vào dashboard: 6 thẻ, thẻ 1→4 “Hoàn thành” (thẻ 1
-  tới `/notes`, thẻ 2→4 tới `/documents`), 2 thẻ còn lại “Sắp có”
-  (chụp light + dark).
+- [ ] Đăng nhập A → vào dashboard: 6 thẻ đều “Hoàn thành” (thẻ 1
+  tới `/notes`, thẻ 2→4 tới `/documents`, thẻ 5 tới `/scan`, thẻ 6 tới
+  tab Tài liệu) (chụp light + dark).
 
 ## 2. Đăng nhập (`/sign-in`)
 
