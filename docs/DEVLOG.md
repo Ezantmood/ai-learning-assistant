@@ -2431,3 +2431,22 @@ https://supabase.com/docs/guides/platform/access-control`
 - Cổng cuối: tsc/lint đạt, 44 suites/338 tests PASS, Android export 5,5 MB.
   Web light/dark/320/390 px và luồng ảnh thực đạt như checklist 24; lượt
   phân tích gặp quota Gemini, camera/Expo Go còn chờ kiểm thiết bị.
+
+
+## AI-01 — 2026-10-21: xác định quota ngày và kiểm trước demo
+
+- API thật 3.6: HTTP 429 RESOURCE_EXHAUSTED, quota free-tier requests per
+  day/project/model = 20, RetryInfo 47578 giây ở thời điểm probe. Chưa mở
+  được Rate limits đăng nhập nên không suy quota model khác từ docs chung.
+- Đọc QuotaFailure/RetryInfo có kiểm kiểu, phân biệt ngày/phút/quota 0,
+  normalize 402 số dư; không đưa message/raw URL nhà cung cấp lên UI,
+  không auto retry. Body 429 không phải JSON vẫn là lỗi quota.
+- Mở rộng script smoke sẵn có --only=preflight: đúng một lượt, báo model,
+  PASS/FAIL; không coi preflight PASS là đo số lượt còn lại. CLI thật với
+  model hiện tại báo đúng quota ngày và exit 1 (ca lỗi dự kiến).
+- Kiểm nguồn Google ngày 2026-10-21: Pro có $10 Cloud credits/tháng, cần
+  claim/liên kết đúng billing; Prepay có điều kiện số dư. SETUP bổ sung
+  hướng dẫn cụ thể, không tự thanh toán hoặc hứa API vô hạn.
+- Hồi quy cho metadata lỗi và không gọi lặp; không đổi stack, dependency,
+  schema, route hay quyền dữ liệu. Expo Go/đọc quota trong Console còn mở.
+- Cổng AI-01: tsc/lint đạt, 44 suites/342 tests PASS; cảnh báo open handle Jest kế thừa còn.

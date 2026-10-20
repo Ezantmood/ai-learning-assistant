@@ -183,3 +183,44 @@ it('timeout ngắt fetch và trả lỗi tiếng Việt, không tự retry', asy
     expect(fetchMock).toHaveBeenCalledTimes(1);
   } finally { jest.useRealTimers(); }
 });
+
+const quotaDetail = (id: string, value = '20') => ({
+  '@type': 'type.googleapis.com/google.rpc.QuotaFailure',
+  violations: [{ quotaId: id, quotaValue: value }],
+});
+const retryDetail = (delay: string) => ({ '@type': 'type.googleapis.com/google.rpc.RetryInfo', retryDelay: delay });
+
+it('quota ngày khác quota phút; báo RetryInfo và không lộ message thô', async () => {
+  for (const [id, type] of [['GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'daily'], ['GenerateRequestsPerMinutePerProjectPerModel-FreeTier', 'rate']]) {
+    fetchMock.mockClear();
+    mockFetchJson(429, { error: { message: `unsafe ${FAKE_KEY}`, details: [quotaDetail(id), retryDetail('47578.2s')] } });
+    const error: unknown = await summarizeWithGemini({ kind: 'txt', textContent: 'Bài học' }).catch((reason: unknown) => reason);
+    expect(error).toBeInstanceOf(GeminiQuotaError);
+    expect(error).toMatchObject({ limitType: type, retryAfterSeconds: 47579 });
+    expect((error as Error).message).toContain('13 giờ 13 phút');
+    expect((error as Error).message).not.toContain(FAKE_KEY);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  }
+});
+
+it('quota bằng 0 không dẫn người dùng chờ reset ngày; metadata lạ vẫn là lỗi quota', async () => {
+  mockFetchJson(429, { error: { details: [quotaDetail('RequestsPerDay', '0'), retryDetail('60s')] } });
+  await expect(summarizeWithGemini({ kind: 'txt', textContent: 'Bài' })).rejects.toMatchObject({ limitType: 'unavailable' });
+  for (const details of [null, [null, 'bad', {}], [retryDetail('NaNs')], [retryDetail('999999999999999999999s')]]) {
+    mockFetchJson(429, { error: { details } });
+    await expect(summarizeWithGemini({ kind: 'txt', textContent: 'Bài' })).rejects.toMatchObject({ limitType: 'unknown', retryAfterSeconds: undefined });
+  }
+});
+
+it('429 body không phải JSON vẫn trả lỗi quota, không đổi thành lỗi mạng', async () => {
+  fetchMock.mockResolvedValue({ status: 429, ok: false, json: async () => { throw new SyntaxError('bad JSON'); } } as unknown as Response);
+  await expect(summarizeWithGemini({ kind: 'txt', textContent: 'Bài' })).rejects.toBeInstanceOf(GeminiQuotaError);
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+});
+
+
+it('402 báo cần kiểm số dư API, không hướng người dùng thử lại liên tục', async () => {
+  mockFetchJson(402, {});
+  await expect(summarizeWithGemini({ kind: 'txt', textContent: 'Bài' })).rejects.toThrow('Số dư thanh toán Gemini API');
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+});

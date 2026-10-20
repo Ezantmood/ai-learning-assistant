@@ -462,3 +462,18 @@ Mỗi checkbox commit/push riêng, tsc/lint/test trước commit; G4+ merge --no
 - [x] UI-03: Luồng ảnh rõ Chọn/chụp → Đọc → Kiểm tra → Học với AI; tinh gọn
   biên tập OCR. Kiểm giao diện nhỏ/light/dark, tab/draft/error/loading và
   Android export; cập nhật thiết kế/checklist/traceability/DEVLOG. FR-31→FR-37.
+
+
+# Hạn mức AI khi demo — 2026-10-21
+
+Branch `codex/ai-demo-quota`, tag `ai-demo-quota-20261021`. Chủ dự án cho
+phép thay model/nhà cung cấp để giảm nguy cơ hết quota khi demo. Không tự
+đăng ký gói trả phí, không luân phiên key/account, không auto retry.
+
+- [x] AI-01: Xác minh quota từ lỗi API; phân biệt giới hạn ngày/phút/không
+  được cấp quota, báo thời gian RetryInfo an toàn; thêm preflight một lượt
+  vào script smoke hiện có và hướng dẫn trước demo. FR-16/23/33/38.
+- [ ] AI-02: Chọn model stable phù hợp có kiểm API thật text/ngữ cảnh/solver/
+  OCR/PDF; đổi cấu hình đã kiểm chứng, ghi rõ quota nào quan sát được và
+  giới hạn chưa đọc được trong AI Studio. Cập nhật tài liệu, hồi quy,
+  Android export, commit/push/merge/tag theo quy tắc. FR-14→45.

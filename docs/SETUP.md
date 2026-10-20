@@ -102,3 +102,46 @@ kết nối vào đó, npx expo start -c rồi quét QR mới. Không dùng --tu
 Workflow .github/workflows/keep-alive.yml dùng GitHub secrets SUPABASE_URL /
 SUPABASE_ANON_KEY để gọi Auth health; không commit giá trị. Trước demo kiểm
 project đang hoạt động; không suy ra mọi chức năng AI khỏe chỉ từ health 200.
+
+
+## 7. Trước buổi demo: kiểm hạn mức API
+
+Chạy một lượt kiểm ngắn, không chạy full smoke liên tục trước giờ demo:
+
+```bash
+node --env-file=.env.local scripts/ai-smoke.mjs --only=preflight
+```
+
+Lệnh gửi đúng một yêu cầu bằng model trong code; PASS chỉ xác nhận hiện tại
+API trả lời được, không đo số lượt còn lại và không bảo đảm buổi demo.
+Nếu fail: đọc lỗi ngày/phút/chưa có quota/số dư, không bấm lại liên tục.
+App không tự retry hoặc luân phiên key để vượt giới hạn.
+
+Quan sát thật 2026-10-21: model 3.6 của key hiện có trả 429 với quota
+`GenerateRequestsPerDayPerProjectPerModel-FreeTier`, giá trị 20. Đây là
+quota của project/model này, không phải con số chung cho mọi tài khoản.
+RPM/RPD/TPM model khác cần đọc trong [AI Studio Rate limits](https://aistudio.google.com/rate-limit?timeRange=last-28-days),
+đúng project chứa key. Thay key cùng project không tăng quota.
+[Tài liệu rate limits](https://ai.google.dev/gemini-api/docs/rate-limits).
+
+Google AI Pro hiện có quyền lợi $10 Google Cloud credits/tháng qua
+Developer Program. Cần liên kết hồ sơ và nhận credits cho billing account
+đúng; thuê bao không tự chuyển key Free Tier hiện tại thành Paid Tier.
+Kiểm eligibility/tình trạng thật trong [My Benefits](https://developers.google.com/profile/u/me/my-benefits);
+nguồn [Google One](https://support.google.com/googleone/answer/14534406?hl=en)
+và [Benefits FAQ](https://developers.google.com/profile/help/benefits).
+
+Nếu quyết định dùng Paid Tier: chủ dự án tự hoàn tất Set up billing ở
+[AI Studio Projects](https://aistudio.google.com/projects), đúng project của
+key; tài khoản Prepay mới thường cần nạp tối thiểu $5 và có số dư dương
+trước khi dùng credits khuyến mại hợp lệ. Xác nhận trong Billing rằng
+credits đã được áp dụng, đặt spend cap phù hợp, kiểm auto-reload theo ý
+chủ tài khoản. Spend cap có độ trễ xử lý khoảng 10 phút, không coi là trần
+chi phí tuyệt đối. Agent không tự nạp tiền/bật tự động thanh toán.
+[Billing và Prepay](https://ai.google.dev/gemini-api/docs/billing).
+
+Chuẩn bị một PDF/ảnh ngắn, một bản tóm tắt và hội thoại đã lưu để có nội
+dung xem lại khi mạng/dịch vụ trục trặc. Nói rõ phần nào là kết quả đã lưu;
+không giả vờ dữ liệu lưu sẵn là AI đang sinh trực tiếp. Không có nhà cung
+cấp API công cộng nào được chốt là vô hạn trong dự án này; Groq/Cerebras
+cũng áp giới hạn, đổi provider cần key và kiểm đủ PDF/ảnh/ngữ cảnh.

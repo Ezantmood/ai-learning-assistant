@@ -416,3 +416,13 @@ Tên nút trong mục cũ là lịch sử. Hiện tại: chọn mục Tóm tắt
 Ảnh chỉ dữ liệu giả: evidence/ui-simplify-home.png, ui-simplify-document.png,
 ui-simplify-scan-dark.png, ui-simplify-error-320.png. AI/backend không đổi trong
 đợt UI; hạn mức/lỗi dịch vụ ở mục 23 vẫn áp dụng.
+
+
+## 25. Hạn mức AI và preflight — 2026-10-21
+
+- [x] API key thật/model 3.6 trả quota 20 yêu cầu/ngày, RetryInfo khoảng 13 giờ; không nhầm với tốc độ gửi/phút.
+- [x] CLI --only=preflight gửi một lượt, báo lỗi quota ngày tiếng Việt, exit 1; không in raw error/key.
+- [x] Unit: quota ngày/phút/0, RetryInfo, metadata thiếu/sai/JSON vỡ, 402 số dư; mỗi lỗi chỉ một fetch.
+- [ ] Đọc RPM/RPD/TPM của model được chọn trong AI Studio đúng project, xác nhận đủ số lượt demo.
+- [ ] Nếu dùng credits Pro/Paid Tier: chủ dự án nhận benefit và kích hoạt billing, kiểm số dư/tier/spend cap.
+- [ ] Expo Go: kiểm thông báo hạn mức thực tế và các ca lỗi mạng AI; không tự đánh dấu đạt từ CLI/unit.

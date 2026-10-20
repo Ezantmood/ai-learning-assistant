@@ -7,6 +7,8 @@ import { pathToFileURL } from 'node:url';
 import ts from 'typescript';
 const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'ai-smoke-'));
 const checks = [];
+const onlyPreflight = process.argv.includes('--only=preflight');
+const files = process.argv.slice(2).filter((arg) => !arg.startsWith('--'));
 const onlyPdf = process.argv.includes('--only=pdf');
 function check(name, pass, elapsed) { checks.push(pass); console.log(`${pass ? 'PASS' : 'FAIL'} ${name}${elapsed ? ` ${elapsed}ms` : ''}`); }
 async function timed(name, fn) { const start = Date.now(); const result = await fn(); console.log(`TIME ${name} ${Date.now() - start}ms`); return result; }
@@ -18,7 +20,11 @@ try {
   const ai = await import(pathToFileURL(path.join(temp, 'transport.mjs')).href);
   const { SUMMARY_MODEL } = await import(pathToFileURL(path.join(temp, 'models.mjs')).href);
   console.log(`MODEL ${SUMMARY_MODEL}`);
-  if (!onlyPdf) {
+  if (onlyPreflight) {
+    const result = await timed('preflight', () => ai.answerWithGemini({ contextText: 'Mã kiểm tra kết nối là OK.', question: 'Mã kiểm tra kết nối là gì? Chỉ trả lời OK.' }));
+    check('preflight model responds', /\bOK\b/.test(result));
+  }
+  if (!onlyPreflight && !onlyPdf) {
   const text = 'Chương 1: Tế bào là đơn vị cơ bản của sự sống.\nChương 2: Định luật Ôm: U = I * R. U là điện áp (V), I là dòng điện (A), R là điện trở (ôm).';
   const summary = await timed('summary-sections', () => ai.summarizeWithGemini({ kind: 'txt', textContent: text }, { level: 'short', scope: 'sections', sectionTitle: 'Chương 2' }));
   check('summary correct section', /Ôm|điện/.test(summary) && !/đơn vị cơ bản của sự sống/.test(summary));
@@ -39,13 +45,13 @@ try {
   const answer = await timed('solution-follow-up', () => ai.solveWithGemini({ contextText, kind: 'follow_up', question: 'Vì sao trừ 3 ở cả hai vế?', history: [{ kind: 'solution', text: full.solutionText }] }));
   check('solution follow-up', /hai vế|tương đương|cân bằng/i.test(answer.solutionText));
   }
-  if (process.argv[2] && !onlyPdf) {
-    const jpeg = (await fs.readFile(process.argv[2])).toString('base64');
+  if (files[0] && !onlyPdf && !onlyPreflight) {
+    const jpeg = (await fs.readFile(files[0])).toString('base64');
     const ocr = await timed('ocr', () => ai.ocrWithGemini(jpeg));
     check('OCR reads equation', /2\s*x\s*\+\s*3\s*=\s*7/i.test(ocr.extractedText));
   }
-  if (process.argv[3]) {
-    const pdf = (await fs.readFile(process.argv[3])).toString('base64');
+  if (files[1] && !onlyPreflight) {
+    const pdf = (await fs.readFile(files[1])).toString('base64');
     const raw = await timed('pdf-extraction', () => ai.summarizeWithGemini({ kind: 'pdf', base64Data: pdf }, { level: 'short', scope: 'whole', sectionTitle: '' }));
     const parsed = ai.parseExtractionJson(raw);
     check('PDF extraction/summary', parsed.extractedText.length > 100 && parsed.summaryText.length > 20 && !parsed.truncated);
