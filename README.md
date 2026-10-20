@@ -1,122 +1,78 @@
 # AI Learning Assistant
 
-Hệ thống học tập Expo duy nhất của môn Lập trình di động, gồm 6 chức năng lớn
-với 45 yêu cầu FR-01 → FR-45, tất cả đã merge vào `main` (code + unit +
-verify schema + kiểm tay theo TEST-CHECKLIST).
-Dữ liệu mỗi tài khoản được cách ly bằng Supabase Row Level Security.
+Ứng dụng học tập Expo Go, gồm 6 chức năng và 45 FR theo đề PDF gốc.
+Đợt đối chiếu 2026-10-20 phát hiện 13 FR thiếu và 5 FR một phần trong bản
+cũ; đã bổ sung luồng code và sửa cách truy vết yêu cầu. Bằng chứng trước/sau:
+[FR-AUDIT](docs/FR-AUDIT.md), [truy vết 45 FR](docs/FR-TRACEABILITY.md).
+Kiểm thử tự động và API không thay thế kiểm thử Expo Go trên điện thoại.
 
-## Stack
+## Chức năng
+
+| Chức năng | FR | Hành vi |
+|---|---|---|
+| Tài khoản | 01–05 | Email/mật khẩu, OTP khôi phục, hồ sơ/avatar, ghi chú riêng |
+| Tài liệu | 06–13 | Upload PDF/DOCX/TXT, CRUD, môn/chủ đề, lưu nội dung cho AI |
+| Tóm tắt | 14–22 | Ngắn/trung bình/chi tiết, theo chương/phần, cấu trúc dễ đọc, lịch sử nhiều bản |
+| Hội thoại | 23–30 | Theo tài liệu và ngữ cảnh phiên, phiên mới, tùy chọn lưu/mở lại |
+| Quét đề | 31–37 | Camera/thư viện, OCR, kiểm tra/sửa văn bản, gửi bản sửa sang phân tích |
+| Giải bài | 38–45 | Phân tích dạng bài, gợi ý tiếp, giải thích, lời giải theo yêu cầu, hỏi tiếp |
+
+## Stack và chạy app
 
 Expo SDK 57, TypeScript strict, expo-router, Supabase Auth/Postgres/Storage,
-supabase-js v2, AsyncStorage, React Hook Form, Zod, TanStack Query,
-React Native Paper, expo-image-picker, expo-image-manipulator,
-expo-document-picker, expo-file-system, expo-crypto,
-base64-arraybuffer. Chạy bằng Expo Go, không development build.
-
-## FR coverage
-
-| Chức năng | Dải FR | Nội dung | Trạng thái |
-|---|---|---|---|
-| 1. Quản lý tài khoản người dùng | FR-01 → FR-05 | Đăng ký/đăng nhập/OTP/hồ sơ/`study_notes` | Xong — unit test + `rls-proof` 7/7 + `storage-rls-proof` 5/5 |
-| 2. Quản lý tài liệu học tập | FR-06 → FR-13 | Tải lên PDF/DOCX/TXT, danh sách, chi tiết, đổi tên, xóa, môn học, hạ tầng trích xuất | Xong — code + unit + verify schema 14/14 |
-| 3. AI tóm tắt tài liệu PDF | FR-14 → FR-22 | Tóm tắt bằng Gemini trong màn chi tiết tài liệu | Xong — code + unit + kiểm tay Expo Go với PDF thật |
-| 4. AI hỏi đáp dựa trên tài liệu | FR-23 → FR-30 | Hỏi đáp trên toàn văn trích xuất trong màn chi tiết | Xong — code + unit + kiểm tay Expo Go với PDF thật |
-| 5. Quét hình ảnh đề bài bằng AI | FR-31 → FR-37 | Chọn/chụp ảnh, OCR Gemini, lưu kết quả | Xong — code + unit + proof RLS 8/8 + nghiệm thu quét thật trên Expo Go |
-| 6. AI gợi ý lời giải | FR-38 → FR-45 | Gợi ý lời giải từng bước trong màn chi tiết | Xong — code + unit + proof RLS 11/11 + verify schema |
-
-Chi tiết file/hàm/test của FR-01 → FR-45 xem `docs/FR-TRACEABILITY.md`.
-
-## Yêu cầu môi trường
-
-- Node.js tối thiểu `22.13.x` (theo Expo SDK 57); Git.
-- Điện thoại cài đúng bản Expo Go tương thích SDK 57:
-  iOS tải tại `sign.expo.dev`, Android tải tại `expo.dev/go`.
-  Bản Expo Go trên App Store hiện dừng ở SDK 54 nên không dùng được.
-- Một project Supabase (free tier tự pause sau ~7 ngày không dùng —
-  trước buổi demo mở Dashboard resume).
-- Không tạo development build, không sinh `ios/`/`android/`.
-
-## Cách chạy
+AsyncStorage, React Hook Form, Zod, TanStack Query, React Native Paper.
+Giữ nguyên dependency; không prebuild/eject/development build.
 
 ```bash
 npm ci
-cp .env.example .env   # điền theo docs/SETUP.md mục 4
-npx expo start -c      # quét QR mới bằng đúng bản Expo Go SDK 57
+# cấu hình .env và .env.local theo docs/SETUP.md; không commit giá trị
+npx expo start -c
 ```
 
-Biến môi trường app cần có (CHỈ TÊN, không giá trị — xem `.env.example`):
-`EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
-`EXPO_PUBLIC_REQUIRE_EMAIL_CONFIRMATION`, `EXPO_PUBLIC_GEMINI_API_KEY`
-(key Gemini cắm ở `.env.local`, không commit).
-Script proof đọc thêm `.env.local`
-(`SUPABASE_PROJECT_REF`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_URL`,
-`SUPABASE_SERVICE_ROLE_KEY`) — không commit hai file này.
+Dùng Expo Go tương thích SDK 57. Nếu Wi-Fi trường có client isolation:
+điện thoại phát hotspot → Mac kết nối → chạy lại lệnh trên → quét QR mới.
+Không dùng --tunnel. Hướng dẫn môi trường, OTP và thứ tự SQL:
+[SETUP](docs/SETUP.md).
 
-Bẫy wifi trường/công cộng bật client isolation: Expo Go không thấy dev
-server dù "cùng mạng" (quét QR không vào, nhập URL tay cũng không vào).
-Cách đi vòng: điện thoại phát hotspot, Mac nối vào hotspot đó, rồi
-`npx expo start -c` và quét QR mới. KHÔNG dùng `--tunnel`.
-
-Dựng đầy đủ từ số 0 (SQL, Auth, Brevo SMTP, bucket private): `docs/SETUP.md`.
-
-## Cách chạy test
+## Kiểm chứng
 
 ```bash
 npx tsc --noEmit
 npm run lint
-npm test               # 39 suites, 318/318 PASS — mock supabase, không gọi mạng
+npm test -- --runInBand
 npm run check:functions
+node --env-file=.env --env-file=.env.local scripts/fr-audit-proof.mjs
+node --env-file=.env.local scripts/ai-smoke.mjs
 ```
 
-## Cách chạy rls-proof (cần `.env` + `.env.local`, tự dọn user test)
+Mốc tự động: 43 suites / 336 test; lint 0 lỗi/0 warning; RLS A/B 51/51;
+đối chiếu 57 cột types với schema remote, verify CN2 14/14 và CN3 10/10.
+Android bundle export đạt. Các ca thiết bị ở [TEST-CHECKLIST](docs/TEST-CHECKLIST.md)
+vẫn để mở nếu chưa chạy. Script proof tạo/dọn user/object test; service-role
+chỉ dùng local, không nằm trong app.
 
-```bash
-# FR-05 notes: mong đợi RLS_PROOF: 7/7 check pass
-npx tsc --ignoreConfig --types node scripts/rls-proof.ts \
-  --outDir /tmp/rlsproof-out --module nodenext --moduleResolution nodenext \
-  --target es2021 --esModuleInterop --skipLibCheck --strict
-NODE_PATH="$PWD/node_modules" node /tmp/rlsproof-out/rls-proof.js
+## AI và giới hạn thực tế
 
-# FR-04 Storage avatars: mong đợi STORAGE_RLS_PROOF: 5/5 check pass
-npx tsc --ignoreConfig --types node scripts/storage-rls-proof.ts \
-  --outDir /tmp/storageproof-out --module nodenext --moduleResolution nodenext \
-  --target es2021 --esModuleInterop --skipLibCheck --strict
-NODE_PATH="$PWD/node_modules" node /tmp/storageproof-out/storage-rls-proof.js
-```
+Model chung: `gemini-3.6-flash` stable, đã gọi sinh nội dung thật.
+3.8 Flash gặp timeout/503 khi probe nên chưa chọn làm mặc định.
+Minimal cho hỏi đáp/OCR/tóm tắt văn bản, low cho trích PDF/gợi ý, medium
+cho lời giải đầy đủ. Tóm tắt lại tái dùng toàn văn đã trích. Timeout 90 giây;
+không tự retry, không hứa hạn mức cố định hay thời gian phản hồi cố định.
+Xem số đo và các lỗi dịch vụ trong [FR-AUDIT](docs/FR-AUDIT.md).
 
-## Giới hạn đã biết
+Gói Google AI Pro và Gemini Developer API có billing/quota riêng; app dùng
+API key của project trong AI Studio. Không tự bật billing/nâng gói.
+[Tài liệu billing Google](https://ai.google.dev/gemini-api/docs/billing).
+Key EXPO_PUBLIC_GEMINI_API_KEY vẫn nằm trong bundle bản demo; cần backend
+proxy trước khi phát hành cho người dùng thật. Không đưa service-role vào app.
 
-- Supabase free tier tự pause project sau ~7 ngày không hoạt động.
-  Workflow `.github/workflows/keep-alive.yml` ping Auth health mỗi 2 ngày để
-  giữ project thức. Người dùng phải tự làm đúng 2 bước (agent không làm thay
-  được vì cần quyền repo):
-  1. Vào GitHub repo → Settings → Secrets and variables → Actions → New
-     repository secret, tạo secret `SUPABASE_URL` với giá trị là Project URL
-     (Supabase Dashboard → Project Settings → Data API).
-  2. Tạo tiếp secret `SUPABASE_ANON_KEY` với giá trị anon/public key.
-  Xong có thể bấm Run workflow tay (workflow_dispatch) để kiểm tra ngay.
-- CN2 còn nợ test tay trên Expo Go (22 case trong TEST-CHECKLIST) và proof
-  A/B cho `documents`/`subjects` (chỉ mới verify schema 14/14 + kế thừa proof CN1).
-- Tìm kiếm tài liệu phân biệt dấu tiếng Việt (`ilike`); không có viewer trong
-  app (mở tệp bằng app ngoài); DOCX tải/xem/xóa được nhưng AI không đọc
-  (`unsupported`).
-- Không offline-first: mất mạng thì báo lỗi + retry, form giữ dữ liệu để thử lại.
-- Không social login, role/admin, realtime, push, E2E (out of scope theo `docs/SPEC.md`).
-- Migration đã apply thì không sửa file cũ; quy ước path avatar timestamp chỉ ghi
-  trong `docs/DATA-MODEL.md` và code.
+DOCX upload/mở/quản lý được, AI yêu cầu chuyển PDF. Kết nối mạng là bắt buộc;
+không offline-first. Mỗi phiên hội thoại chưa lưu mất khi rời màn; chỉ lần hỗ
+trợ giải bài gần nhất lưu DB, các lượt trong phiên giữ để hỏi tiếp.
 
 ## Tài liệu
 
-- [Đặc tả và quyết định](docs/SPEC.md)
-- [Kiến trúc + luồng màn hình](docs/ARCHITECTURE.md)
-- [Mô hình dữ liệu/RLS](docs/DATA-MODEL.md)
-- [Hệ thống thiết kế](docs/DESIGN-SYSTEM.md)
-- [Backlog CN1 + CN2](docs/TASKS.md)
-- [Nhật ký phát triển](docs/DEVLOG.md)
-- [Truy vết FR](docs/FR-TRACEABILITY.md)
-- [Dựng môi trường](docs/SETUP.md)
-- [Checklist test](docs/TEST-CHECKLIST.md)
-- [Nguyên liệu báo cáo](docs/REPORT-NOTES.md)
-- [Quy tắc Git](AGENTS.md#quy-tắc-git-bắt-buộc)
-
-Đọc `AGENTS.md` trước mỗi session để biết luật dự án và file cần đọc theo loại công việc.
+[SPEC](docs/SPEC.md) · [Kiến trúc](docs/ARCHITECTURE.md) ·
+[Dữ liệu/RLS](docs/DATA-MODEL.md) · [TASKS](docs/TASKS.md) ·
+[DEVLOG](docs/DEVLOG.md) · [Báo cáo](docs/REPORT-NOTES.md) ·
+[Quy tắc dự án](AGENTS.md).

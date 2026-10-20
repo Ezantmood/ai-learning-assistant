@@ -1,3 +1,9 @@
+> Hiện hành: mục “Đợt đối chiếu PDF 2026-10-20” ở cuối file. Các backlog
+> G/CN cũ giữ như nhật ký, không dùng diễn giải FR cũ thay SPEC hiện tại.
+> Proof A/B CN2/CN3 đã được thay bằng fr-audit-proof.mjs 51/51; CLI regen
+> ở CN2-01 vẫn chưa chạy, types đã so 57 cột catalog. Không chạy lại SQL cũ
+> sau migration mới chỉ để tick checkbox lịch sử.
+
 # Backlog 5 giai đoạn
 
 Mỗi checkbox là một commit độc lập và phải để app chạy được. Trước commit chạy `npx tsc --noEmit`, `npm run lint`, test tay phần liên quan; staged diff phải không có secret. Push ngay sau commit.
@@ -418,3 +424,24 @@ gốc khác thì sửa SPEC trước, không sửa code).
   thứ hai khi render lại sau lượt gợi ý. Đặt key riêng cho vùng gợi ý,
   chạy cổng chất lượng và ghi ca Expo Go còn chờ chủ dự án kiểm.
   Branch `fix/cn6-solution-key`; tag `cn6-solution-key-fix`.
+
+
+# Đợt đối chiếu PDF 2026-10-20 (quyền chủ dự án: kiểm tra và bổ sung toàn đề)
+
+Branch `codex/fr-pdf-audit`, tag `fr-pdf-audit-20261020`. Mỗi checkbox một
+commit, chạy tsc/lint/test và push ngay. G4+ tự merge --no-ff sau cổng xanh.
+Các task/mô tả FR phía trên là lịch sử; SPEC hiện tại và FR-AUDIT theo PDF
+thay thế việc diễn giải FR cũ. Không tick nợ test tay chưa chạy.
+
+- [x] AUDIT-01: Đọc/render PDF đủ 3 trang, đối chiếu 45 FR với code, sửa SPEC/traceability và ghi sai lệch trước sửa.
+- [x] AUDIT-02: Bổ sung độ dài/chương/phần, cấu trúc kết quả và lưu/xem nhiều bản tóm tắt. FR-18→FR-22.
+- [x] AUDIT-03: Hội thoại theo phiên có ngữ cảnh, bắt đầu mới, lựa chọn lưu và mở lại lịch sử. FR-26→FR-30.
+- [x] AUDIT-04: Sửa/lưu OCR và gửi đề đã kiểm tra sang phân tích. FR-36→FR-37.
+- [x] AUDIT-05: Phân tích/chủ đề, gợi ý tiếp, giải thích, lời giải theo yêu cầu, phân biệt loại, hỏi tiếp. FR-38→FR-45.
+- [x] AUDIT-06: Xác minh/nâng model stable, tối ưu độ trễ có kiểm chứng, proof RLS A/B, hồi quy và hoàn thiện tài liệu.
+
+
+AUDIT-06 hoàn tất code/cổng tự động và ghi giới hạn thực tế: RLS 51/51,
+Jest 335/335, lint sạch, schema/types/export/web và AI text/OCR/solver đạt.
+Smoke PDF 3.6 gặp 503 hai lượt, kiểm lại dịch vụ còn mở trong checklist 23;
+Expo Go chưa chạy. Không coi việc tick task triển khai là nghiệm thu thiết bị.

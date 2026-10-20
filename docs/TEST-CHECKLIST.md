@@ -1,3 +1,7 @@
+> Mục 0→18 giữ ca hồi quy lịch sử; nhãn FR ở đó có thể theo SPEC cũ.
+> Khi nghiệm thu đề PDF dùng SPEC/FR-TRACEABILITY hiện tại và mục 19→23.
+> Không tự tick ca thiết bị dựa trên unit/API/web.
+
 # Checklist chạy một lượt trước buổi bảo vệ (6 chức năng FR-01 → FR-45)
 
 > Chạy từ mục 0 đến mục 18 theo đúng thứ tự trong một buổi duy nhất.
@@ -321,3 +325,70 @@ Theo đúng khuôn `scripts/rls-proof.ts` của FR-05 (2 user test A/B, tự d�
   dashboard ghi “Hoàn thành” và mở tab Tài liệu.
 - [ ] Xóa tài liệu đã có lời giải → row `document_solutions` mất theo CASCADE.
   A đăng nhập không thấy row của B; proof Data API A/B đã đạt 11/11.
+
+
+## 19. Hồi quy PDF gốc — tóm tắt (2026-10-20)
+
+- [ ] PDF/TXT: lần lượt chọn Ngắn/Trung bình/Chi tiết, kiểm độ dài và cấu trúc.
+- [ ] Chọn Theo chương/phần, để trống rồi nhập Chương 2; kiểm đúng phạm vi.
+- [ ] Tạo hai bản, mở lịch sử chọn lại bản cũ; rời màn và mở lại vẫn còn cả hai.
+- [ ] Mất mạng/429 khi đã có bản cũ: lỗi hiện rõ, dữ liệu cũ còn, không gọi lặp.
+
+Tự động: prompt/schema mới + hồi quy Jest 322/322; remote smoke tạo hai
+phiên bản với metadata thành công và dọn user test. Chưa kiểm thiết bị.
+
+
+## 20. Hội thoại theo PDF (FR-26→FR-30)
+
+- [ ] Hỏi một câu rồi hỏi “vì sao?”: trả lời đúng dựa trên lượt trước và tài liệu.
+- [ ] Chưa bấm Lưu: phiên không xuất hiện trong lịch sử; bấm Lưu rồi mở lại đủ các lượt.
+- [ ] Hỏi thêm trong phiên đã lưu, bấm Lưu lại: không nhân đôi lượt cũ.
+- [ ] Hội thoại mới: trống ngữ cảnh; mở bản cũ vẫn đầy đủ.
+- [ ] Mạng lỗi khi hỏi/lưu: câu hỏi và kết quả hiện có còn nguyên; không tự retry.
+- [ ] Đổi tài liệu/tài khoản: không lẫn hội thoại.
+
+UI unit mô phỏng hỏi hai lượt → lưu → phiên mới; transport kiểm role/thứ tự;
+remote smoke save/reopen/resave 2 lượt đạt. Kiểm Expo Go còn mở.
+
+
+## 21. Chỉnh OCR và gửi phân tích (FR-36/37)
+
+- [ ] Quét ảnh → sửa lỗi nhận dạng → Lưu → mở lại vẫn đúng chữ đã sửa.
+- [ ] Xóa trắng → báo lỗi; ảnh gốc giữ nguyên.
+- [ ] Sửa công thức rồi bấm Phân tích đề bài đã kiểm tra: AI nhận bản sửa.
+- [ ] Mất mạng khi lưu: giữ nội dung đang sửa, không chuyển màn/gọi AI.
+- [ ] Mở lại ảnh cũ trong Tài liệu: vẫn chỉnh OCR được; A không sửa ảnh B.
+
+Unit API chặn rỗng, ghi extracted_text; unit UI kiểm đúng bản sửa và lưu lỗi
+không chuyển màn. 329/329 PASS; thiết bị chưa chạy.
+
+
+## 22. Hỗ trợ giải bài theo PDF (FR-38→FR-45)
+
+- [ ] Phân tích: nêu chủ đề/dạng bài, dữ kiện/yêu cầu, không tự giải hết.
+- [ ] Gợi ý đầu tiên rồi Gợi ý tiếp: chỉ một bước mới, tiếp nối và không lặp.
+- [ ] Giải thích: các khái niệm/công thức liên quan, nhãn riêng.
+- [ ] Chỉ sau Yêu cầu lời giải tham khảo mới có lời giải đầy đủ, nhãn riêng.
+- [ ] Hỏi “vì sao dùng công thức đó?”: dùng các lượt trước, giữ đề gốc.
+- [ ] Sửa OCR → Phân tích: dùng bản sửa, chỉ một request, không dùng đề cũ.
+- [ ] Mạng lỗi/quota/rỗng: giữ kết quả cũ, không tự retry; bấm nhanh không gửi đôi.
+- [ ] Mở lại tài liệu: thấy loại phản hồi/bước đã lưu gần nhất; A không xem B.
+
+Unit UI/transport/API kiểm chế độ, bước tiếp và ngữ cảnh, intent OCR/quota;
+331/331 PASS. Chất lượng nội dung cần smoke API thật và kiểm thiết bị.
+
+
+## 23. Bằng chứng đợt audit 2026-10-20
+
+- [x] tsc, lint (0 lỗi/0 warning), 336/336 Jest, check:functions.
+- [x] Android bundle export, không prebuild/không sinh ios/android.
+- [x] Proof RLS A/B 51/51 sau vá 8 ca forged-parent/subject/path.
+- [x] Schema CN2 14/14, CN3 10/10; types Row/nullability/kiểu cơ bản 57 cột.
+- [x] Web thật: chọn chương, mở 2 bản; hỏi AI → lưu → phiên mới → mở lại.
+- [x] API thật: tóm tắt text theo chương, hỏi/đáp có lịch sử, các chế độ solver.
+- [x] OCR JPEG giả đọc đúng phương trình (67,6 giây; không cam kết latency).
+- [ ] PDF với model 3.6: 2 lượt HTTP 503, chưa xác nhận bản mới đạt smoke PDF.
+- [ ] Expo Go thật: mục 19→22 và các ca cũ chưa tick vẫn cần kiểm trên máy.
+
+Ảnh web chỉ có dữ liệu giả ở docs/evidence/fr-audit-20261020.png.
+Gemini Pro/API billing tách biệt, không đổi gói/bật billing trong đợt này.

@@ -113,3 +113,13 @@ describe('answerWithGemini — map lỗi', () => {
     ).rejects.toThrow('không trả về câu trả lời');
   });
 });
+
+
+it('FR-27: gửi các lượt trước đúng role và thứ tự', async () => {
+  mockFetchJson(200, { candidates: [{ content: { parts: [{ text: 'Đáp án tiếp' }] } }] });
+  await answerWithGemini({ contextText: 'Tài liệu', question: 'Vì sao?', history: [{ question: 'Câu đầu', answer: 'Đáp án đầu' }] });
+  const body = JSON.parse(lastRawBody()) as { contents: { role: string; parts: { text: string }[] }[] };
+  expect(body.contents.map((c) => c.role)).toEqual(['user', 'model', 'user']);
+  expect(body.contents[1]?.parts[0]?.text).toBe('Đáp án đầu');
+  expect(body.contents[2]?.parts[0]?.text).toContain('Vì sao?');
+});

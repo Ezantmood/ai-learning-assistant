@@ -1358,7 +1358,7 @@ https://supabase.com/docs/guides/platform/access-control`
 **Mốc Git**
 
 - Commit tính năng: `176f035` (branch `fix/upload-db-permission`, đã push)
-- Commit merge: `278b0b6335d5837c3bc3ece4c3ab972596f0a4dd` (merge --no-ff)
+- Commit merge: `278b0b6336d5837c3bc3ece4c3ab972596f0a4dd` (merge --no-ff)
 - Branch: `fix/upload-db-permission`
 - Tag: `fix-upload-db` (tạo + push cùng lệnh với push main)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
@@ -2243,3 +2243,105 @@ https://supabase.com/docs/guides/platform/access-control`
   `3f858a58bec064ac5470af2ffc07696d95d21d84` (đã push); tag
   `release-docs` trỏ merge này, push cùng lệnh với main. Không mở PR
   theo quyết định G4+.)
+
+
+### AUDIT-01 — Đối chiếu PDF gốc — 2026-10-20
+
+- Đọc/extract/render toàn bộ 3 trang PDF trong thư mục cha; so từng FR với
+  screens/API/transport/DDL và bảng truy vết cũ. Trước sửa: 27 có code,
+  5 một phần, 13 thiếu (chi tiết FR-AUDIT.md).
+- SPEC cũ đổi nghĩa FR và bỏ nhầm yêu cầu ra ngoài phạm vi. Viết lại theo
+  đúng 45 FR gốc; traceability không còn khẳng định 45/45 đạt. TASKS thêm
+  từng checkbox sửa có commit riêng, theo yêu cầu chủ dự án kiểm tra toàn đề.
+- Không đổi stack/dependency. Hai mục untracked .DS_Store và supabase/.temp/
+  không đưa vào commit. Không đọc/in/commit giá trị secret.
+- Cổng nền: tsc exit 0; lint 0 lỗi/2 warning watch() kế thừa; Jest 39 suites, 318/318; check:functions exit 0. Kiểm tra PDF bằng mắt đủ 3 trang.
+
+
+### AUDIT-02 — Tóm tắt đúng FR-18→FR-22 — 2026-10-20
+
+- Thêm bộ chọn độ dài/phạm vi/chương, prompt tương ứng; AiResultText
+  hiển thị heading/gạch đầu dòng an toàn. Nút khóa cả khi tải tệp/tóm tắt.
+- Migration 0008 đã áp qua kết nối Postgres có sẵn: bỏ unique document_id,
+  thêm metadata có CHECK, giữ row cũ; INSERT phiên bản mới và lịch sử chọn lại.
+- Chuyển type DocumentWithSubject sang shared, bỏ import chéo feature
+  summary→documents. Không thêm dependency.
+- tsc 0; lint 0 lỗi/2 warning cũ; 40 suites, 322/322 PASS. Smoke remote bằng
+  user test: lưu 2 phiên bản khác mức độ cùng tài liệu PASS, dọn user xong.
+  Chưa có thiết bị để kiểm Expo Go; mục 19 checklist giữ mở.
+
+### AUDIT-03 — Hội thoại đúng FR-26→FR-30 — 2026-10-20
+
+- Gửi các lượt trước theo role user/model; giao diện hội thoại theo thứ tự,
+  phiên mới rỗng ngữ cảnh. Không ghi DB trong askQuestion; Lưu hội thoại
+  là mutation riêng, lưu lại idempotent theo id; có mở lại/tiếp tục.
+- Migration 0009 đã áp Postgres: thêm conversation_id nullable + index,
+  không sửa/xóa dữ liệu cũ. Row legacy mở như phiên riêng. Không tạo bảng dư.
+- Tách type dùng chung khỏi import chéo; route key theo tài liệu bảo đảm
+  không tái sử dụng state hội thoại khi đổi doc. Ngữ cảnh quá dài báo rõ.
+- Cổng tsc 0; lint 0 lỗi/2 warning cũ; 41 suites, 327/327 PASS.
+  Unit UI thực hiện hỏi hai lượt → chọn lưu → phiên mới và kiểm payload.
+  Remote smoke save/reopen/resave 2 lượt PASS, dọn user test. Expo Go mục 20
+  chưa chạy, không tick đã đạt tay.
+
+
+### AUDIT-04 — Sửa OCR và chuyển đề đã kiểm tra — 2026-10-20
+
+- ScanTextEditor có sửa/lưu và chuyển phân tích, dùng ở scan lẫn chi tiết
+  ảnh cũ. Nội dung rỗng/qua giới hạn bị chặn; API update đúng id/user/ảnh,
+  ảnh gốc không đổi. RLS vẫn là lớp quyền thực tế.
+- Luồng chuyển màn chờ lưu thành công; lỗi giữ draft. OCR cắt cụt có id
+  để người dùng sửa phần cứu được. Không thêm bảng/dependency.
+- tsc 0; lint 0 lỗi/2 warning cũ; 42 suites, 329/329 PASS. Test UI mô phỏng
+  sửa→lưu→chuyển detail và lưu lỗi không điều hướng. Kiểm Expo Go mục 21 mở.
+
+
+### AUDIT-05 — Đủ luồng học từng bước FR-38→FR-45 — 2026-10-20
+
+- Nút/phản hồi riêng cho phân tích chủ đề/dạng bài, một gợi ý tiếp theo,
+  giải thích khái niệm, lời giải tham khảo theo yêu cầu và hỏi tiếp.
+  Prompt giữ dữ kiện đề, không tự lộ lời giải trong chế độ gợi ý; gửi lịch sử.
+- Migration 0010 đã áp: response_type CHECK + hint_step >=0; giữ row cũ.
+  Lưu lượt gần nhất và metadata; lịch sử phiên ở UI cho hỏi tiếp.
+- Nối intent OCR một lần sau lưu/refetch, không tự gọi khi mở tài liệu thường.
+  Bỏ import chéo solver→documents; thêm guard ngữ cảnh/câu hỏi, giữ khóa gọi.
+- Cổng tsc 0; lint 0 lỗi/2 warning cũ; 42 suites, 331/331 PASS. UI unit kiểm
+  gợi ý bước 1→2, full opt-in, hỏi tiếp và intent OCR. Expo Go mục 22 mở.
+
+
+### AUDIT-06 — RLS, model stable và kiểm chứng cuối — 2026-10-20
+
+- Probe model chính thức + models API: 3.8 có nhưng generate timeout 90s,
+  25s và 503; 3.7 timeout; 3.6 có lượt 503 và lượt sinh nội dung thành công.
+  Chọn gemini-3.6-flash stable. Bản 3.5 cũ là alias deprecated theo Google;
+  không dùng preview, không thêm dependency/không bật billing. Gói Google AI
+  Pro không tự chuyển quota của Gemini Developer API sang trả phí.
+- Minimal hỏi đáp/OCR/summary text, low PDF/gợi ý, medium full solution.
+  Tái dùng extracted_text khi tóm tắt lại, bỏ refetch lịch sử khi chưa lưu.
+  Key qua header, timeout AbortController 90s, không auto retry; quota bỏ
+  số lượt 1.500/ngày/reset cố định không có căn cứ. Parser chặn JSON null.
+- Chuyển AI dùng chung src/lib/ai → src/shared/ai đúng AGENTS.md, không
+  thêm abstraction; cập nhật import/test/script/docs. Hai warning watch()
+  kế thừa đổi sang useWatch đúng thư viện sẵn có; lint 0 lỗi/0 warning.
+- Proof mới hai user thật phát hiện 8 lỗ RLS trong 51 ca: own user_id vẫn
+  gắn document/subject/path B. Migration 0011 restrictive đã áp; chạy lại
+  51/51 PASS, cleanup xong. Verify SQL cập nhật whitelist 8 MIME, 5 policy
+  và history summary: CN2 14/14, CN3 10/10. Row types so catalog 57/57 cột;
+  CLI Supabase chưa có nên không ghi đã regen bằng CLI.
+- Cổng: tsc 0, lint sạch; 43 suites, 336/336 PASS; check:functions 0.
+  Android export lại với đường dẫn shared cuối đạt (5,5 MB Hermes bundle). Jest vẫn có cảnh báo open handle kế thừa sau suite,
+  không lỗi assertion/type/lint.
+- AI thật các mẫu: summary theo phần 9,23s, Q/A 9,22s, follow-up 12,53s,
+  analysis 7,70s, hint 7,96s/20,07s, explanation 13,68s, full 12,02s,
+  solution follow-up 2,37s, OCR 67,62s; nội dung kiểm đạt. PDF hai lượt
+  HTTP 503, chưa ghi pass; cần kiểm lại khi dịch vụ ổn định. Không hứa
+  model mới luôn nhanh hơn; 3.6 low Q/A từng timeout, minimal sau đó đạt.
+- Web thật với tài khoản giả: chọn chương/mở 2 bản, hỏi Gemini, chọn lưu,
+  phiên mới rỗng, mở lại lịch sử đạt. Ảnh evidence/fr-audit-20261020.png.
+  Expo Go/OTP/camera/quyền/picker thật còn checklist mở, không tự nghiệm thu.
+- Viết lại docs hiện hành theo PDF, giữ nhật ký/bằng chứng cũ như lịch sử;
+  README/traceability không còn tuyên bố toàn bộ 45 FR đã kiểm thiết bị.
+
+- Đã dọn tài khoản/fixture web sau chụp ảnh; không để dữ liệu test trong project.
+- Bổ sung FR-05 cache: AuthProvider dọn Query cache khi hết phiên/đổi user,
+  giữ cache khi refresh cùng user; regression mới nâng tổng lên 43 suites/336.

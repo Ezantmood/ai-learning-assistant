@@ -3,11 +3,11 @@ import * as Crypto from 'expo-crypto';
 import { decode } from 'base64-arraybuffer';
 import { Platform } from 'react-native';
 
-import { ocrWithGemini } from '../../lib/ai/transport';
+import { ocrWithGemini } from '../../shared/ai/transport';
 import { supabase } from '../../shared/lib/supabase';
 import type { DocumentRow } from '../../shared/types/database';
 import { ScanGuardError, ScanTruncatedError } from './errors';
-import { scanDisplayNameSchema, SCAN_MAX_BYTES, toScanImage, validateScanAsset, type ScanImage } from './schemas';
+import { scanDisplayNameSchema, scanTextSchema, SCAN_MAX_BYTES, toScanImage, validateScanAsset, type ScanImage } from './schemas';
 
 export type ScanPickOutcome =
   | { status: 'ready'; image: ScanImage }
@@ -170,7 +170,7 @@ export async function runScan(input: {
       throw doneError ?? new ScanGuardError('Không lưu được kết quả quét. Hãy thử lại.');
     }
     if (result.truncated) {
-      throw new ScanTruncatedError(result.extractedText);
+      throw new ScanTruncatedError(result.extractedText, saved.id);
     }
     return { document: saved, extractedText: result.extractedText };
   } catch (error) {
@@ -183,4 +183,19 @@ export async function runScan(input: {
       .eq('user_id', input.userId);
     throw error;
   }
+}
+
+/** FR-36: RLS kiểm quyền sở hữu; chỉ cập nhật văn bản, giữ nguyên ảnh gốc. */
+export async function updateScanText(input: {
+  documentId: string; userId: string; text: string;
+}): Promise<DocumentRow> {
+  const parsed = scanTextSchema.safeParse(input.text);
+  if (!parsed.success) throw new ScanGuardError(parsed.error.issues[0]?.message ?? 'Nội dung không hợp lệ.');
+  if (!input.userId || !input.documentId) throw new ScanGuardError('Bạn không có quyền sửa kết quả này.');
+  const { data, error } = await supabase.from('documents')
+    .update({ extracted_text: parsed.data, extraction_status: 'done' })
+    .eq('id', input.documentId).eq('user_id', input.userId).eq('file_ext', 'jpg')
+    .select().single();
+  if (error || !data) throw new ScanGuardError('Không lưu được nội dung OCR. Kiểm tra kết nối và thử lại.');
+  return data;
 }

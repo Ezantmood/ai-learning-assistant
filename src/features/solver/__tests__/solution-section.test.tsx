@@ -4,71 +4,61 @@ import { Button, PaperProvider } from 'react-native-paper';
 import { SolutionSection } from '../SolutionSection';
 import { lightTheme } from '../../../shared/theme/theme';
 import { useRequestSolution, useSolution } from '../queries';
-import type { DocumentWithSubject } from '../../documents/api';
-import { GeminiQuotaError } from '../../../lib/ai/transport';
+import { FormTextInput } from '../../../shared/components/FormTextInput';
+import type { DocumentWithSubject } from '../../../shared/types/database';
+import type { SolutionRequest } from '../api';
+import { GeminiQuotaError } from '../../../shared/ai/transport';
 
-jest.mock('../queries', () => ({
-  useRequestSolution: jest.fn(), useSolution: jest.fn(),
-}));
+jest.mock('../queries', () => ({ useRequestSolution: jest.fn(), useSolution: jest.fn() }));
 const queryMock = jest.mocked(useSolution);
 const mutationMock = jest.mocked(useRequestSolution);
-const mutate = jest.fn();
+const mutateAsync = jest.fn(async (input: Omit<SolutionRequest, 'userId'>) => ({ solution_text: `Phản hồi ${input.kind}`, response_type: input.kind, hint_step: input.hintStep }));
 const trees: ReturnType<typeof create>[] = [];
-const doc = {
-  id: 'doc-1', user_id: 'u1', file_ext: 'pdf', extraction_status: 'done',
-  extracted_text: 'Đề toán',
-} as DocumentWithSubject;
-
-function render(document = doc) {
+const doc = { id: 'doc-1', user_id: 'u1', file_ext: 'pdf', extraction_status: 'done', extracted_text: 'Đề toán' } as DocumentWithSubject;
+function render(document = doc, analysisRequest?: string) {
   let tree: ReturnType<typeof create> | undefined;
-  act(() => {
-    tree = create(<PaperProvider theme={lightTheme}>
-      <SolutionSection doc={document} userId="u1" />
-    </PaperProvider>);
-  });
-  if (!tree) throw new Error('Không render được SolutionSection');
-  trees.push(tree);
-  return tree;
+  act(() => { tree = create(<PaperProvider theme={lightTheme}><SolutionSection doc={document} userId="u1" analysisRequest={analysisRequest} /></PaperProvider>); });
+  if (!tree) throw new Error('Không render được');
+  trees.push(tree); return tree;
 }
-function setState(query: Record<string, unknown>, mutation: Record<string, unknown> = {}) {
-  queryMock.mockReturnValue({ isPending: false, isError: false, data: null, ...query } as ReturnType<typeof useSolution>);
-  mutationMock.mockReturnValue({ isPending: false, error: null, mutate, ...mutation } as unknown as ReturnType<typeof useRequestSolution>);
+function state(pending = false) {
+  queryMock.mockReturnValue({ isPending: false, isError: false, data: null } as unknown as ReturnType<typeof useSolution>);
+  mutationMock.mockReturnValue({ isPending: pending, mutateAsync } as unknown as ReturnType<typeof useRequestSolution>);
 }
-beforeEach(() => { jest.clearAllMocks(); setState({}); });
-afterEach(() => {
-  act(() => { for (const tree of trees) tree.unmount(); });
-  trees.length = 0;
-});
+beforeEach(() => { jest.clearAllMocks(); state(); });
+afterEach(() => { act(() => { for (const tree of trees) tree.unmount(); }); trees.length = 0; });
+const button = (tree: ReturnType<typeof create>, id: string) => tree.root.findAllByType(Button).find((node) => node.props.testID === id);
 
-describe('SolutionSection', () => {
-  it('DOCX và thiếu text chỉ dẫn trước, không có nút chạy', () => {
-    for (const document of [
-      { ...doc, file_ext: 'docx' }, { ...doc, extracted_text: '   ' },
-    ]) {
-      const tree = render(document);
-      expect(tree.root.findAllByProps({ testID: 'solution-run' })).toHaveLength(0);
-      expect(tree.root.findAllByProps({ testID: 'solution-rerun' })).toHaveLength(0);
+describe('SolutionSection theo PDF', () => {
+  it('DOCX/thiếu nội dung chặn các nút; pending khóa thao tác', () => {
+    for (const document of [{ ...doc, file_ext: 'docx' }, { ...doc, extracted_text: '' }]) {
+      expect(button(render(document), 'solution-hint')).toBeUndefined();
     }
+    state(true);
+    expect(button(render(), 'solution-hint')?.props.disabled).toBe(true);
   });
-  it('empty → bấm một lần; pending disabled; row mới nhất hiển thị', () => {
-    const empty = render();
-    const run = empty.root.findByProps({ testID: 'solution-run' });
-    act(() => { run.props.onPress(); });
-    expect(mutate).toHaveBeenCalledTimes(1);
-    setState({}, { isPending: true });
-    const pending = render();
-    expect(pending.root.findByProps({ testID: 'solution-running' }).props.disabled).toBe(true);
-    setState({ data: { solution_text: 'Bước 1' } });
-    const saved = render();
-    expect(saved.root.findByProps({ testID: 'solution-text' }).props.children).toBe('Bước 1');
-    expect(saved.root.findByProps({ testID: 'solution-rerun' }).type).toBe(Button);
+  it('gợi ý tiếp nối; chỉ yêu cầu lời giải sau nút riêng, hỏi tiếp có lịch sử', async () => {
+    const tree = render();
+    await act(async () => { button(tree, 'solution-hint')?.props.onPress(); });
+    await act(async () => { button(tree, 'solution-hint')?.props.onPress(); });
+    expect(mutateAsync.mock.calls[0]?.[0]).toMatchObject({ kind: 'hint', hintStep: 1, history: [] });
+    expect(mutateAsync.mock.calls[1]?.[0]).toMatchObject({ kind: 'hint', hintStep: 2, history: [expect.objectContaining({ kind: 'hint' })] });
+    expect(mutateAsync.mock.calls.some(([input]) => input.kind === 'solution')).toBe(false);
+    await act(async () => { button(tree, 'solution-full')?.props.onPress(); });
+    act(() => tree.root.findByType(FormTextInput).props.onChangeText('Vì sao dùng công thức đó?'));
+    await act(async () => { button(tree, 'solution-follow-up')?.props.onPress(); });
+    expect(mutateAsync.mock.calls[3]?.[0]).toMatchObject({ kind: 'follow_up', question: 'Vì sao dùng công thức đó?' });
+    expect(mutateAsync.mock.calls[3]?.[0]?.history).toHaveLength(3);
   });
-  it('lỗi thường có Thử lại; quota chỉ có banner', () => {
-    setState({}, { error: new Error('offline') });
-    expect(render().root.findAllByType(Button).filter((node) => node.props.testID === 'solution-retry')).toHaveLength(1);
-    setState({}, { error: new GeminiQuotaError() });
-    const quota = render();
-    expect(quota.root.findAllByType(Button).filter((node) => node.props.testID === 'solution-retry')).toHaveLength(0);
-    expect(quota.root.findAllByType(Button).filter((node) => node.props.testID === 'solution-run')).toHaveLength(0);
+  it('intent OCR chỉ chạy phân tích một lần; quota không tự retry', async () => {
+    render(doc, 'ocr-intent');
+    await act(async () => undefined);
+    expect(mutateAsync).toHaveBeenCalledTimes(1);
+    expect(mutateAsync.mock.calls[0]?.[0]?.kind).toBe('analysis');
+    mutateAsync.mockRejectedValueOnce(new GeminiQuotaError());
+    const tree = render();
+    await act(async () => { button(tree, 'solution-hint')?.props.onPress(); });
+    expect(mutateAsync).toHaveBeenCalledTimes(2);
+    expect(JSON.stringify(tree.toJSON())).toContain('hạn mức');
   });
 });

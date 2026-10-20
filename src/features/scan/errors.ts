@@ -6,7 +6,7 @@ import {
   GeminiNetworkError,
   GeminiQuotaError,
   GeminiServerError,
-} from '../../lib/ai/transport';
+} from '../../shared/ai/transport';
 
 export class ScanGuardError extends Error {
   constructor(message: string) {
@@ -18,7 +18,7 @@ export class ScanGuardError extends Error {
 export class ScanTruncatedError extends Error {
   readonly extractedText: string;
 
-  constructor(extractedText: string) {
+  constructor(extractedText: string, readonly documentId?: string) {
     super('Nội dung trong ảnh bị cắt cụt. Phần chữ đã đọc được đã được lưu; hãy quét ảnh rõ hơn để có đầy đủ.');
     this.name = 'ScanTruncatedError';
     this.extractedText = extractedText;

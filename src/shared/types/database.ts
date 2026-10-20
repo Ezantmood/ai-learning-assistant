@@ -1,8 +1,6 @@
-// Database types cho AI Learning Assistant.
-// Sinh bằng CLI từ schema Supabase remote (2026-09-17):
-//   supabase gen types typescript --db-url "$SUPABASE_DB_URL" > src/types/database.ts
-// ($SUPABASE_DB_URL lấy từ .env.local, session pooler; không commit secret.)
-// Không sửa phần sinh tự động; alias tiện ích của project nằm ở cuối file.
+// Database types đồng bộ migrations 0001..0010; RLS bổ sung ở 0011.
+// Nền sinh CLI 2026-09-17, các bảng/cột sau đó đồng bộ tay và đối chiếu catalog.
+// CLI Supabase chưa có trong máy hiện tại; không ghi đè nhãn thành "đã regen".
 
 export type Json =
   | string
@@ -148,6 +146,9 @@ export type Database = {
       }
       document_summaries: {
         Row: {
+          summary_level: string
+          summary_scope: string
+          section_title: string
           created_at: string
           document_id: string
           id: string
@@ -157,6 +158,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          summary_level?: string
+          summary_scope?: string
+          section_title?: string
           created_at?: string
           document_id: string
           id?: string
@@ -166,6 +170,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          summary_level?: string
+          summary_scope?: string
+          section_title?: string
           created_at?: string
           document_id?: string
           id?: string
@@ -178,7 +185,7 @@ export type Database = {
           {
             foreignKeyName: 'document_summaries_document_id_fkey'
             columns: ['document_id']
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: 'documents'
             referencedColumns: ['id']
           },
@@ -186,6 +193,7 @@ export type Database = {
       }
       document_questions: {
         Row: {
+          conversation_id: string | null
           answer: string
           created_at: string
           document_id: string
@@ -196,6 +204,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          conversation_id?: string | null
           answer: string
           created_at?: string
           document_id: string
@@ -206,6 +215,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          conversation_id?: string | null
           answer?: string
           created_at?: string
           document_id?: string
@@ -227,6 +237,8 @@ export type Database = {
       }
       document_solutions: {
         Row: {
+          response_type: string
+          hint_step: number
           created_at: string
           document_id: string
           id: string
@@ -236,6 +248,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          response_type?: string
+          hint_step?: number
           created_at?: string
           document_id: string
           id?: string
@@ -245,6 +259,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          response_type?: string
+          hint_step?: number
           created_at?: string
           document_id?: string
           id?: string
@@ -445,3 +461,5 @@ export type DocumentSolutionInsert =
   Database['public']['Tables']['document_solutions']['Insert'];
 export type DocumentSolutionUpdate =
   Database['public']['Tables']['document_solutions']['Update'];
+
+export type DocumentWithSubject = DocumentRow & { subjectName: string | null };

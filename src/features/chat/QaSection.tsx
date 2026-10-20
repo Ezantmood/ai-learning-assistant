@@ -1,224 +1,84 @@
-import { useState } from 'react';
+import * as Crypto from 'expo-crypto';
+import { useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import {
-  Banner,
-  Button,
-  Card,
-  List,
-  Text,
-  useTheme,
-} from 'react-native-paper';
-
-import { EmptyState } from '../../shared/components/EmptyState';
+import { Button, Card, List, Text, useTheme } from 'react-native-paper';
+import type { DocumentQuestionRow, DocumentWithSubject } from '../../shared/types/database';
+import { AiResultText } from '../../shared/components/ai-result-text';
 import { FormTextInput } from '../../shared/components/FormTextInput';
-import { ListSkeleton } from '../../shared/components/LoadingState';
-import type { DocumentWithSubject } from '../documents/api';
-import {
-  ChatGuardError,
-  isChatQuotaError,
-  toChatErrorMessage,
-} from './errors';
-import type { ChatDocument } from './api';
-import {
-  useAskQuestion,
-  useQuestions,
-} from './queries';
-import { spacing } from '../../shared/theme/spacing';
 import { AppIcons } from '../../shared/theme/icons';
+import { spacing } from '../../shared/theme/spacing';
 import type { AppTheme } from '../../shared/theme/theme';
+import { groupConversations } from './api';
+import { toChatErrorMessage } from './errors';
+import { useAskQuestion, useQuestions, useSaveConversation } from './queries';
 
-function toChatDocument(doc: DocumentWithSubject): ChatDocument {
-  return {
-    extracted_text: doc.extracted_text,
-    extraction_status: doc.extraction_status,
-    file_ext: doc.file_ext,
-    id: doc.id,
-    user_id: doc.user_id,
-  };
-}
-
-function formatDateTime(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return 'Không rõ';
-  }
-  return date.toLocaleString('vi-VN');
-}
-
-/**
- * Vùng hỏi đáp CN4 trên cùng màn chi tiết (FR-23 → FR-30).
- * CẤM vector DB/RAG/chunking: toàn văn `extracted_text` nhồi thẳng vào
- * prompt trong một request. Khi `extracted_text` có nội dung thì hỏi đáp
- * được trên PDF y như TXT (FR-13: PDF trích toàn văn ở CN3); TXT giữ
- * nguyên hành vi cũ. Chưa có `extracted_text` → chặn hỏi, bảo
- * user tóm tắt trước. Lịch sử append-only, mới nhất trước; lượt hỏi
- * lỗi không tạo row. Lỗi 429/5xx → thông điệp riêng + nút thử lại
- * (riêng 429/quota → banner hạn mức, CẤM retry).
- */
-export function QaSection({
-  doc,
-  userId,
-}: {
-  doc: DocumentWithSubject;
-  userId: string;
-}) {
+export function QaSection({ doc, userId }: { doc: DocumentWithSubject; userId: string }) {
   const theme = useTheme<AppTheme>();
-  const hasContext = (doc.extracted_text?.trim() ?? '').length > 0;
-  const questionsQuery = useQuestions(userId, doc.id, hasContext);
-  const askMutation = useAskQuestion(userId, doc.id);
-
+  const [conversationId, setConversationId] = useState(() => Crypto.randomUUID());
+  const [turns, setTurns] = useState<DocumentQuestionRow[]>([]);
   const [question, setQuestion] = useState('');
-  const [fieldError, setFieldError] = useState<string | null>(null);
-  const [askError, setAskError] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const lock = useRef(false);
+  const ask = useAskQuestion(userId);
+  const save = useSaveConversation(userId, doc.id);
+  const hasContext = doc.file_ext !== 'docx' && Boolean(doc.extracted_text?.trim());
+  const saved = useQuestions(userId, doc.id, hasContext);
+  const busy = ask.isPending || save.isPending;
 
-  const asking = askMutation.isPending;
-  const isQuotaError =
-    askMutation.error != null && isChatQuotaError(askMutation.error);
-
-  const handleAsk = () => {
-    if (asking) {
-      return;
-    }
-    setFieldError(null);
-    setAskError(null);
-    askMutation.mutate(
-      { document: toChatDocument(doc), question },
-      {
-        onError: (error: unknown) => {
-          const message = toChatErrorMessage(error);
-          if (
-            error instanceof ChatGuardError &&
-            /nhập câu hỏi|500 ký tự/.test(message)
-          ) {
-            setFieldError(message);
-          } else {
-            setAskError(message);
-          }
-        },
-        onSuccess: () => {
-          setQuestion('');
-        },
-      },
-    );
+  const send = async () => {
+    if (busy || lock.current) return;
+    lock.current = true;
+    setError(null);
+    try {
+      const result = await ask.mutateAsync({ document: doc, question, history: turns });
+      const now = new Date().toISOString();
+      setTurns([...turns, { ...result, id: Crypto.randomUUID(), document_id: doc.id,
+        user_id: userId, conversation_id: conversationId, created_at: now, updated_at: now }]);
+      setQuestion('');
+      setDirty(true);
+    } catch (reason) { setError(toChatErrorMessage(reason)); }
+    finally { lock.current = false; }
   };
 
-  return (
-    <Card mode="outlined">
-      <Card.Title
-        left={(props) => (
-          <List.Icon {...props} icon={AppIcons.messageTextOutline} />
-        )}
-        subtitle="Trả lời dựa trên nội dung tài liệu"
-        title="Hỏi đáp với AI"
-      />
-      <Card.Content style={styles.content}>
-        {!hasContext ? (
-          <EmptyState
-            description="Hãy bấm “Tóm tắt bằng AI” ở trên để có nội dung hỏi đáp. Khi tài liệu đã có nội dung trích xuất (TXT sau tóm tắt, PDF sau trích xuất toàn văn), hỏi đáp dùng được y như nhau."
-            icon={AppIcons.messageTextOutline}
-            title="Chưa thể hỏi đáp"
-          />
-        ) : (
-          <View style={styles.content}>
-            <FormTextInput
-              accessibilityLabel="Câu hỏi về tài liệu"
-              fieldError={fieldError ?? undefined}
-              label="Câu hỏi về tài liệu (tối đa 500 ký tự)"
-              leftIcon={AppIcons.messageTextOutline}
-              multiline
-              numberOfLines={3}
-              onChangeText={(text) => {
-                setQuestion(text);
-                setFieldError(null);
-              }}
-              testID="qa-input"
-              value={question}
-            />
-            <Button
-              accessibilityLabel="Gửi câu hỏi cho AI"
-              disabled={asking}
-              icon={AppIcons.send}
-              loading={asking}
-              mode="contained"
-              onPress={handleAsk}
-              testID="qa-submit"
-            >
-              Hỏi
-            </Button>
-            {isQuotaError ? (
-              <Banner icon={AppIcons.alertCircle} visible>
-                <Text style={{ color: theme.colors.error }}>
-                  {toChatErrorMessage(askMutation.error)}
-                </Text>
-              </Banner>
-            ) : askError !== null ? (
-              <View style={styles.content}>
-                <Text
-                  style={{ color: theme.colors.error }}
-                  variant="bodyMedium"
-                >
-                  {askError}
-                </Text>
-                <Button
-                  accessibilityLabel="Hỏi lại câu vừa rồi"
-                  disabled={asking}
-                  icon={AppIcons.refresh}
-                  mode="outlined"
-                  onPress={handleAsk}
-                  testID="qa-retry"
-                >
-                  Thử lại
-                </Button>
-              </View>
-            ) : null}
+  const saveCurrent = async () => {
+    if (busy || lock.current || !turns.length) return;
+    lock.current = true;
+    setError(null);
+    try { await save.mutateAsync({ conversationId, turns }); setDirty(false); }
+    catch (reason) { setError(toChatErrorMessage(reason)); }
+    finally { lock.current = false; }
+  };
 
-            <Text variant="titleSmall">Lịch sử hỏi đáp</Text>
-            {questionsQuery.isPending ? (
-              <ListSkeleton rows={2} />
-            ) : questionsQuery.isError ? (
-              <EmptyState
-                actionLabel="Thử lại"
-                actionTestID="questions-retry"
-                description={toChatErrorMessage(questionsQuery.error)}
-                icon={AppIcons.alertCircle}
-                onAction={() => {
-                  void questionsQuery.refetch();
-                }}
-                title="Không tải được lịch sử hỏi đáp"
-              />
-            ) : (questionsQuery.data ?? []).length === 0 ? (
-              <EmptyState
-                description="Hãy đặt câu hỏi đầu tiên về tài liệu."
-                icon={AppIcons.messageTextOutline}
-                title="Chưa có câu hỏi nào"
-              />
-            ) : (
-              <View style={styles.content}>
-                {(questionsQuery.data ?? []).map((row) => (
-                  <Card key={row.id} mode="outlined">
-                    <Card.Content style={styles.content}>
-                      <Text variant="titleSmall">Hỏi: {row.question}</Text>
-                      <Text variant="bodyMedium">{row.answer}</Text>
-                      <Text
-                        style={{ color: theme.colors.onSurfaceVariant }}
-                        variant="bodySmall"
-                      >
-                        {formatDateTime(row.created_at)}
-                      </Text>
-                    </Card.Content>
-                  </Card>
-                ))}
-              </View>
-            )}
-          </View>
-        )}
-      </Card.Content>
-    </Card>
-  );
+  return <Card mode="outlined">
+    <Card.Title title="Hỏi đáp với AI" subtitle="Trả lời theo tài liệu và ngữ cảnh phiên hiện tại"
+      left={(props) => <List.Icon {...props} icon={AppIcons.messageTextOutline} />} />
+    <Card.Content style={styles.content}>
+      {!hasContext ? <Text>Hãy tóm tắt tài liệu hoặc quét ảnh trước để có nội dung hỏi đáp.</Text> : <>
+        <Text variant="bodySmall">{dirty ? 'Có nội dung chưa lưu. Bấm Lưu hội thoại trước khi rời màn hoặc bắt đầu phiên mới.' : turns.length ? 'Hội thoại đã lưu.' : 'Phiên mới chỉ lưu khi bạn lựa chọn.'}</Text>
+        <View style={styles.actions}>
+          <Button disabled={busy} testID="qa-new" onPress={() => {
+            setConversationId(Crypto.randomUUID()); setTurns([]); setQuestion(''); setDirty(false); setError(null);
+          }}>Hội thoại mới</Button>
+          <Button disabled={busy || !turns.length || !dirty} loading={save.isPending} testID="qa-save" onPress={() => void saveCurrent()}>Lưu hội thoại</Button>
+        </View>
+        {turns.map((turn) => <View key={turn.id} style={styles.content}>
+          <Card mode="contained" style={{ alignSelf: 'flex-end', maxWidth: '95%' }}><Card.Content><Text selectable>Bạn: {turn.question}</Text></Card.Content></Card>
+          <Card mode="outlined"><Card.Content><Text variant="labelMedium">Trợ lý</Text><AiResultText text={turn.answer} /></Card.Content></Card>
+        </View>)}
+        <FormTextInput label="Câu hỏi về tài liệu (tối đa 500 ký tự)" value={question} onChangeText={setQuestion}
+          multiline numberOfLines={3} disabled={busy} maxLength={500} testID="qa-input" />
+        <Button disabled={busy} loading={ask.isPending} mode="contained" onPress={() => void send()} testID="qa-submit">Hỏi</Button>
+        {error ? <Text style={{ color: theme.colors.error }} accessibilityLiveRegion="polite">{error}</Text> : null}
+        <List.Accordion title="Hội thoại đã lưu">
+          {saved.isPending ? <Text>Đang tải lịch sử…</Text> : saved.isError
+            ? <Button onPress={() => { void saved.refetch(); }}>Thử tải lại lịch sử</Button>
+            : groupConversations(saved.data ?? []).map((session) => <List.Item key={session.id}
+              title={session.turns[0]?.question ?? 'Hội thoại'} description={`${session.turns.length} lượt · ${new Date(session.turns[0]?.created_at ?? '').toLocaleString('vi-VN')}`}
+              disabled={busy} onPress={() => { setConversationId(session.id); setTurns(session.turns); setDirty(false); setQuestion(''); setError(null); }} />)}
+        </List.Accordion>
+      </>}
+    </Card.Content>
+  </Card>;
 }
-
-const styles = StyleSheet.create({
-  content: {
-    gap: spacing.sm,
-  },
-});
+const styles = StyleSheet.create({ content: { gap: spacing.sm }, actions: { flexDirection: 'row', flexWrap: 'wrap' } });

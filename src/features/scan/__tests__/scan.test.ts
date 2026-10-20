@@ -1,16 +1,16 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
-import { GeminiEmptyError, GeminiServerError, ocrWithGemini } from '../../../lib/ai/transport';
+import { GeminiEmptyError, GeminiServerError, ocrWithGemini } from '../../../shared/ai/transport';
 import { supabase } from '../../../shared/lib/supabase';
-import { runScan } from '../api';
+import { runScan, updateScanText } from '../api';
 import { ScanTruncatedError, toScanErrorMessage } from '../errors';
 import type { ScanImage } from '../schemas';
 
 jest.mock('../../../shared/lib/supabase', () => ({
   supabase: { auth: { getUser: jest.fn() }, from: jest.fn(), storage: { from: jest.fn() } },
 }));
-jest.mock('../../../lib/ai/transport', () => {
-  const actual = jest.requireActual('../../../lib/ai/transport') as Record<string, unknown>;
+jest.mock('../../../shared/ai/transport', () => {
+  const actual = jest.requireActual('../../../shared/ai/transport') as Record<string, unknown>;
   return { ...actual, ocrWithGemini: jest.fn() };
 });
 jest.mock('expo-crypto', () => ({ randomUUID: () => 'uuid-1' }));
@@ -123,4 +123,15 @@ describe('runScan', () => {
     expect(toScanErrorMessage(new GeminiServerError(503))).toContain('quá tải (503)');
     expect(toScanErrorMessage(new GeminiServerError(503))).toContain('Thử lại');
   });
+});
+
+
+it('FR-36: lưu bản OCR đã sửa, chặn rỗng trước DB/AI', async () => {
+  const { updates } = setupDb();
+  await expect(updateScanText({ documentId: 'doc-1', userId: 'user-1', text: '   ' })).rejects.toThrow('để trống');
+  expect(updates).toHaveLength(0);
+  const saved = await updateScanText({ documentId: 'doc-1', userId: 'user-1', text: '  Đề đã sửa  ' });
+  expect(saved.extracted_text).toBe('Đề đã sửa');
+  expect(updates).toEqual([{ extracted_text: 'Đề đã sửa', extraction_status: 'done' }]);
+  expect(ocrMock).not.toHaveBeenCalled();
 });

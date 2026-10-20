@@ -7,6 +7,7 @@ import { Platform } from 'react-native';
 import { supabase } from '../../shared/lib/supabase';
 import type {
   DocumentRow,
+  DocumentWithSubject,
   SubjectRow,
 } from '../../shared/types/database';
 import {
@@ -93,9 +94,7 @@ export async function countDocuments(userId: string): Promise<number> {
   return count ?? 0;
 }
 
-export type DocumentWithSubject = DocumentRow & {
-  subjectName: string | null;
-};
+export type { DocumentWithSubject } from '../../shared/types/database';
 
 /**
  * FR-08: liệt kê tài liệu của mình, mới nhất trước, kèm tên môn học

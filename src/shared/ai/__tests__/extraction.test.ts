@@ -84,3 +84,8 @@ describe('EXTRACTION_GENERATION_CONFIG — một lần gọi, JSON 2 trường',
     expect(SUMMARY_PROMPT.length).toBeGreaterThan(0);
   });
 });
+
+
+it('JSON null không được lưu thành bản tóm tắt chữ null', () => {
+  expect(() => parseExtractionJson('null')).toThrow(GeminiEmptyError);
+});

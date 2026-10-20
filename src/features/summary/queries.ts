@@ -4,28 +4,22 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 
-import type { SummarySource } from '../../lib/ai/transport';
+import type { SummarySource, SummaryOptions } from '../../shared/ai/transport';
 import {
   getSummary,
+  listSummaries,
   requestSummary,
   type SummaryDocument,
 } from './api';
 
-/** Bản tóm tắt của một tài liệu. */
 export function summaryKey(documentId: string) {
   return ['summary', documentId] as const;
 }
 
-/**
- * Key trạng thái trích xuất của màn chi tiết CN2. Dựng literal cùng hình
- * dạng với `documentKey` của feature documents để invalidate — KHÔNG
- * import chéo từ feature documents (cấm theo AGENTS.md).
- */
 export function documentDetailKey(documentId: string) {
   return ['document', documentId] as const;
 }
 
-/** FR-18 (dữ liệu): đọc bản tóm tắt mới nhất, null khi chưa có. */
 export function useSummary(
   userId: string | undefined,
   documentId: string | undefined,
@@ -41,20 +35,16 @@ export function useSummary(
   });
 }
 
-/**
- * FR-14: mutation "tóm tắt tài liệu". G2 truyền `source` (nội dung tệp đã
- * tải: PDF base64 / TXT text). Xong thì invalidate key tóm tắt + key chi
- * tiết tài liệu + danh sách tài liệu của user; không invalidate toàn cache.
- */
 export function useRequestSummary(userId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (input: { document: SummaryDocument; source: SummarySource }) =>
+    mutationFn: (input: { document: SummaryDocument; source: SummarySource; options?: SummaryOptions }) =>
       requestSummary({ ...input, userId }),
     onError: (_error, variables) => {
       // Lỗi vẫn lật DB về `failed` nên cache trạng thái phải refresh
       // để UI hiện nút “Thử lại” thay vì kẹt spinner.
+      void queryClient.invalidateQueries({ queryKey: ['summary-history', variables.document.id] });
       void queryClient.invalidateQueries({
         queryKey: summaryKey(variables.document.id),
       });
@@ -66,6 +56,7 @@ export function useRequestSummary(userId: string) {
       });
     },
     onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ['summary-history', variables.document.id] });
       void queryClient.invalidateQueries({
         queryKey: summaryKey(variables.document.id),
       });
@@ -76,5 +67,12 @@ export function useRequestSummary(userId: string) {
         queryKey: ['documents', userId],
       });
     },
+  });
+}
+
+export function useSummaryHistory(userId: string, documentId: string) {
+  return useQuery({ queryKey: ['summary-history', documentId],
+    enabled: Boolean(userId && documentId),
+    queryFn: () => listSummaries({ userId, documentId }),
   });
 }

@@ -66,3 +66,7 @@ export function toScanImage(asset: ImagePickerAsset): ScanImage {
     uri: asset.uri,
   };
 }
+
+export const scanTextSchema = z.string().trim()
+  .min(1, 'Nội dung đề bài không được để trống.')
+  .max(100000, 'Nội dung OCR tối đa 100.000 ký tự.');

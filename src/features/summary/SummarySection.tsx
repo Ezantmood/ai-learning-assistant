@@ -5,6 +5,7 @@ import {
   Button,
   Card,
   List,
+  SegmentedButtons,
   Text,
   useTheme,
 } from 'react-native-paper';
@@ -12,8 +13,11 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { EmptyState } from '../../shared/components/EmptyState';
 import { ListSkeleton } from '../../shared/components/LoadingState';
-import type { DocumentWithSubject } from '../documents/api';
-import { getExtractionStatusLabel } from '../documents/storage';
+import type { DocumentWithSubject } from '../../shared/types/database';
+import { AiResultText } from '../../shared/components/ai-result-text';
+import { FormTextInput } from '../../shared/components/FormTextInput';
+import { DEFAULT_SUMMARY_OPTIONS, type SummaryOptions } from '../../shared/ai/transport';
+
 import {
   isStaleProcessing,
   reclaimStaleProcessing,
@@ -28,6 +32,7 @@ import {
   documentDetailKey,
   useRequestSummary,
   useSummary,
+  useSummaryHistory,
 } from './queries';
 import { loadSummarySource } from './source';
 import { AppIcons } from '../../shared/theme/icons';
@@ -62,15 +67,19 @@ export function SummarySection({
   const theme = useTheme<AppTheme>();
   const queryClient = useQueryClient();
   const summaryQuery = useSummary(userId, doc.id);
+  const history = useSummaryHistory(userId, doc.id);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [options, setOptions] = useState<SummaryOptions>(DEFAULT_SUMMARY_OPTIONS);
   const requestMutation = useRequestSummary(userId);
 
+  const runLock = useRef(false);
   const [loadingFile, setLoadingFile] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   // Chặn thu hồi lặp cho cùng một bản ghi (không dùng state để khỏi
   // setState đồng bộ trong effect).
   const reclaimedRef = useRef<string | null>(null);
 
-  // FR-20: `processing` treo (> 15 phút, app từng bị kill giữa chừng)
+  // Thu hồi `processing` treo (> 15 phút, app từng bị kill giữa chừng)
   // tự thu hồi về `failed` khi mở màn, không kẹt vĩnh viễn.
   useEffect(() => {
     const candidate = toSummaryDocument(doc);
@@ -98,7 +107,7 @@ export function SummarySection({
   }
 
   const busy = loadingFile || requestMutation.isPending;
-  const summary = summaryQuery.data ?? null;
+  const summary = history.data?.find((row) => row.id === selectedId) ?? summaryQuery.data ?? null;
   const isQuotaError =
     requestMutation.error != null &&
     isSummaryQuotaError(requestMutation.error);
@@ -109,25 +118,26 @@ export function SummarySection({
   const stepLabel = loadingFile ? 'Đang tải tệp…' : 'Đang tóm tắt…';
 
   const handleRun = () => {
-    if (busy) {
+    if (running || runLock.current) {
       return;
     }
+    runLock.current = true;
     setLoadError(null);
     setLoadingFile(true);
-    loadSummarySource({
-      file_ext: doc.file_ext,
-      id: doc.id,
-      storage_path: doc.storage_path,
-    })
+    (doc.extracted_text?.trim() && doc.extraction_status === 'done'
+      ? Promise.resolve({ kind: 'txt' as const, textContent: doc.extracted_text })
+      : loadSummarySource({ file_ext: doc.file_ext, id: doc.id, storage_path: doc.storage_path }))
       .then((source) => {
         setLoadingFile(false);
         requestMutation.mutate({
           document: toSummaryDocument(doc),
           source,
-        });
+          options,
+        }, { onSuccess: (row) => setSelectedId(row.id), onSettled: () => { runLock.current = false; } });
       })
       .catch((error: unknown) => {
         setLoadingFile(false);
+        runLock.current = false;
         setLoadError(toSummaryErrorMessage(error));
       });
   };
@@ -138,10 +148,21 @@ export function SummarySection({
         left={(props) => (
           <List.Icon {...props} icon={AppIcons.textBoxOutline} />
         )}
-        subtitle={`Trạng thái: ${getExtractionStatusLabel(doc.extraction_status)}`}
+        subtitle="Chọn mức độ và phạm vi; kết quả được tự động lưu"
         title="Tóm tắt bằng AI"
       />
       <Card.Content style={styles.content}>
+        <Text variant="titleSmall">Mức độ tóm tắt</Text>
+        <SegmentedButtons value={options.level} onValueChange={(level) => setOptions({ ...options, level: level as SummaryOptions['level'] })}
+          buttons={[{ value: 'short', label: 'Ngắn', disabled: running }, { value: 'medium', label: 'Trung bình', disabled: running }, { value: 'detailed', label: 'Chi tiết', disabled: running }]} />
+        <SegmentedButtons value={options.scope} onValueChange={(scope) => setOptions({ ...options, scope: scope as SummaryOptions['scope'] })}
+          buttons={[{ value: 'whole', label: 'Toàn tài liệu', disabled: running }, { value: 'sections', label: 'Theo chương/phần', disabled: running }]} />
+        {options.scope === 'sections' ? <FormTextInput label="Tên chương/phần (để trống: tất cả)" value={options.sectionTitle}
+          maxLength={200} disabled={running} onChangeText={(sectionTitle) => setOptions({ ...options, sectionTitle })} testID="summary-section-title" /> : null}
+        {loadError || (requestMutation.error && !isTruncated) ? <Text style={{ color: theme.colors.error }}>
+          {loadError ?? toSummaryErrorMessage(requestMutation.error)}
+        </Text> : null}
+        {running ? <Text accessibilityLiveRegion="polite">{stepLabel}</Text> : null}
         {summaryQuery.isPending ? (
           <ListSkeleton rows={2} />
         ) : summary ? (
@@ -153,10 +174,11 @@ export function SummarySection({
                 </Text>
               </Banner>
             ) : null}
-            <Text variant="bodyMedium">{summary.summary_text}</Text>
+            <Text variant="labelMedium">Đã lưu · {new Date(summary.created_at).toLocaleString('vi-VN')}</Text>
+            <AiResultText text={summary.summary_text} testID="summary-text" />
             <Button
               accessibilityLabel="Tóm tắt lại tài liệu này"
-              disabled={busy}
+              disabled={running}
               icon={AppIcons.refresh}
               mode="outlined"
               onPress={handleRun}
@@ -194,7 +216,7 @@ export function SummarySection({
             </Text>
             <Button
               accessibilityLabel="Thử tóm tắt lại"
-              disabled={busy}
+              disabled={running}
               icon={AppIcons.refresh}
               mode="outlined"
               onPress={handleRun}
@@ -221,7 +243,7 @@ export function SummarySection({
             </Text>
             <Button
               accessibilityLabel="Tóm tắt tài liệu bằng AI"
-              disabled={busy}
+              disabled={running}
               icon={AppIcons.textBoxOutline}
               mode="contained"
               onPress={handleRun}
@@ -231,6 +253,12 @@ export function SummarySection({
             </Button>
           </View>
         )}
+        <List.Accordion title={`Bản tóm tắt đã lưu (${history.data?.length ?? 0})`}>
+          {history.isError ? <Button onPress={() => { void history.refetch(); }}>Thử tải lại lịch sử</Button> : null}
+          {(history.data ?? []).map((row) => <List.Item key={row.id} title={new Date(row.created_at).toLocaleString('vi-VN')}
+            description={`${({ short: 'Ngắn', medium: 'Trung bình', detailed: 'Chi tiết' } as Record<string, string>)[row.summary_level] ?? 'Trung bình'} · ${row.section_title || (row.summary_scope === 'sections' ? 'Theo chương/phần' : 'Toàn tài liệu')}`}
+            onPress={() => setSelectedId(row.id)} />)}
+        </List.Accordion>
       </Card.Content>
     </Card>
   );

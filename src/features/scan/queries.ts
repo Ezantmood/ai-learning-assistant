@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { captureScanImage, getLatestScan, pickScanImage, runScan } from './api';
+import { captureScanImage, getLatestScan, pickScanImage, runScan, updateScanText } from './api';
 import type { ScanImage } from './schemas';
 
 export function usePickScanImage() {
@@ -27,5 +27,17 @@ export function useLatestScan(userId: string | undefined) {
     enabled: Boolean(userId),
     queryFn: () => getLatestScan(userId as string),
     queryKey: ['latest-scan', userId ?? 'anonymous'],
+  });
+}
+
+export function useSaveScanText(userId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { documentId: string; text: string }) => updateScanText({ ...input, userId }),
+    onSuccess: async (document) => {
+      await client.invalidateQueries({ queryKey: ['document', document.id] });
+      void client.invalidateQueries({ queryKey: ['documents', userId] });
+      void client.invalidateQueries({ queryKey: ['latest-scan', userId] });
+    },
   });
 }

@@ -26,3 +26,9 @@ export const summarySourceSchema = z.discriminatedUnion('kind', [
 ]);
 
 export type SummarySourceInput = z.infer<typeof summarySourceSchema>;
+
+export const summaryOptionsSchema = z.object({
+  level: z.enum(['short', 'medium', 'detailed']),
+  scope: z.enum(['whole', 'sections']),
+  sectionTitle: z.string().trim().max(200, 'Tên chương/phần tối đa 200 ký tự.'),
+});

@@ -7,6 +7,7 @@ import { useSession } from '../../src/features/auth/useSession';
 import { reclaimStaleScan, recoverPendingScanImage, type ScanPickOutcome } from '../../src/features/scan/api';
 import { isScanQuotaError, ScanTruncatedError, toScanErrorMessage } from '../../src/features/scan/errors';
 import { useCaptureScanImage, useLatestScan, usePickScanImage, useRunScan } from '../../src/features/scan/queries';
+import { ScanTextEditor } from '../../src/features/scan/scan-text-editor';
 import type { ScanImage } from '../../src/features/scan/schemas';
 import { getScanViewState } from '../../src/features/scan/viewState';
 import { EmptyState } from '../../src/shared/components/EmptyState';
@@ -26,6 +27,7 @@ export default function ScanScreen() {
   const scanMutation = useRunScan(userId);
   const latest = useLatestScan(user?.id);
   const [image, setImage] = useState<ScanImage | null>(null);
+  const [documentId, setDocumentId] = useState<string | null>(null);
   const [text, setText] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [quota, setQuota] = useState(false);
@@ -72,6 +74,7 @@ export default function ScanScreen() {
     }
     setImage(outcome.image);
     setShowLatest(false);
+    setDocumentId(null);
     setText(null);
     setError(null);
     setQuota(false);
@@ -99,8 +102,9 @@ export default function ScanScreen() {
     try {
       const result = await scanMutation.mutateAsync(image);
       setText(result.extractedText);
+      setDocumentId(result.document.id);
     } catch (reason) {
-      if (reason instanceof ScanTruncatedError) setText(reason.extractedText);
+      if (reason instanceof ScanTruncatedError) { setText(reason.extractedText); setDocumentId(reason.documentId ?? null); }
       setQuota(isScanQuotaError(reason));
       setError(toScanErrorMessage(reason));
     } finally {
@@ -110,6 +114,7 @@ export default function ScanScreen() {
 
   const resultText = text ?? (showLatest && latestDocument?.extraction_status === 'done'
     ? latestDocument.extracted_text : null);
+  const resultDocumentId = documentId ?? (showLatest ? latestDocument?.id : null);
   const latestError = showLatest && latestDocument?.extraction_status === 'failed'
     ? 'Lần quét trước thất bại. Hãy chọn hoặc chụp ảnh rồi thử lại.' : null;
   const view = getScanViewState({
@@ -145,10 +150,10 @@ export default function ScanScreen() {
           <Text>Đang đọc chữ trong ảnh…</Text>
         </View>
       ) : null}
-      {view === 'result' ? (
+      {resultText && resultDocumentId ? (
         <Card mode="outlined">
           <Card.Title title="Văn bản đã quét" />
-          <Card.Content><Text selectable variant="bodyMedium">{resultText}</Text></Card.Content>
+          <Card.Content><ScanTextEditor key={resultDocumentId} documentId={resultDocumentId} userId={userId} initialText={resultText} /></Card.Content>
         </Card>
       ) : null}
       {view === 'empty' ? <EmptyState description="Chọn hoặc chụp ảnh đề bài để bắt đầu." icon={AppIcons.imageOutline} title="Chưa có kết quả" /> : null}

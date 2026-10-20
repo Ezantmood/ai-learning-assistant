@@ -1,14 +1,16 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
-import { SUMMARY_MODEL } from '../../../lib/ai/models';
+import { SUMMARY_MODEL } from '../../../shared/ai/models';
 import {
   GeminiQuotaError,
   answerWithGemini,
-} from '../../../lib/ai/transport';
+} from '../../../shared/ai/transport';
 import { supabase } from '../../../shared/lib/supabase';
 import {
   askQuestion,
   listQuestions,
+  saveConversation,
+  groupConversations,
   type ChatDocument,
 } from '../api';
 import {
@@ -28,8 +30,8 @@ jest.mock('../../../shared/lib/supabase', () => ({
   },
 }));
 
-jest.mock('../../../lib/ai/transport', () => {
-  const actual = jest.requireActual('../../../lib/ai/transport') as Record<
+jest.mock('../../../shared/ai/transport', () => {
+  const actual = jest.requireActual('../../../shared/ai/transport') as Record<
     string,
     unknown
   >;
@@ -60,6 +62,7 @@ function makeDoc(overrides?: Partial<ChatDocument>): ChatDocument {
 }
 
 const QUESTION_ROW = {
+  conversation_id: null,
   answer: 'Đáp án: chương 1.',
   created_at: new Date().toISOString(),
   document_id: 'doc-1',
@@ -75,40 +78,13 @@ beforeEach(() => {
 });
 
 describe('askQuestion — hỏi thành công', () => {
-  it('gọi Gemini đúng một lần rồi insert lịch sử (model gemini-3.5-flash)', async () => {
-    let insertPayload: Record<string, unknown> = {};
-    const fromMock = mockFrom(() => ({
-      insert: jest.fn((payload: Record<string, unknown>) => {
-        insertPayload = payload;
-        return {
-          select: () => ({
-            single: async () => ({ data: QUESTION_ROW, error: null }),
-          }),
-        };
-      }),
-    }));
+  it('gọi AI nhưng không tự lưu khi chưa được chọn', async () => {
+    const fromMock = mockFrom(() => { throw new Error('không được lưu'); });
     answerMock.mockResolvedValue('Đáp án: chương 1.');
-
-    const result = await askQuestion({
-      document: makeDoc(),
-      question: '  Chương 1 nói về gì?  ',
-      userId: 'user-1',
-    });
-
-    expect(result).toEqual(QUESTION_ROW);
+    const result = await askQuestion({ document: makeDoc(), question: '  Chương 1 nói về gì?  ', userId: 'user-1' });
+    expect(result).toEqual({ question: 'Chương 1 nói về gì?', answer: 'Đáp án: chương 1.', model: SUMMARY_MODEL });
     expect(answerMock).toHaveBeenCalledTimes(1);
-    expect(answerMock).toHaveBeenCalledWith({
-      contextText: 'Nội dung trích xuất của tài liệu.',
-      question: 'Chương 1 nói về gì?',
-    });
-    expect(insertPayload).toMatchObject({
-      answer: 'Đáp án: chương 1.',
-      document_id: 'doc-1',
-      model: 'gemini-3.5-flash',
-      question: 'Chương 1 nói về gì?',
-      user_id: 'user-1',
-    });
-    expect(fromMock).toHaveBeenCalledWith('document_questions');
+    expect(fromMock).not.toHaveBeenCalled();
   });
 });
 
@@ -206,7 +182,7 @@ describe('askQuestion — Gemini lỗi', () => {
         question: 'Hỏi gì đó?',
         userId: 'user-1',
       }),
-    ).rejects.toThrow('giới hạn miễn phí');
+    ).rejects.toThrow('hạn mức');
     expect(insertMock).not.toHaveBeenCalled();
     expect(fromMock).toHaveBeenCalledTimes(0);
   });
@@ -299,7 +275,7 @@ describe('chat schemas/errors/keys', () => {
       toChatErrorMessage(new ChatGuardError('Câu guard.')),
     ).toBe('Câu guard.');
     expect(toChatErrorMessage(new GeminiQuotaError())).toContain(
-      'giới hạn miễn phí',
+      'hạn mức',
     );
     expect(
       toChatErrorMessage(new Error('Network request failed')),
@@ -314,5 +290,36 @@ describe('chat schemas/errors/keys', () => {
 
   it("questionsKey là ['questions', documentId]", () => {
     expect(questionsKey('doc-1')).toEqual(['questions', 'doc-1']);
+  });
+});
+
+
+describe('ngữ cảnh và lựa chọn lưu FR-27→FR-30', () => {
+  it('gửi câu trả lời trước để hỏi tiếp; phiên mới không có ngữ cảnh cũ', async () => {
+    answerMock.mockResolvedValue('Giải thích thêm.');
+    const history = [{ question: 'Câu trước?', answer: 'Đáp án trước.' }];
+    await askQuestion({ document: makeDoc(), userId: 'user-1', question: 'Vì sao?', history });
+    expect(answerMock).toHaveBeenLastCalledWith(expect.objectContaining({ history }));
+    await askQuestion({ document: makeDoc(), userId: 'user-1', question: 'Câu đầu phiên mới?', history: [] });
+    expect(answerMock).toHaveBeenLastCalledWith(expect.objectContaining({ history: [] }));
+  });
+  it('chỉ ghi khi gọi saveConversation và không cho lưu lượt của người khác', async () => {
+    const upsert = jest.fn(async () => ({ error: null }));
+    mockFrom(() => ({ upsert }));
+    const input = { documentId: 'doc-1', userId: 'user-1', conversationId: '00000000-0000-4000-8000-000000000001', turns: [QUESTION_ROW] };
+    await saveConversation(input);
+    expect(upsert).toHaveBeenCalledWith([expect.objectContaining({ conversation_id: input.conversationId })], { onConflict: 'id' });
+    await expect(saveConversation({ ...input, userId: 'user-2' })).rejects.toThrow('quyền');
+    expect(upsert).toHaveBeenCalledTimes(1);
+  });
+  it('nhóm phiên độc lập, sắp lượt từ cũ đến mới; giữ lịch sử legacy', () => {
+    const groups = groupConversations([
+      { ...QUESTION_ROW, id: 'new', conversation_id: 'session', created_at: '2026-01-02' },
+      { ...QUESTION_ROW, id: 'old', conversation_id: 'session', created_at: '2026-01-01' },
+      QUESTION_ROW,
+    ]);
+    expect(groups).toHaveLength(2);
+    expect(groups[0]?.turns.map((row) => row.id)).toEqual(['old', 'new']);
+    expect(groups[1]?.id).toBe(QUESTION_ROW.id);
   });
 });

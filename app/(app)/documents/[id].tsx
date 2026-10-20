@@ -22,6 +22,7 @@ import {
 } from '../../../src/shared/components/FeedbackSnackbar';
 import { FormTextInput } from '../../../src/shared/components/FormTextInput';
 import { ListSkeleton } from '../../../src/shared/components/LoadingState';
+import { ScanTextEditor } from '../../../src/features/scan/scan-text-editor';
 import { QaSection } from '../../../src/features/chat/QaSection';
 import { SummarySection } from '../../../src/features/summary/SummarySection';
 import { SolutionSection } from '../../../src/features/solver/SolutionSection';
@@ -72,7 +73,7 @@ type Notice = {
  * tạo signed URL TTL 3600s rồi `Linking.openURL` ra app ngoài.
  */
 export default function DocumentDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, analyze } = useLocalSearchParams<{ id: string; analyze?: string }>();
   const { user } = useSession();
   const theme = useTheme<AppTheme>();
   const userId = user?.id;
@@ -286,11 +287,13 @@ export default function DocumentDetailScreen() {
         Mở tài liệu
       </Button>
 
-      <SummarySection doc={doc} userId={userId ?? ''} />
+      {doc.file_ext === 'jpg' && doc.extracted_text ? <ScanTextEditor key={`ocr-${doc.id}`}
+        documentId={doc.id} userId={userId ?? ''} initialText={doc.extracted_text} /> : null}
+      <SummarySection key={`summary-${doc.id}`} doc={doc} userId={userId ?? ''} />
 
-      <QaSection doc={doc} userId={userId ?? ''} />
+      <QaSection key={`qa-${doc.id}`} doc={doc} userId={userId ?? ''} />
 
-      <SolutionSection doc={doc} key={`solution-${doc.id}`} userId={userId ?? ''} />
+      <SolutionSection doc={doc} key={`solution-${doc.id}`} userId={userId ?? ''} analysisRequest={analyze} />
 
       <RenameDocumentForm
         documentId={doc.id}

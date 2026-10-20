@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getSolution, requestSolution, type SolverDocument } from './api';
+import { getSolution, requestSolution, type SolutionRequest } from './api';
 
 export function solutionKey(documentId: string) {
   return ['solution', documentId] as const;
@@ -16,7 +16,7 @@ export function useSolution(userId: string | undefined, documentId: string | und
 export function useRequestSolution(userId: string, documentId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (document: SolverDocument) => requestSolution({ document, userId }),
+    mutationFn: (input: Omit<SolutionRequest, 'userId'>) => requestSolution({ ...input, userId }),
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: solutionKey(documentId) });
     },

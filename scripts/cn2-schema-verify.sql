@@ -1,4 +1,4 @@
--- Kiem chung CN2 sau khi ap 0002_cn2_documents.sql. FILE CHI DOC, khong sua gi.
+-- Kiem chung CN2 sau khi ap tat ca migration den 0011. FILE CHI DOC, khong sua gi.
 -- Cach chay: SQL Editor chi hien ket qua cau CUOI, nen copy TOAN BO file
 -- (da gop bang union all thanh mot cau duy nhat) roi Run mot lan.
 -- Mong doi: moi dong deu DAT. Dong nao KHONG DAT thi ap migration chua dung.
@@ -11,12 +11,12 @@ select 'bucket documents ton tai, private, 10485760 byte' as muc_kiem_tra,
   (select 'public=' || public::text || ', limit=' || file_size_limit::text
    from storage.buckets where id = 'documents') as chi_tiet
 union all
-select 'bucket documents dung 3 MIME whitelist',
+select 'bucket documents dung 8 MIME whitelist (tai lieu + anh)',
   case when exists (
     select 1 from storage.buckets
     where id = 'documents'
-      and allowed_mime_types @> array['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain']
-      and array_length(allowed_mime_types, 1) = 3
+      and allowed_mime_types @> array['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'image/png', 'image/jpeg', 'image/webp', 'image/heic', 'image/heif']
+      and array_length(allowed_mime_types, 1) = 8
   ) then 'DAT' else 'KHONG DAT' end,
   (select array_to_string(allowed_mime_types, ', ')
    from storage.buckets where id = 'documents')
@@ -44,11 +44,11 @@ select 'subjects du 4 policy (hien co ' ||
   (select string_agg(policyname, ', ') from pg_policies
     where schemaname = 'public' and tablename = 'subjects')
 union all
-select 'documents du 4 policy (hien co ' ||
+select 'documents du 4 CRUD + 1 restrictive (hien co ' ||
   (select count(*)::text from pg_policies
     where schemaname = 'public' and tablename = 'documents') || ')',
   case when (select count(*) from pg_policies
-              where schemaname = 'public' and tablename = 'documents') = 4
+              where schemaname = 'public' and tablename = 'documents') = 5
     then 'DAT' else 'KHONG DAT' end,
   (select string_agg(policyname, ', ') from pg_policies
     where schemaname = 'public' and tablename = 'documents')
