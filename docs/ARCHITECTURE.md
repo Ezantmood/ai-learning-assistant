@@ -35,7 +35,8 @@ Guard không thay thế RLS; client không được tự quyết quyền sở h�
 - `(auth)`: sign-in, sign-up, forgot-password, verify-reset-otp, reset-password.
   OTP email 6 số, không cần deep link.
 - `(app)`: tabs Trang chủ/Tài liệu/Tài khoản; routes phụ không là tab.
-- Dashboard 6 thẻ, route/status từ shared/config/featureStatus.ts.
+- Dashboard hướng theo tác vụ: Tải tài liệu/Quét đề, kho tài liệu, ghi chú
+  và môn học. Route chức năng vẫn từ shared/config/featureStatus.ts.
 - `/notes`, `/notes/new`, `/notes/[id]`: CRUD ghi chú riêng.
 - `/profile`, `/profile/change-password`: hồ sơ/avatar/giao diện/mật khẩu.
 - `/documents`, `/documents/upload`, `/documents/[id]`, `/subjects`: CRUD tài liệu
@@ -53,6 +54,11 @@ Upload guard ext/MIME/10 MB và trần 100 tài liệu, tên/path snake_case.
 Storage trước DB; insert lỗi dọn object. Xóa Storage trước DB, DB fail báo rõ
 để thử lại; sau xóa điều hướng rồi dọn cache detail. Chủ đề tối đa 30,
 xóa chủ đề chỉ SET NULL, không mất tài liệu.
+
+DocumentStudyTabs nhận ba vùng UI từ route, không import feature khác.
+Chỉ vùng đang chọn hiển thị; cả ba giữ mount để bảo toàn draft/lượt chat.
+Intent analyze mới mở mục Giải bài. Thông tin/quản lý tệp và sửa đề ảnh
+thu gọn bằng display, không unmount form. DOCX chỉ hiện quản lý và hướng dẫn.
 
 SummarySection chọn mức độ/phạm vi/phần, API đặt processing rồi sinh kết quả.
 PDF gửi inline + JSON extracted_text/summary_text trong một lần gọi; TXT

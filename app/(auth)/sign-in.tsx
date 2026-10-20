@@ -56,9 +56,9 @@ export default function SignInScreen() {
 
   return (
     <ScreenContainer>
-      <Text variant="headlineSmall">Đăng nhập</Text>
+      <Text variant="headlineSmall">Chào mừng bạn</Text>
       <Text variant="bodyMedium">
-        Dùng email và mật khẩu đã đăng ký để vào ghi chú học tập.
+        Đăng nhập để lưu tài liệu và tiếp tục buổi học của bạn.
       </Text>
 
       {params.passwordReset === 'done' ? (

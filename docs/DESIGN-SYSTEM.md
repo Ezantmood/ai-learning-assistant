@@ -101,3 +101,23 @@ Bo góc: card 16 (`radius.xl`), chip 8 (`radius.md`), bottom sheet 28
 - [ ] Cặp màu mới (nếu có ngoài bảng file-type) đã tính tương phản ≥ 4.5:1
       theo công thức WCAG ở mục “Màu phụ theo loại tệp”, ghi số vào TEST-CHECKLIST.
 - [ ] Test tay trên Expo Go theo `docs/TEST-CHECKLIST.md` đạt.
+
+
+## Giao diện tinh gọn — 2026-10-21
+
+- Trang chủ ưu tiên Tải tài liệu và Quét đề bài; nhãn là hành động của
+  người học, không hiện mã FR/trạng thái phát triển. Ghi chú/môn học là
+  liên kết phụ. Giữ tabs gốc Trang chủ/Tài liệu/Tài khoản.
+- Chi tiết chỉ hiện một mục Tóm tắt/Hỏi đáp/Giải bài. Các vùng giữ mount
+  nhưng vùng ẩn không tham gia accessibility; draft/ngữ cảnh không mất khi
+  chuyển mục. Thông tin/quản lý và sửa đề ảnh mở theo yêu cầu.
+- Mức tóm tắt hiện Ngắn/Vừa/Chi tiết (Vừa = trung bình); phạm vi Toàn bộ
+  hoặc Chương/phần trong mục mở thêm. Lịch sử luôn có lối mở rõ ràng.
+- Giải bài ưu tiên một nút gợi ý; Phân tích/Giải thích/Lời giải tham khảo
+  trong Cách hỗ trợ khác. Giữ nhãn loại phản hồi; lời giải đầy đủ cần bấm.
+- Quét: Thêm ảnh → Đọc đề → Kiểm tra → Tiếp tục với AI. Chỉ hiện nút đọc
+  sau khi có ảnh; ảnh gốc thu gọn sau nhận dạng, nội dung sửa là trọng tâm.
+- Vùng cuộn đọc tối đa 720 px, giữ padding 16 px. Nút và bộ chọn mới có
+  vùng cao 48 px; nhãn ngắn để vừa khung 320 px. Không thêm màu/font/thư viện.
+- Đã soi web 320/390 px, sáng/tối và màn rộng. Kiểm Expo Go, bàn phím/font
+  hệ thống lớn và VoiceOver/TalkBack trên thiết bị còn trong checklist 24.

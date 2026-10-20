@@ -9,6 +9,8 @@ import {
 } from 'react-native';
 import {
   Appbar,
+  Button,
+  Text,
   Chip,
   Divider,
   FAB,
@@ -88,6 +90,7 @@ export default function DocumentsScreen() {
     deletedStamp !== undefined &&
     deletedStamp !== '0' &&
     deletedStamp !== dismissedDeleted;
+  const [filtersVisible, setFiltersVisible] = useState(false);
   const [search, setSearch] = useState('');
   const [subjectFilter, setSubjectFilter] =
     useState<SubjectFilterValue>(undefined);
@@ -113,7 +116,7 @@ export default function DocumentsScreen() {
     <List.Item
       accessibilityLabel={`Tài liệu: ${item.display_name}`}
       description={describeDocument(item)}
-      descriptionNumberOfLines={3}
+      descriptionNumberOfLines={2}
       left={(props) => (
         <List.Icon
           {...props}
@@ -138,7 +141,7 @@ export default function DocumentsScreen() {
   return (
     <ScreenContainer contentStyle={styles.plain} scrollable={false}>
       <Appbar.Header>
-        <Appbar.Content title="Tài liệu học tập" />
+        <Appbar.Content title="Tài liệu" />
         <Appbar.Action
           accessibilityLabel="Quản lý môn học"
           icon={AppIcons.folderOutline}
@@ -151,17 +154,27 @@ export default function DocumentsScreen() {
         <Searchbar
           accessibilityLabel="Tìm tài liệu theo tên"
           onChangeText={setSearch}
-          placeholder="Tìm theo tên tài liệu…"
+          placeholder="Tìm tài liệu…"
           testID="documents-search"
           value={search}
         />
+        <View style={styles.filterBar}>
+          <Text style={{ color: theme.colors.onSurfaceVariant }} variant="bodySmall">
+            {docsQuery.isPending ? 'Đang tải…' : `${docs.length} tài liệu${isSearching || effectiveFilter !== undefined ? ' phù hợp' : ''}`}
+          </Text>
+          <Chip style={styles.chip} icon={AppIcons.folderOutline} selected={effectiveFilter !== undefined}
+            accessibilityLabel="Hiện hoặc ẩn bộ lọc môn học" onPress={() => setFiltersVisible(!filtersVisible)}>
+            {effectiveFilter === undefined ? 'Lọc theo môn' : filterLabel(effectiveFilter, subjects)}
+          </Chip>
+        </View>
+        {filtersVisible ? <>
         <ScrollView
           accessibilityLabel="Lọc theo môn học"
           horizontal
           showsHorizontalScrollIndicator={false}
         >
           <View style={styles.chips}>
-            <Chip
+            <Chip style={styles.chip}
               accessibilityLabel="Lọc: tất cả môn"
               onPress={() => setSubjectFilter(undefined)}
               selected={effectiveFilter === undefined}
@@ -170,7 +183,7 @@ export default function DocumentsScreen() {
               Tất cả
             </Chip>
             {subjects.map((subject) => (
-              <Chip
+              <Chip style={styles.chip}
                 accessibilityLabel={`Lọc môn: ${subject.name}`}
                 key={subject.id}
                 onPress={() => setSubjectFilter(subject.id)}
@@ -180,7 +193,7 @@ export default function DocumentsScreen() {
                 {subject.name}
               </Chip>
             ))}
-            <Chip
+            <Chip style={styles.chip}
               accessibilityLabel="Lọc: chưa phân loại"
               onPress={() => setSubjectFilter(null)}
               selected={effectiveFilter === null}
@@ -190,6 +203,8 @@ export default function DocumentsScreen() {
             </Chip>
           </View>
         </ScrollView>
+        <Button mode="text" onPress={() => router.push('/subjects')}>Quản lý môn học</Button>
+        </> : null}
       </View>
 
       {docsQuery.isPending ? (
@@ -207,15 +222,18 @@ export default function DocumentsScreen() {
         />
       ) : docs.length === 0 ? (
         <EmptyState
-          actionLabel="Tải tài liệu lên"
+          actionLabel={isSearching || effectiveFilter !== undefined ? 'Xóa bộ lọc' : 'Tải tài liệu đầu tiên'}
           actionTestID="documents-empty-upload"
           description={
             isSearching || effectiveFilter !== undefined
               ? 'Thử từ khóa khác hoặc chọn bộ lọc khác.'
-              : 'Tải lên tệp PDF, DOCX hoặc TXT (tối đa 10 MB) để bắt đầu.'
+              : 'Thêm tệp PDF, DOCX hoặc TXT để lưu, tóm tắt và học cùng AI.'
           }
           icon={AppIcons.fileDocumentOutline}
-          onAction={() => router.push('/documents/upload')}
+          onAction={() => {
+            if (isSearching || effectiveFilter !== undefined) { setSearch(''); setSubjectFilter(undefined); }
+            else router.push('/documents/upload');
+          }}
           title={emptyTitle}
         />
       ) : (
@@ -237,13 +255,14 @@ export default function DocumentsScreen() {
         />
       )}
 
-      <FAB
+      {docs.length > 0 || isSearching || effectiveFilter !== undefined ? <FAB
+        label="Thêm tài liệu"
         accessibilityLabel="Tải tài liệu lên"
         icon={AppIcons.upload}
         onPress={() => router.push('/documents/upload')}
         style={styles.fab}
         testID="documents-fab"
-      />
+      /> : null}
 
       <FeedbackSnackbar
         message="Đã xóa tài liệu."
@@ -269,6 +288,7 @@ export default function DocumentsScreen() {
 }
 
 const styles = StyleSheet.create({
+  chip: { minHeight: spacing.xl * 2, justifyContent: 'center' },
   chips: {
     flexDirection: 'row',
     gap: spacing.sm,
@@ -281,12 +301,14 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: spacing.sm,
+    paddingBottom: spacing.xxl * 3,
   },
   plain: {
     padding: 0,
   },
+  filterBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
   tools: {
     gap: spacing.sm,
-    padding: spacing.sm,
+    padding: spacing.lg,
   },
 });

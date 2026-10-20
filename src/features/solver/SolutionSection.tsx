@@ -21,6 +21,7 @@ export function SolutionSection({ doc, userId, analysisRequest }: {
   const [turns, setTurns] = useState<SolutionTurn[]>([]);
   const [step, setStep] = useState<number | null>(null);
   const [question, setQuestion] = useState('');
+  const [moreVisible, setMoreVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const lock = useRef(false);
   const requested = useRef<string | null>(null);
@@ -59,31 +60,45 @@ export function SolutionSection({ doc, userId, analysisRequest }: {
   }, [analysisRequest, available, query.isPending, query.isError, run]);
 
   return <Card mode="outlined">
-    <Card.Title title="Hỗ trợ giải bài" subtitle="Học từng bước; lời giải đầy đủ chỉ khi bạn yêu cầu"
+    <Card.Title title="Hỗ trợ giải bài" subtitle="Bắt đầu bằng gợi ý, tự tìm ra lời giải" subtitleNumberOfLines={2}
       left={(props) => <List.Icon {...props} icon={AppIcons.lightbulbOutline} />} />
     <Card.Content style={styles.content}>
       {!available ? <Banner visible>Hãy tóm tắt PDF/TXT hoặc quét ảnh để có nội dung đề bài. DOCX cần chuyển sang PDF.</Banner>
         : query.isPending ? <Text>Đang tải lần hỗ trợ gần nhất…</Text>
-        : query.isError ? <Button onPress={() => { void query.refetch(); }}>Thử tải lại</Button>
+        : query.isError ? <Button contentStyle={styles.touchTarget} onPress={() => { void query.refetch(); }}>Thử tải lại</Button>
         : <>
-          <Text variant="bodySmall">Lần hỗ trợ gần nhất được tự động lưu. Phân tích đề bài bắt đầu lại các bước gợi ý.</Text>
-          {history.map((turn, index) => <View key={index} style={styles.content}>
-            <Text variant="titleSmall">{SOLUTION_LABELS[turn.kind]}</Text>
-            <AiResultText text={turn.text} testID={`solution-text-${index}`} />
-          </View>)}
-          {mutation.isPending ? <Button disabled loading testID="solution-running">AI đang xử lý…</Button> : null}
+          {history.length > 1 ? <List.Accordion title={`Các bước trước (${history.length - 1})`}>
+            {history.slice(0, -1).map((turn, index) => <View key={index} style={styles.content}>
+              <Text variant="titleSmall">{SOLUTION_LABELS[turn.kind]}</Text>
+              <AiResultText text={turn.text} testID={`solution-text-${index}`} />
+            </View>)}
+          </List.Accordion> : null}
+          {history.length ? <View style={styles.content}>
+            <Text variant="titleSmall">{SOLUTION_LABELS[history[history.length - 1].kind]}</Text>
+            <AiResultText text={history[history.length - 1].text} testID={`solution-text-${history.length - 1}`} />
+            <Text variant="bodySmall">Đã tự động lưu lần hỗ trợ gần nhất.</Text>
+          </View> : <Text>Nhận một gợi ý nhỏ để bắt đầu. Bạn có thể yêu cầu thêm từng bước.</Text>}
+          {mutation.isPending ? <Button contentStyle={styles.touchTarget} disabled loading testID="solution-running">AI đang xử lý…</Button> : null}
           {error ? <Text accessibilityLiveRegion="polite" style={{ color: theme.colors.error }}>{error}</Text> : null}
-          <Button disabled={mutation.isPending} mode="outlined" testID="solution-analysis" onPress={() => void run('analysis')}>Phân tích đề bài</Button>
-          <Button disabled={mutation.isPending} mode="contained" testID="solution-hint" onPress={() => void run('hint')}>
+          <Button contentStyle={styles.touchTarget} disabled={mutation.isPending} mode="contained" testID="solution-hint" onPress={() => void run('hint')}>
             {hintStep ? `Gợi ý tiếp theo (bước ${hintStep + 1})` : 'Gợi ý đầu tiên'}
           </Button>
-          <Button disabled={mutation.isPending} testID="solution-explain" onPress={() => void run('explanation')}>Giải thích khái niệm</Button>
-          <Button disabled={mutation.isPending} mode="outlined" testID="solution-full" onPress={() => void run('solution')}>Yêu cầu lời giải tham khảo</Button>
-          <FormTextInput label="Hỏi tiếp về hướng giải (tối đa 500 ký tự)" value={question} onChangeText={setQuestion}
-            multiline maxLength={500} disabled={mutation.isPending} testID="solution-question" />
-          <Button disabled={mutation.isPending || !history.length} testID="solution-follow-up" onPress={() => void run('follow_up')}>Hỏi tiếp về lời giải</Button>
+          {history.length ? <>
+            <FormTextInput label="Hỏi thêm về bước này" value={question} onChangeText={setQuestion}
+              multiline maxLength={500} disabled={mutation.isPending} testID="solution-question" />
+            <Button contentStyle={styles.touchTarget} disabled={mutation.isPending || !question.trim()} icon={AppIcons.send}
+              testID="solution-follow-up" onPress={() => void run('follow_up')}>Gửi câu hỏi</Button>
+          </> : null}
+          <List.Accordion title="Cách hỗ trợ khác" testID="solution-more"
+            expanded={moreVisible} onPress={() => setMoreVisible(!moreVisible)}>
+            <Button contentStyle={styles.touchTarget} disabled={mutation.isPending} testID="solution-analysis" onPress={() => void run('analysis')}>Phân tích đề bài</Button>
+            <Button contentStyle={styles.touchTarget} disabled={mutation.isPending} testID="solution-explain" onPress={() => void run('explanation')}>Giải thích khái niệm</Button>
+            <Button contentStyle={styles.touchTarget} disabled={mutation.isPending} mode="outlined" testID="solution-full" onPress={() => void run('solution')}>Xem lời giải tham khảo</Button>
+            <Text variant="bodySmall">Phân tích đề sẽ bắt đầu lại các bước. Lời giải đầy đủ chỉ hiện khi bạn yêu cầu.</Text>
+          </List.Accordion>
         </>}
     </Card.Content>
   </Card>;
 }
-const styles = StyleSheet.create({ content: { gap: spacing.sm } });
+const styles = StyleSheet.create({
+  touchTarget: { minHeight: spacing.xl * 2 }, content: { gap: spacing.sm } });

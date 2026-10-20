@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Image, Linking, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Banner, Button, Card, Text, useTheme } from 'react-native-paper';
+import { Banner, Button, Card, Text, useTheme } from 'react-native-paper';
 
 import { useSession } from '../../src/features/auth/useSession';
 import { reclaimStaleScan, recoverPendingScanImage, type ScanPickOutcome } from '../../src/features/scan/api';
@@ -10,7 +10,7 @@ import { useCaptureScanImage, useLatestScan, usePickScanImage, useRunScan } from
 import { ScanTextEditor } from '../../src/features/scan/scan-text-editor';
 import type { ScanImage } from '../../src/features/scan/schemas';
 import { getScanViewState } from '../../src/features/scan/viewState';
-import { EmptyState } from '../../src/shared/components/EmptyState';
+import { ListSkeleton } from '../../src/shared/components/LoadingState';
 import { ScreenContainer } from '../../src/shared/components/ScreenContainer';
 import { ScreenHeader } from '../../src/shared/components/ScreenHeader';
 import { goBackOrReplace } from '../../src/shared/lib/navigation';
@@ -33,6 +33,7 @@ export default function ScanScreen() {
   const [quota, setQuota] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
   const [showLatest, setShowLatest] = useState(true);
+  const [previewVisible, setPreviewVisible] = useState(false);
   const scanLock = useRef(false);
   const staleCheckedId = useRef<string | null>(null);
 
@@ -73,6 +74,7 @@ export default function ScanScreen() {
       return;
     }
     setImage(outcome.image);
+    setPreviewVisible(false);
     setShowLatest(false);
     setDocumentId(null);
     setText(null);
@@ -123,54 +125,76 @@ export default function ScanScreen() {
     text: resultText,
   });
 
+  const hasResult = Boolean(resultText && resultDocumentId);
+  const processing = view === 'processing';
+  const showPreview = Boolean(image && (!hasResult || previewVisible));
+
   return (
-    <ScreenContainer header={<ScreenHeader onBack={() => goBackOrReplace(router, '/dashboard')} showBack title="Quét đề bài" />}>
-      <Text variant="bodyMedium">Chọn hoặc chụp một ảnh đề bài (tối đa 10 MB), xem trước rồi bấm Quét.</Text>
-
-      {image ? (
-        <Card mode="outlined">
-          <Card.Content style={styles.previewWrap}>
-            <Image accessibilityLabel="Ảnh đề bài đã chọn" resizeMode="contain" source={{ uri: image.uri }} style={styles.preview} />
-          </Card.Content>
-        </Card>
-      ) : null}
-
-      <View style={styles.actions}>
-        <Button disabled={busy} icon={AppIcons.imageOutline} mode="outlined" onPress={() => void pick()} testID="scan-pick">Chọn ảnh</Button>
-        <Button disabled={busy} icon={AppIcons.camera} mode="outlined" onPress={() => void capture()} testID="scan-capture">Chụp ảnh</Button>
-        <Button disabled={!image || busy} icon={AppIcons.textBoxOutline} loading={scanMutation.isPending} mode="contained" onPress={() => void run()} testID="scan-run">Quét</Button>
+    <ScreenContainer contentStyle={styles.content}
+      header={<ScreenHeader onBack={() => goBackOrReplace(router, '/dashboard')} showBack title="Quét đề bài" />}>
+      <View style={styles.intro}>
+        <Text variant="headlineSmall">{hasResult ? '3. Kiểm tra nội dung' : image || processing ? '2. Đọc đề từ ảnh' : '1. Thêm ảnh đề bài'}</Text>
+        <Text style={{ color: theme.colors.onSurfaceVariant }}>
+          {hasResult ? 'Sửa lại chữ hoặc công thức nếu cần, rồi tiếp tục học với AI.'
+            : image ? 'Kiểm tra ảnh rõ chữ trước khi đọc. Mỗi lần xử lý một đề bài.'
+            : 'Chụp rõ đề, đủ sáng và không mất góc. Ảnh tối đa 10 MB.'}
+        </Text>
       </View>
 
-      {quota ? <Banner icon={AppIcons.alertCircle} visible>Đã chạm hạn mức AI. Hãy thử lại sau.</Banner> : null}
-      {openSettings ? <Button icon={AppIcons.openInNew} onPress={() => void Linking.openSettings()}>Mở Cài đặt</Button> : null}
+      {hasResult && resultText && resultDocumentId ? <Card mode="outlined">
+        <Card.Content style={styles.editor}>
+          <ScanTextEditor key={resultDocumentId} documentId={resultDocumentId} userId={userId} initialText={resultText} />
+        </Card.Content>
+      </Card> : null}
 
-      {view === 'processing' ? (
-        <View style={styles.center}>
-          <ActivityIndicator accessibilityLabel="Đang quét ảnh" size="large" />
-          <Text>Đang đọc chữ trong ảnh…</Text>
-        </View>
-      ) : null}
-      {resultText && resultDocumentId ? (
-        <Card mode="outlined">
-          <Card.Title title="Văn bản đã quét" />
-          <Card.Content><ScanTextEditor key={resultDocumentId} documentId={resultDocumentId} userId={userId} initialText={resultText} /></Card.Content>
-        </Card>
-      ) : null}
-      {view === 'empty' ? <EmptyState description="Chọn hoặc chụp ảnh đề bài để bắt đầu." icon={AppIcons.imageOutline} title="Chưa có kết quả" /> : null}
-      {view === 'error' ? (
-        <View style={styles.center}>
-          <Text style={{ color: theme.colors.error }}>{error ?? latestError ?? 'Không tải được kết quả quét.'}</Text>
-          {resultText ? <Text selectable>{resultText}</Text> : null}
-          {!quota ? <Button icon={AppIcons.refresh} mode="outlined" onPress={() => { if (image) void run(); else void pick(); }} testID="scan-retry">Thử lại</Button> : null}
-        </View>
-      ) : null}
+      {hasResult && image ? <Button contentStyle={styles.touchTarget} onPress={() => setPreviewVisible(!previewVisible)} testID="scan-preview-toggle">
+        {previewVisible ? 'Thu gọn ảnh gốc' : 'Xem ảnh gốc'}
+      </Button> : null}
+      {showPreview && image ? <Card mode="outlined">
+        <Card.Content style={styles.previewWrap}>
+          <Image accessibilityLabel="Ảnh đề bài đã chọn" resizeMode="contain" source={{ uri: image.uri }} style={styles.preview} />
+        </Card.Content>
+      </Card> : null}
+
+      {image && (!hasResult || previewVisible) ? <Button contentStyle={styles.touchTarget} disabled={busy || processing}
+        icon={AppIcons.textBoxOutline} loading={scanMutation.isPending} mode="contained"
+        onPress={() => void run()} testID="scan-run">
+        {processing ? 'Đang đọc đề…' : hasResult ? 'Đọc lại từ ảnh' : 'Đọc đề bài'}
+      </Button> : null}
+
+      {processing ? <View style={styles.intro}>
+        <Text accessibilityLiveRegion="polite">AI đang đọc chữ và công thức. Vui lòng giữ màn hình mở.</Text>
+        <ListSkeleton rows={2} />
+      </View> : showLatest && latest.isPending && !image ? <ListSkeleton rows={2} /> : null}
+
+      {quota ? <Banner icon={AppIcons.alertCircle} visible>Đã chạm hạn mức AI. Hãy thử lại sau.</Banner> : null}
+      {openSettings ? <Button contentStyle={styles.touchTarget} icon={AppIcons.openInNew} onPress={() => void Linking.openSettings()}>Mở Cài đặt</Button> : null}
+      {view === 'error' ? <View style={styles.intro}>
+        <Text accessibilityLiveRegion="polite" style={{ color: theme.colors.error }}>{error ?? latestError ?? 'Không tải được kết quả quét.'}</Text>
+        {resultText && !resultDocumentId ? <Text selectable>{resultText}</Text> : null}
+        {!quota ? <Button contentStyle={styles.touchTarget} icon={AppIcons.refresh} mode="outlined"
+          onPress={() => { if (image) void run(); else if (latest.isError) void latest.refetch(); else void pick(); }} testID="scan-retry">Thử lại</Button> : null}
+      </View> : null}
+
+      <View style={styles.actions}>
+        <Button contentStyle={styles.touchTarget} disabled={busy} icon={AppIcons.camera} mode={!image && !hasResult ? 'contained' : 'text'}
+          onPress={() => void capture()} testID="scan-capture">{image || hasResult ? 'Chụp ảnh khác' : 'Chụp đề bài'}</Button>
+        <Button contentStyle={styles.touchTarget} disabled={busy} icon={AppIcons.imageOutline} mode={!image && !hasResult ? 'outlined' : 'text'}
+          onPress={() => void pick()} testID="scan-pick">{image || hasResult ? 'Chọn ảnh khác' : 'Chọn từ thư viện'}</Button>
+      </View>
+      {!image && !hasResult ? <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+        Thêm ảnh → đọc đề → kiểm tra → học cùng AI
+      </Text> : null}
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
+  touchTarget: { minHeight: spacing.xl * 2 },
   actions: { gap: spacing.sm },
-  center: { alignItems: 'center', gap: spacing.md, padding: spacing.md },
-  preview: { height: 260, width: '100%' },
+  content: { justifyContent: 'flex-start', gap: spacing.lg },
+  intro: { gap: spacing.sm },
+  editor: { paddingTop: spacing.lg },
+  preview: { height: spacing.xxl * 8, width: '100%' },
   previewWrap: { padding: spacing.sm },
 });

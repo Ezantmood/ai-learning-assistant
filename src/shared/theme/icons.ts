@@ -22,6 +22,7 @@ export const AppIcons = {
   camera: 'camera',
   check: 'check',
   checkCircle: 'check-circle',
+  chevronRight: 'chevron-right',
   clockOutline: 'clock-outline',
   close: 'close',
   contentSave: 'content-save',

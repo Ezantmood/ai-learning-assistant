@@ -39,6 +39,8 @@ import { AppIcons } from '../../shared/theme/icons';
 import { spacing } from '../../shared/theme/spacing';
 import type { AppTheme } from '../../shared/theme/theme';
 
+const summaryLevelLabels: Record<string, string> = { short: 'Ngắn', medium: 'Vừa', detailed: 'Chi tiết' };
+
 function toSummaryDocument(doc: DocumentWithSubject): SummaryDocument {
   return {
     extraction_status: doc.extraction_status,
@@ -145,20 +147,23 @@ export function SummarySection({
   return (
     <Card mode="outlined">
       <Card.Title
+        subtitleNumberOfLines={2}
         left={(props) => (
           <List.Icon {...props} icon={AppIcons.textBoxOutline} />
         )}
-        subtitle="Chọn mức độ và phạm vi; kết quả được tự động lưu"
-        title="Tóm tắt bằng AI"
+        subtitle="Nắm ý chính, tự động lưu để xem lại"
+        title="Hiểu nhanh tài liệu"
       />
       <Card.Content style={styles.content}>
-        <Text variant="titleSmall">Mức độ tóm tắt</Text>
+        <Text variant="titleSmall">{summary ? 'Mức độ cho bản mới' : 'Mức độ tóm tắt'}</Text>
         <SegmentedButtons value={options.level} onValueChange={(level) => setOptions({ ...options, level: level as SummaryOptions['level'] })}
-          buttons={[{ value: 'short', label: 'Ngắn', disabled: running }, { value: 'medium', label: 'Trung bình', disabled: running }, { value: 'detailed', label: 'Chi tiết', disabled: running }]} />
+          buttons={[{ value: 'short', label: 'Ngắn', disabled: running, labelStyle: styles.tabLabel }, { value: 'medium', label: 'Vừa', accessibilityLabel: 'Mức độ trung bình', disabled: running, labelStyle: styles.tabLabel }, { value: 'detailed', label: 'Chi tiết', disabled: running, labelStyle: styles.tabLabel }]} />
+        <List.Accordion title={options.scope === 'whole' ? 'Phạm vi: toàn tài liệu' : 'Phạm vi: chương / phần'}>
         <SegmentedButtons value={options.scope} onValueChange={(scope) => setOptions({ ...options, scope: scope as SummaryOptions['scope'] })}
-          buttons={[{ value: 'whole', label: 'Toàn tài liệu', disabled: running }, { value: 'sections', label: 'Theo chương/phần', disabled: running }]} />
+          buttons={[{ value: 'whole', label: 'Toàn bộ', disabled: running, labelStyle: styles.tabLabel }, { value: 'sections', label: 'Chương/phần', disabled: running, labelStyle: styles.tabLabel }]} />
         {options.scope === 'sections' ? <FormTextInput label="Tên chương/phần (để trống: tất cả)" value={options.sectionTitle}
           maxLength={200} disabled={running} onChangeText={(sectionTitle) => setOptions({ ...options, sectionTitle })} testID="summary-section-title" /> : null}
+        </List.Accordion>
         {loadError || (requestMutation.error && !isTruncated) ? <Text style={{ color: theme.colors.error }}>
           {loadError ?? toSummaryErrorMessage(requestMutation.error)}
         </Text> : null}
@@ -174,9 +179,9 @@ export function SummarySection({
                 </Text>
               </Banner>
             ) : null}
-            <Text variant="labelMedium">Đã lưu · {new Date(summary.created_at).toLocaleString('vi-VN')}</Text>
+            <Text variant="labelMedium">Đã lưu · {summaryLevelLabels[summary.summary_level] ?? 'Vừa'} · {new Date(summary.created_at).toLocaleString('vi-VN')}</Text>
             <AiResultText text={summary.summary_text} testID="summary-text" />
-            <Button
+            <Button contentStyle={styles.touchTarget}
               accessibilityLabel="Tóm tắt lại tài liệu này"
               disabled={running}
               icon={AppIcons.refresh}
@@ -194,7 +199,7 @@ export function SummarySection({
             </Text>
           </Banner>
         ) : running ? (
-          <Button
+          <Button contentStyle={styles.touchTarget}
             accessibilityLabel={stepLabel}
             disabled
             icon={AppIcons.textBoxOutline}
@@ -214,7 +219,7 @@ export function SummarySection({
                   ? toSummaryErrorMessage(requestMutation.error)
                   : 'Lần tóm tắt trước thất bại. Hãy thử lại.')}
             </Text>
-            <Button
+            <Button contentStyle={styles.touchTarget}
               accessibilityLabel="Thử tóm tắt lại"
               disabled={running}
               icon={AppIcons.refresh}
@@ -239,9 +244,9 @@ export function SummarySection({
         ) : (
           <View style={styles.content}>
             <Text variant="bodyMedium">
-              Chưa có bản tóm tắt — bấm nút để tạo.
+              Chọn mức độ rồi tạo bản tóm tắt đầu tiên.
             </Text>
-            <Button
+            <Button contentStyle={styles.touchTarget}
               accessibilityLabel="Tóm tắt tài liệu bằng AI"
               disabled={running}
               icon={AppIcons.textBoxOutline}
@@ -254,9 +259,9 @@ export function SummarySection({
           </View>
         )}
         <List.Accordion title={`Bản tóm tắt đã lưu (${history.data?.length ?? 0})`}>
-          {history.isError ? <Button onPress={() => { void history.refetch(); }}>Thử tải lại lịch sử</Button> : null}
+          {history.isError ? <Button contentStyle={styles.touchTarget} onPress={() => { void history.refetch(); }}>Thử tải lại lịch sử</Button> : null}
           {(history.data ?? []).map((row) => <List.Item key={row.id} title={new Date(row.created_at).toLocaleString('vi-VN')}
-            description={`${({ short: 'Ngắn', medium: 'Trung bình', detailed: 'Chi tiết' } as Record<string, string>)[row.summary_level] ?? 'Trung bình'} · ${row.section_title || (row.summary_scope === 'sections' ? 'Theo chương/phần' : 'Toàn tài liệu')}`}
+            description={`${summaryLevelLabels[row.summary_level] ?? 'Vừa'} · ${row.section_title || (row.summary_scope === 'sections' ? 'Theo chương/phần' : 'Toàn tài liệu')}`}
             onPress={() => setSelectedId(row.id)} />)}
         </List.Accordion>
       </Card.Content>
@@ -265,6 +270,8 @@ export function SummarySection({
 }
 
 const styles = StyleSheet.create({
+  tabLabel: { paddingVertical: spacing.xs },
+  touchTarget: { minHeight: spacing.xl * 2 },
   content: {
     gap: spacing.sm,
   },

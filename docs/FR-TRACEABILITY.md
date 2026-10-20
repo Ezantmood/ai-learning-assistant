@@ -56,3 +56,18 @@ Chưa chạy lại checklist Expo Go 19→22; các ca cũ còn mở không tự 
 | FR-43 | Hệ thống có thể cung cấp lời giải tham khảo sau khi sinh viên yêu cầu. | `shared/ai/transport.ts: solution; SolutionSection yêu cầu riêng` | Unit API/UI + smoke AI thật từng chế độ; Expo Go chờ |
 | FR-44 | Hệ thống phải phân biệt giữa gợi ý, giải thích và lời giải hoàn chỉnh. | `solver/SolutionSection.tsx: SOLUTION_LABELS; migration 0010 response_type` | Unit API/UI + smoke AI thật từng chế độ; Expo Go chờ |
 | FR-45 | Hệ thống phải cho phép sinh viên đặt câu hỏi tiếp theo về lời giải. | `solver/api.ts: requestSolution(history/question); SolutionSection hỏi tiếp` | Unit API/UI + smoke AI thật từng chế độ; Expo Go chờ |
+
+
+## Truy cập sau tinh gọn UI — 2026-10-21
+
+45 FR giữ nguyên. FR-09→12 nằm trong Thông tin & quản lý ở chi tiết.
+FR-14→22 ở mục Tóm tắt; mức trung bình hiển thị Vừa, chương/phần mở trong
+Phạm vi, các bản cũ ở Bản tóm tắt đã lưu. FR-23→30 ở Hỏi đáp, giữ nút
+Hội thoại mới/Lưu hội thoại/Hội thoại đã lưu. FR-36→37 trong màn Quét hoặc
+Xem & sửa nội dung đề ở Giải bài. FR-38→45 ở Giải bài; Phân tích/Giải thích/
+Lời giải trong Cách hỗ trợ khác, phản hồi gần nhất và các bước trước có nhãn.
+
+`documents/document-study-tabs.tsx` giữ mount/draft/ngữ cảnh khi đổi mục;
+regression `documents/__tests__/document-study-tabs.test.tsx` kiểm giữ bản
+nháp, vùng ẩn accessibility, intent OCR. Tổng 44 suites/338 test; web thực
+và Android export đạt theo checklist 24. Camera/Expo Go vẫn chưa nghiệm thu.

@@ -51,28 +51,28 @@ export function QaSection({ doc, userId }: { doc: DocumentWithSubject; userId: s
   };
 
   return <Card mode="outlined">
-    <Card.Title title="Hỏi đáp với AI" subtitle="Trả lời theo tài liệu và ngữ cảnh phiên hiện tại"
+    <Card.Title subtitleNumberOfLines={2} title="Hỏi đáp với AI" subtitle="Cùng tìm hiểu nội dung trong tài liệu này"
       left={(props) => <List.Icon {...props} icon={AppIcons.messageTextOutline} />} />
     <Card.Content style={styles.content}>
       {!hasContext ? <Text>Hãy tóm tắt tài liệu hoặc quét ảnh trước để có nội dung hỏi đáp.</Text> : <>
-        <Text variant="bodySmall">{dirty ? 'Có nội dung chưa lưu. Bấm Lưu hội thoại trước khi rời màn hoặc bắt đầu phiên mới.' : turns.length ? 'Hội thoại đã lưu.' : 'Phiên mới chỉ lưu khi bạn lựa chọn.'}</Text>
+        <Text variant="bodySmall">{dirty ? 'Chưa lưu. Lưu hội thoại trước khi rời tài liệu hoặc tạo phiên mới.' : turns.length ? 'Hội thoại đã lưu.' : 'Hỏi điều bạn chưa hiểu. Chỉ lưu hội thoại khi bạn chọn.'}</Text>
         <View style={styles.actions}>
-          <Button disabled={busy} testID="qa-new" onPress={() => {
+          <Button contentStyle={styles.touchTarget} disabled={busy} testID="qa-new" onPress={() => {
             setConversationId(Crypto.randomUUID()); setTurns([]); setQuestion(''); setDirty(false); setError(null);
           }}>Hội thoại mới</Button>
-          <Button disabled={busy || !turns.length || !dirty} loading={save.isPending} testID="qa-save" onPress={() => void saveCurrent()}>Lưu hội thoại</Button>
+          <Button contentStyle={styles.touchTarget} disabled={busy || !turns.length || !dirty} loading={save.isPending} testID="qa-save" onPress={() => void saveCurrent()}>Lưu hội thoại</Button>
         </View>
         {turns.map((turn) => <View key={turn.id} style={styles.content}>
           <Card mode="contained" style={{ alignSelf: 'flex-end', maxWidth: '95%' }}><Card.Content><Text selectable>Bạn: {turn.question}</Text></Card.Content></Card>
           <Card mode="outlined"><Card.Content><Text variant="labelMedium">Trợ lý</Text><AiResultText text={turn.answer} /></Card.Content></Card>
         </View>)}
-        <FormTextInput label="Câu hỏi về tài liệu (tối đa 500 ký tự)" value={question} onChangeText={setQuestion}
+        <FormTextInput label="Câu hỏi của bạn" placeholder="Ví dụ: Giải thích ý chính của phần này" value={question} onChangeText={setQuestion}
           multiline numberOfLines={3} disabled={busy} maxLength={500} testID="qa-input" />
-        <Button disabled={busy} loading={ask.isPending} mode="contained" onPress={() => void send()} testID="qa-submit">Hỏi</Button>
+        <Button contentStyle={styles.touchTarget} disabled={busy || !question.trim()} icon={AppIcons.send} loading={ask.isPending} mode="contained" onPress={() => void send()} testID="qa-submit">Gửi câu hỏi</Button>
         {error ? <Text style={{ color: theme.colors.error }} accessibilityLiveRegion="polite">{error}</Text> : null}
         <List.Accordion title="Hội thoại đã lưu">
           {saved.isPending ? <Text>Đang tải lịch sử…</Text> : saved.isError
-            ? <Button onPress={() => { void saved.refetch(); }}>Thử tải lại lịch sử</Button>
+            ? <Button contentStyle={styles.touchTarget} onPress={() => { void saved.refetch(); }}>Thử tải lại lịch sử</Button>
             : groupConversations(saved.data ?? []).map((session) => <List.Item key={session.id}
               title={session.turns[0]?.question ?? 'Hội thoại'} description={`${session.turns.length} lượt · ${new Date(session.turns[0]?.created_at ?? '').toLocaleString('vi-VN')}`}
               disabled={busy} onPress={() => { setConversationId(session.id); setTurns(session.turns); setDirty(false); setQuestion(''); setError(null); }} />)}
@@ -81,4 +81,5 @@ export function QaSection({ doc, userId }: { doc: DocumentWithSubject; userId: s
     </Card.Content>
   </Card>;
 }
-const styles = StyleSheet.create({ content: { gap: spacing.sm }, actions: { flexDirection: 'row', flexWrap: 'wrap' } });
+const styles = StyleSheet.create({
+  touchTarget: { minHeight: spacing.xl * 2 }, content: { gap: spacing.sm }, actions: { flexDirection: 'row', flexWrap: 'wrap' } });

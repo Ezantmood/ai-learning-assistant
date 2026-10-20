@@ -2364,3 +2364,54 @@ https://supabase.com/docs/guides/platform/access-control`
 - Cổng cuối: tsc 0, lint 0 lỗi/0 warning, 43 suites/336 PASS,
   check:functions 0; Android export 5,5 MB đạt; RLS cuối 51/51, dọn fixture.
   Test tay web đạt; PDF API 503 hai lượt và Expo Go vẫn là các ô mở rõ ràng.
+
+
+## UI-01 — 2026-10-21: bắt đầu buổi học rõ ràng
+
+- Trang chủ còn hai lối Tải tài liệu/Quét đề, kho tài liệu và hai liên kết
+  ghi chú/môn học; bỏ mã FR và trạng thái phát triển khỏi UI. Câu dẫn đăng
+  nhập ngắn hơn; vùng đọc cuộn giới hạn 720 px trên màn rộng.
+- Danh sách tài liệu thu gọn bộ lọc môn, hiển thị số kết quả; trạng thái
+  không tìm thấy có nút xóa bộ lọc, kho rỗng có một CTA tải tệp.
+- tsc/lint đạt, 43 suites/336 tests PASS. Jest còn cảnh báo open handle
+  kế thừa. Web thật tài khoản fixture: đăng nhập, trang chủ light/dark,
+  khung 390×844, tải tệp từ CTA, mở kho và lọc chưa phân loại đạt.
+  Ảnh: evidence/ui-simplify-home.png. Chưa thay thế kiểm Expo Go thiết bị.
+
+
+## UI-02 — 2026-10-21: một việc học tại một thời điểm
+
+- Chi tiết tài liệu chia ba mục Tóm tắt/Hỏi đáp/Giải bài. Component cụ thể
+  DocumentStudyTabs nhận UI qua props, giữ mount/draft/ngữ cảnh; vùng ẩn
+  loại khỏi accessibility. Intent OCR mới luôn chuyển sang Giải bài.
+- Thông tin/đổi tên/môn/xóa/mở tệp nằm trong Thông tin & quản lý; đề ảnh
+  có nút mở sửa riêng. Mức độ tóm tắt luôn hiện, phạm vi/chương mở thêm.
+  Giải bài ưu tiên từng bước, các lựa chọn khác và bước trước được thu gọn.
+- Không đổi API, dữ liệu hay prompt. Hỏi đáp vẫn lưu tùy chọn/phiên mới,
+  lời giải đầy đủ vẫn chỉ chạy sau yêu cầu riêng.
+- Web 390×844: đổi 3 mục, soạn câu hỏi→đổi mục→quay lại còn nguyên, chọn
+  chương, mở các chế độ giải và quản lý tệp đạt. Ảnh document mới trong
+  evidence/ui-simplify-document.png. Native Expo Go chưa chạy.
+- Regression mới kiểm draft/accessibility/intent; test solver đi qua mục
+  mở thêm. Cổng tsc/lint đạt, 44 suites/338 tests PASS (open handle kế thừa).
+
+
+## UI-03 — 2026-10-21: thêm ảnh, đọc đề, kiểm tra, học
+
+- Màn quét chỉ đưa thao tác phù hợp bước hiện tại; thu gọn ảnh gốc sau
+  nhận dạng. Biên tập dùng nhãn Nội dung đề bài, Tiếp tục với AI và Lưu
+  nội dung; rỗng khóa nút. Giữ toàn bộ guard/khóa request/lưu trước intent.
+- Rà khung 320 px: rút nhãn mức trung bình thành Vừa, phạm vi Toàn bộ/
+  Chương/phần và nút lời giải. Nút/bộ chọn mới tăng cao 48 px bằng token.
+- Web thực với JPEG fixture: picker→preview→pending khóa→OCR đúng 2x+3=7;
+  sửa sang tiếng Việt→lưu→mở detail giữ bản sửa, tự chọn Giải bài. Phân
+  tích mẫu gặp hạn mức Gemini, UI báo rõ; không tự retry, không coi AI đạt.
+- Soi light/dark 320/390 px và màn rộng; giới hạn đọc 720 px, không thêm
+  màu, font, dependency, route hay migration. Không đổi model/API/prompt.
+- tsc/lint xanh, 44 suites/338 tests PASS; Android export đạt. Cảnh báo
+  open handle Jest kế thừa còn. Camera/quyền/keyboard/font lớn/trình đọc màn
+  hình Expo Go chưa kiểm, ghi ô mở trong checklist 24.
+- Cập nhật DESIGN-SYSTEM, ARCHITECTURE, README và traceability theo lối truy
+  cập mới; giữ nguyên nghĩa 45 FR và các giới hạn AI đã ghi trước đây.
+- Sau kiểm web đã dọn tài khoản fixture, object ảnh và row test; đóng
+  tab, trả viewport mặc định và dừng Metro thử nghiệm. Ảnh evidence chỉ dữ liệu giả.

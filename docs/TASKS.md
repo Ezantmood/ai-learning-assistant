@@ -445,3 +445,20 @@ AUDIT-06 hoàn tất code/cổng tự động và ghi giới hạn thực tế: 
 Jest 335/335, lint sạch, schema/types/export/web và AI text/OCR/solver đạt.
 Smoke PDF 3.6 gặp 503 hai lượt, kiểm lại dịch vụ còn mở trong checklist 23;
 Expo Go chưa chạy. Không coi việc tick task triển khai là nghiệm thu thiết bị.
+
+# Tinh gọn giao diện cho người mới — 2026-10-20
+
+Branch `codex/ui-simplify`, tag `ui-simplify-20261020`. Theo yêu cầu chủ dự án:
+thiết kế gọn, dễ bắt đầu, giữ đủ 45 FR và stack; không đổi API/model/schema.
+Mỗi checkbox commit/push riêng, tsc/lint/test trước commit; G4+ merge --no-ff.
+
+- [x] UI-01: Trang chủ hướng theo việc cần làm, hai lối Tải tài liệu/Quét đề;
+  bỏ mã FR/trạng thái phát triển khỏi UI. Danh sách và đăng nhập có câu dẫn
+  ngắn, hành động trống đúng ngữ cảnh, chiều rộng đọc phù hợp. FR-01/02/06/08/12/31/32.
+- [x] UI-02: Chi tiết tài liệu chia Tóm tắt/Hỏi đáp/Giải bài, chỉ hiện một
+  vùng; đổi mục không mất draft/lượt chat. Thu gọn thông tin/quản lý tài liệu,
+  tùy chọn tóm tắt và thao tác giải bài phụ; giữ đầy đủ lịch sử/chọn mức độ/
+  chương/lưu/phiên mới/gợi ý tiếp/giải thích/full/hỏi tiếp. FR-09→FR-30/36→FR-45.
+- [x] UI-03: Luồng ảnh rõ Chọn/chụp → Đọc → Kiểm tra → Học với AI; tinh gọn
+  biên tập OCR. Kiểm giao diện nhỏ/light/dark, tab/draft/error/loading và
+  Android export; cập nhật thiết kế/checklist/traceability/DEVLOG. FR-31→FR-37.
