@@ -428,7 +428,7 @@ Các task/mô tả FR phía trên là lịch sử; SPEC hiện tại và FR-AUDI
 thay thế việc diễn giải FR cũ. Không tick nợ test tay chưa chạy.
 
 - [x] AUDIT-01: Đọc/render PDF đủ 3 trang, đối chiếu 45 FR với code, sửa SPEC/traceability và ghi sai lệch trước sửa.
-- [ ] AUDIT-02: Bổ sung độ dài/chương/phần, cấu trúc kết quả và lưu/xem nhiều bản tóm tắt. FR-18→FR-22.
+- [x] AUDIT-02: Bổ sung độ dài/chương/phần, cấu trúc kết quả và lưu/xem nhiều bản tóm tắt. FR-18→FR-22.
 - [ ] AUDIT-03: Hội thoại theo phiên có ngữ cảnh, bắt đầu mới, lựa chọn lưu và mở lại lịch sử. FR-26→FR-30.
 - [ ] AUDIT-04: Sửa/lưu OCR và gửi đề đã kiểm tra sang phân tích. FR-36→FR-37.
 - [ ] AUDIT-05: Phân tích/chủ đề, gợi ý tiếp, giải thích, lời giải theo yêu cầu, phân biệt loại, hỏi tiếp. FR-38→FR-45.

@@ -19,11 +19,25 @@ export type SummarySource =
 const GEMINI_GENERATE_URL =
   `https://generativelanguage.googleapis.com/v1beta/models/${SUMMARY_MODEL}:generateContent`;
 
-/** Prompt tóm tắt tiếng Việt cố định cho mọi request CN3. */
+export type SummaryOptions = {
+  level: 'short' | 'medium' | 'detailed';
+  scope: 'whole' | 'sections';
+  sectionTitle: string;
+};
+export const DEFAULT_SUMMARY_OPTIONS: SummaryOptions = {
+  level: 'medium', scope: 'whole', sectionTitle: '',
+};
 export const SUMMARY_PROMPT =
-  'Bạn là trợ lý học tập cho sinh viên. Hãy đọc tài liệu đính kèm và tóm tắt ' +
-  'bằng tiếng Việt, trình bày ngắn gọn theo các ý chính, giữ đúng thuật ngữ ' +
-  'chuyên môn trong tài liệu. Chỉ trả về bản tóm tắt, không thêm lời dẫn.';
+  'Bạn là trợ lý học tập. Tóm tắt bằng tiếng Việt, chỉ dựa trên tài liệu, ' +
+  'giữ đúng thuật ngữ, không bịa. Trình bày có tiêu đề Markdown và gạch đầu dòng.';
+
+export function buildSummaryPrompt(options: SummaryOptions): string {
+  const levels = { short: 'ngắn (khoảng 3–5 ý chính)', medium: 'trung bình (các ý chính và dẫn giải ngắn)', detailed: 'chi tiết (luận điểm, ví dụ và kết luận quan trọng)' };
+  return `${SUMMARY_PROMPT} Mức độ: ${levels[options.level]}. ` +
+    (options.scope === 'sections'
+      ? `Tóm tắt riêng từng chương/phần, giữ tên chương/phần làm tiêu đề. ${options.sectionTitle ? `Chỉ tập trung vào phần: ${JSON.stringify(options.sectionTitle)}. Nếu không tìm thấy, nói rõ.` : 'Bao quát các chương/phần trong tài liệu; nếu không có chương thì chia theo chủ đề có thật.'}`
+      : 'Tóm tắt toàn bộ tài liệu.');
+}
 
 /**
  * Cấu hình JSON cho MỘT lần gọi Gemini trích PDF (CN3-PDF): trả đúng 2
@@ -273,14 +287,15 @@ function readApiKey(): string {
   return apiKey;
 }
 
-function buildParts(source: SummarySource): GeminiPart[] {
+function buildParts(source: SummarySource, options?: SummaryOptions): GeminiPart[] {
+  const prompt = options ? buildSummaryPrompt(options) : SUMMARY_PROMPT;
   if (source.kind === 'pdf') {
     return [
       { inline_data: { mime_type: 'application/pdf', data: source.base64Data } },
-      { text: SUMMARY_PROMPT },
+      { text: prompt },
     ];
   }
-  return [{ text: `${SUMMARY_PROMPT}\n\n--- NỘI DUNG TÀI LIỆU ---\n${source.textContent}` }];
+  return [{ text: `${prompt}\n\n--- NỘI DUNG TÀI LIỆU ---\n${source.textContent}` }];
 }
 
 type GeminiGenerateResponse = {
@@ -358,9 +373,9 @@ async function postGenerate(
  * Key lấy từ EXPO_PUBLIC_GEMINI_API_KEY, CẤM log key. Không set
  * temperature/top_p/top_k (deprecated). Giữ nguyên mapping 429/5xx.
  */
-export async function summarizeWithGemini(source: SummarySource): Promise<string> {
+export async function summarizeWithGemini(source: SummarySource, options?: SummaryOptions): Promise<string> {
   return postGenerate(
-    buildParts(source),
+    buildParts(source, options),
     'Gemini không trả về nội dung tóm tắt. Hãy thử lại.',
     source.kind === 'pdf' ? EXTRACTION_GENERATION_CONFIG : undefined,
   );

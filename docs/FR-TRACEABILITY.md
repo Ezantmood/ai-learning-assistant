@@ -23,11 +23,11 @@ Bằng chứng thiếu trước sửa được giữ ở FR-AUDIT.md.
 | FR-15 | Hệ thống phải trích xuất nội dung văn bản từ tài liệu PDF . | `src/features/summary/` | có code; hồi quy thiết bị còn mở |
 | FR-16 | Hệ thống phải gửi nội dung phù hợp đến Generative AI API như OpenAI hoặc Gemini để xử lý. | `src/features/summary/` | có code; hồi quy thiết bị còn mở |
 | FR-17 | AI phải tạo bản tóm tắt dựa trên nội dung của tài liệu. | `src/features/summary/` | có code; hồi quy thiết bị còn mở |
-| FR-18 | Hệ thống phải cho phép người dùng lựa chọn mức độ tóm tắt như ngắn, trung bình hoặc chi tiết. | `src/features/summary/` | thiếu; chờ bổ sung |
-| FR-19 | Hệ thống phải có thể tạo bản tóm tắt theo từng chương hoặc từng phần của tài liệu. | `src/features/summary/` | thiếu; chờ bổ sung |
-| FR-20 | Hệ thống phải trình bày kết quả tóm tắt theo cấu trúc dễ đọc. | `src/features/summary/` | một phần; chờ bổ sung |
-| FR-21 | Hệ thống phải cho phép sinh viên lưu bản tóm tắt. | `src/features/summary/` | có code; hồi quy thiết bị còn mở |
-| FR-22 | Hệ thống phải cho phép sinh viên xem lại các bản tóm tắt đã tạo. | `src/features/summary/` | một phần; chờ bổ sung |
+| FR-18 | Hệ thống phải cho phép người dùng lựa chọn mức độ tóm tắt như ngắn, trung bình hoặc chi tiết. | `src/features/summary/` | có code + unit; remote lưu 2 phiên bản PASS; chờ Expo Go |
+| FR-19 | Hệ thống phải có thể tạo bản tóm tắt theo từng chương hoặc từng phần của tài liệu. | `src/features/summary/` | có code + unit; remote lưu 2 phiên bản PASS; chờ Expo Go |
+| FR-20 | Hệ thống phải trình bày kết quả tóm tắt theo cấu trúc dễ đọc. | `src/features/summary/` | có code + unit; remote lưu 2 phiên bản PASS; chờ Expo Go |
+| FR-21 | Hệ thống phải cho phép sinh viên lưu bản tóm tắt. | `src/features/summary/` | có code + unit; remote lưu 2 phiên bản PASS; chờ Expo Go |
+| FR-22 | Hệ thống phải cho phép sinh viên xem lại các bản tóm tắt đã tạo. | `src/features/summary/` | có code + unit; remote lưu 2 phiên bản PASS; chờ Expo Go |
 | FR-23 | Hệ thống phải cho phép sinh viên đặt câu hỏi liên quan đến tài liệu đã tải lên. | `src/features/chat/` | có code; hồi quy thiết bị còn mở |
 | FR-24 | AI phải sử dụng nội dung tài liệu làm nguồn thông tin để trả lời câu hỏi. | `src/features/chat/` | có code; hồi quy thiết bị còn mở |
 | FR-25 | Hệ thống phải ưu tiên trả lời dựa trên nội dung tài liệu thay vì tạo câu trả lời không liên quan. | `src/features/chat/` | có code; hồi quy thiết bị còn mở |

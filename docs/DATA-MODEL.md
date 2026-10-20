@@ -285,3 +285,9 @@ unsupported (DOCX, trạng thái cuối, CN3 không chạm)
   `updated_at` quá 15 phút (hằng số app) thì coi như `failed` (UPDATE về
   `failed`) rồi cho thử lại. Mốc 15 phút dựa trên trigger `updated_at` có sẵn,
   không thêm cột.
+
+## Đối chiếu PDF 2026-10-20 — lịch sử tóm tắt
+
+Migration `0008_summary_history.sql` bỏ UNIQUE(document_id) để giữ mỗi bản
+đã tạo (FR-21/22), thêm summary_level, summary_scope, section_title có CHECK.
+Không xóa row cũ; mặc định medium/whole. Giữ FK CASCADE, RLS hiện có.

@@ -492,3 +492,9 @@ EXPO_PUBLIC_REQUIRE_EMAIL_CONFIRMATION=false
 - Publishable/anon key được thiết kế để có mặt ở client nhưng **không phải** cơ chế phân quyền; RLS bảo vệ dữ liệu.
 - Tuyệt đối không đưa `service_role`, database password, access token hoặc refresh token vào source/env client.
 - Sau khi đổi env, khởi động lại Expo; không ghi key vào screenshot, DEVLOG hay báo cáo.
+
+## Cập nhật theo PDF 2026-10-20 (ưu tiên hơn mô tả lịch sử phía trên)
+
+CN3 chọn mức độ/phạm vi tại SummarySection, gửi options qua API đến prompt.
+Mỗi lần tạo thêm một document_summaries, không ghi đè; xem lại bằng lịch sử
+trên cùng màn chi tiết. AiResultText hiển thị tiêu đề/ý chính, không HTML.

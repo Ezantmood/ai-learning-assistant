@@ -148,6 +148,9 @@ export type Database = {
       }
       document_summaries: {
         Row: {
+          summary_level: string
+          summary_scope: string
+          section_title: string
           created_at: string
           document_id: string
           id: string
@@ -157,6 +160,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          summary_level?: string
+          summary_scope?: string
+          section_title?: string
           created_at?: string
           document_id: string
           id?: string
@@ -166,6 +172,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          summary_level?: string
+          summary_scope?: string
+          section_title?: string
           created_at?: string
           document_id?: string
           id?: string
@@ -178,7 +187,7 @@ export type Database = {
           {
             foreignKeyName: 'document_summaries_document_id_fkey'
             columns: ['document_id']
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: 'documents'
             referencedColumns: ['id']
           },
@@ -445,3 +454,5 @@ export type DocumentSolutionInsert =
   Database['public']['Tables']['document_solutions']['Insert'];
 export type DocumentSolutionUpdate =
   Database['public']['Tables']['document_solutions']['Update'];
+
+export type DocumentWithSubject = DocumentRow & { subjectName: string | null };

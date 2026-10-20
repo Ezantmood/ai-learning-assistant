@@ -2256,3 +2256,16 @@ https://supabase.com/docs/guides/platform/access-control`
 - Không đổi stack/dependency. Hai mục untracked .DS_Store và supabase/.temp/
   không đưa vào commit. Không đọc/in/commit giá trị secret.
 - Cổng nền: tsc exit 0; lint 0 lỗi/2 warning watch() kế thừa; Jest 39 suites, 318/318; check:functions exit 0. Kiểm tra PDF bằng mắt đủ 3 trang.
+
+
+### AUDIT-02 — Tóm tắt đúng FR-18→FR-22 — 2026-10-20
+
+- Thêm bộ chọn độ dài/phạm vi/chương, prompt tương ứng; AiResultText
+  hiển thị heading/gạch đầu dòng an toàn. Nút khóa cả khi tải tệp/tóm tắt.
+- Migration 0008 đã áp qua kết nối Postgres có sẵn: bỏ unique document_id,
+  thêm metadata có CHECK, giữ row cũ; INSERT phiên bản mới và lịch sử chọn lại.
+- Chuyển type DocumentWithSubject sang shared, bỏ import chéo feature
+  summary→documents. Không thêm dependency.
+- tsc 0; lint 0 lỗi/2 warning cũ; 40 suites, 322/322 PASS. Smoke remote bằng
+  user test: lưu 2 phiên bản khác mức độ cùng tài liệu PASS, dọn user xong.
+  Chưa có thiết bị để kiểm Expo Go; mục 19 checklist giữ mở.

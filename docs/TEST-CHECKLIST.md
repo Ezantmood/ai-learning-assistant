@@ -321,3 +321,14 @@ Theo đúng khuôn `scripts/rls-proof.ts` của FR-05 (2 user test A/B, tự d�
   dashboard ghi “Hoàn thành” và mở tab Tài liệu.
 - [ ] Xóa tài liệu đã có lời giải → row `document_solutions` mất theo CASCADE.
   A đăng nhập không thấy row của B; proof Data API A/B đã đạt 11/11.
+
+
+## 19. Hồi quy PDF gốc — tóm tắt (2026-10-20)
+
+- [ ] PDF/TXT: lần lượt chọn Ngắn/Trung bình/Chi tiết, kiểm độ dài và cấu trúc.
+- [ ] Chọn Theo chương/phần, để trống rồi nhập Chương 2; kiểm đúng phạm vi.
+- [ ] Tạo hai bản, mở lịch sử chọn lại bản cũ; rời màn và mở lại vẫn còn cả hai.
+- [ ] Mất mạng/429 khi đã có bản cũ: lỗi hiện rõ, dữ liệu cũ còn, không gọi lặp.
+
+Tự động: prompt/schema mới + hồi quy Jest 322/322; remote smoke tạo hai
+phiên bản với metadata thành công và dọn user test. Chưa kiểm thiết bị.

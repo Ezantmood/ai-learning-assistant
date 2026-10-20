@@ -80,14 +80,14 @@ beforeEach(() => {
 });
 
 describe('requestSummary — PDF thành công', () => {
-  it("processing → upsert (model gemini-3.5-flash) → done, đúng một request Gemini", async () => {
+  it("processing → insert (model gemini-3.5-flash) → done, đúng một request Gemini", async () => {
     const updates: Record<string, unknown>[] = [];
-    let upsertPayload: Record<string, unknown> = {};
+    let insertPayload: Record<string, unknown> = {};
     mockFrom((table) => {
       if (table === 'document_summaries') {
         return {
-          upsert: jest.fn((payload: Record<string, unknown>) => {
-            upsertPayload = payload;
+          insert: jest.fn((payload: Record<string, unknown>) => {
+            insertPayload = payload;
             return {
               select: () => ({
                 single: async () => ({ data: SUMMARY_ROW, error: null }),
@@ -116,7 +116,7 @@ describe('requestSummary — PDF thành công', () => {
       { extraction_status: 'processing' },
       { extraction_status: 'done' },
     ]);
-    expect(upsertPayload).toMatchObject({
+    expect(insertPayload).toMatchObject({
       document_id: 'doc-1',
       model: 'gemini-3.5-flash',
       summary_text: 'Bản tóm tắt tiếng Việt.',
@@ -203,7 +203,7 @@ describe('requestSummary — chặn gọi lặp và thu hồi treo', () => {
     mockFrom((table) => {
       if (table === 'document_summaries') {
         return {
-          upsert: jest.fn(() => ({
+          insert: jest.fn(() => ({
             select: () => ({
               single: async () => ({ data: SUMMARY_ROW, error: null }),
             }),
@@ -233,7 +233,7 @@ describe('requestSummary — TXT lưu extracted_text cho CN4', () => {
     mockFrom((table) => {
       if (table === 'document_summaries') {
         return {
-          upsert: jest.fn(() => ({
+          insert: jest.fn(() => ({
             select: () => ({
               single: async () => ({ data: SUMMARY_ROW, error: null }),
             }),
@@ -293,7 +293,9 @@ describe('getSummary', () => {
       select: () => ({
         eq: () => ({
           eq: () => ({
+            order: () => ({ order: () => ({ limit: () => ({
             maybeSingle: async () => ({ data: SUMMARY_ROW, error: null }),
+            }) }) }),
           }),
         }),
       }),

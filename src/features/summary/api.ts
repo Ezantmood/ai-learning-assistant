@@ -1,6 +1,7 @@
 import { SUMMARY_MODEL } from '../../lib/ai/models';
 import {
   GeminiEmptyError,
+  type SummaryOptions,
   parseExtractionJson,
   summarizeWithGemini,
 } from '../../lib/ai/transport';
@@ -10,7 +11,7 @@ import type {
   DocumentSummaryRow,
 } from '../../shared/types/database';
 import { SummaryGuardError, SummaryTruncatedError } from './errors';
-import { summarySourceSchema, summaryTextSchema } from './schemas';
+import { summaryOptionsSchema, summarySourceSchema, summaryTextSchema } from './schemas';
 
 /**
  * Tầng dữ liệu CN3-G1 (FR-14 → FR-22, nhánh key trực tiếp).
@@ -20,6 +21,15 @@ import { summarySourceSchema, summaryTextSchema } from './schemas';
 
 /** Tóm tắt tối đa 20.000 ký tự (CHECK ở DB, xem schemas.ts). */
 export const SUMMARY_MAX_CHARS = 20000;
+
+/** FR-22: tất cả phiên bản đã lưu, mới nhất trước. */
+export async function listSummaries(input: { documentId: string; userId: string }): Promise<DocumentSummaryRow[]> {
+  const { data, error } = await supabase.from('document_summaries').select('*')
+    .eq('document_id', input.documentId).eq('user_id', input.userId)
+    .order('created_at', { ascending: false }).order('id', { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
 
 /** `processing` quá 15 phút (so trên `updated_at`) coi như treo (FR-20). */
 export const STALE_PROCESSING_MINUTES = 15;
@@ -48,6 +58,9 @@ export async function getSummary(input: {
     .select('*')
     .eq('document_id', input.documentId)
     .eq('user_id', input.userId)
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (error) {
@@ -98,14 +111,15 @@ async function setExtractionStatus(
 }
 
 /**
- * FR-14/FR-17/FR-19/FR-20: guard → `processing` → gọi Gemini → upsert
- * (ghi đè theo UNIQUE(document_id)) → `done`; lỗi bất kỳ sau khi đặt
+ * FR-14/FR-17/FR-19/FR-20: guard → `processing` → gọi Gemini → insert
+ * (thêm phiên bản mới, không ghi đè) → `done`; lỗi bất kỳ sau khi đặt
  * `processing` → `failed` + ném lỗi đã chuẩn hóa. Không retry tự động,
  * mỗi lần gọi tối đa một request Gemini.
  */
 export async function requestSummary(input: {
   document: SummaryDocument;
   source: unknown;
+  options?: SummaryOptions;
   userId: string;
 }): Promise<DocumentSummaryRow> {
   const { document, userId } = input;
@@ -153,13 +167,14 @@ export async function requestSummary(input: {
     );
   }
 
+  const options = input.options ? summaryOptionsSchema.parse(input.options) : undefined;
   await setExtractionStatus(document.id, 'processing');
 
   try {
-    const raw = await summarizeWithGemini(parsedSource.data);
+    const raw = options ? await summarizeWithGemini(parsedSource.data, options) : await summarizeWithGemini(parsedSource.data);
 
     // PDF: MỘT lần gọi Gemini trả JSON 2 trường (toàn văn + tóm tắt).
-    // Ghi CẢ HAI vào DB: upsert `document_summaries` + MỘT update
+    // Ghi CẢ HAI vào DB: insert `document_summaries` + MỘT update
     // `documents` gộp `extracted_text` + `done` (native vision, ≤10MB
     // nên không chunking, không vector DB). TXT giữ hành vi cũ (plain,
     // extracted từ local).
@@ -169,7 +184,7 @@ export async function requestSummary(input: {
         extraction.summaryText,
       );
       // Nhánh (b) rỗng một phần: có extracted nhưng summary rỗng → vẫn
-      // cứu extracted, giữ summary cũ (không upsert rỗng).
+      // cứu extracted, giữ summary cũ (không insert rỗng).
       let saved: DocumentSummaryRow | null = null;
       if (extraction.summaryText) {
         if (!parsedSummary.success) {
@@ -180,14 +195,14 @@ export async function requestSummary(input: {
         }
         const { data, error } = await supabase
           .from('document_summaries')
-          .upsert(
+          .insert(
             {
+              ...(options ? { summary_level: options.level, summary_scope: options.scope, section_title: options.sectionTitle } : {}),
               document_id: document.id,
               model: SUMMARY_MODEL,
               summary_text: parsedSummary.data,
               user_id: userId,
             },
-            { onConflict: 'document_id' },
           )
           .select()
           .single();
@@ -237,14 +252,14 @@ export async function requestSummary(input: {
 
     const { data, error } = await supabase
       .from('document_summaries')
-      .upsert(
+      .insert(
         {
+          ...(options ? { summary_level: options.level, summary_scope: options.scope, section_title: options.sectionTitle } : {}),
           document_id: document.id,
           model: SUMMARY_MODEL,
           summary_text: parsedText.data,
           user_id: userId,
         },
-        { onConflict: 'document_id' },
       )
       .select()
       .single();
@@ -278,7 +293,7 @@ export async function requestSummary(input: {
       throw error;
     }
     // Mọi lỗi khác sau khi đã đặt `processing` đều đưa về `failed` để user
-    // thử lại (FR-20), KHÔNG upsert rỗng nên summary cũ được giữ.
+    // thử lại (FR-20), KHÔNG insert rỗng nên summary cũ được giữ.
     // Giữ lỗi gốc để UI báo đúng (quota/mạng/5xx/rỗng).
     try {
       await setExtractionStatus(document.id, 'failed');
@@ -293,6 +308,7 @@ export async function requestSummary(input: {
 export async function retrySummary(input: {
   document: SummaryDocument;
   source: unknown;
+  options?: SummaryOptions;
   userId: string;
 }): Promise<DocumentSummaryRow> {
   if (input.document.extraction_status !== 'failed') {
