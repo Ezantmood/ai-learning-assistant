@@ -2415,3 +2415,19 @@ https://supabase.com/docs/guides/platform/access-control`
   cập mới; giữ nguyên nghĩa 45 FR và các giới hạn AI đã ghi trước đây.
 - Sau kiểm web đã dọn tài khoản fixture, object ảnh và row test; đóng
   tab, trả viewport mặc định và dừng Metro thử nghiệm. Ảnh evidence chỉ dữ liệu giả.
+
+
+**Mốc Git tinh gọn UI — hoàn tất 2026-10-21**
+
+- Branch: `codex/ui-simplify`, mỗi checkbox commit và push riêng.
+- UI-01: `2f44333f85a746c677af2bb66ef2ccd61a61c5dc`.
+- UI-02: `c1e16f44462efb976ae7faade030b449fe512c34`.
+- UI-03: `93973e4a2db5a9bb303191a73d940c94ad0754ed`.
+- Merge `--no-ff` vào main: `7124d67e2c34979a802f5a1c9eab2af61c0ef909`, đã push.
+- Tag theo TASKS `ui-simplify-20261020` trỏ merge trên; tạo và push ngay,
+  không di chuyển. Ngày trong tên tag là ngày bắt đầu đợt UI.
+- Không PR theo quy tắc từ G4. Ghi mốc Git trên branch đã fast-forward
+  tới merge, rồi fast-forward main tới commit nhật ký; không commit trực tiếp main.
+- Cổng cuối: tsc/lint đạt, 44 suites/338 tests PASS, Android export 5,5 MB.
+  Web light/dark/320/390 px và luồng ảnh thực đạt như checklist 24; lượt
+  phân tích gặp quota Gemini, camera/Expo Go còn chờ kiểm thiết bị.
