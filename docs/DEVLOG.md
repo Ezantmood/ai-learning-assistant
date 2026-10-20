@@ -2480,3 +2480,16 @@ https://supabase.com/docs/guides/platform/access-control`
 - Cổng AI-02: tsc/lint đạt, 44 suites/342 tests PASS, Android export 5,5 MB.
   Cảnh báo open handle Jest kế thừa còn. Expo Go/camera/quyền và luồng AI
   trên điện thoại vẫn để mở ở checklist 25/26; không đánh đồng CLI với kiểm tay.
+
+
+**Mốc Git hạn mức AI khi demo — hoàn tất 2026-10-21**
+
+- Branch: `codex/ai-demo-quota`, mỗi checkbox commit và push riêng.
+- AI-01: `ad56b6bac614a3331cdf62c3c170370d2e797c62`.
+- AI-02: `e4277dd391e874fc92dd2719124f6f5223d99325`.
+- Merge `--no-ff` vào main: `f825d05d7abb1d92b2c3bd07a7fdbde784ce3bba`, đã push.
+- Tag `ai-demo-quota-20261021` trỏ merge trên, đã tạo và push ngay;
+  không di chuyển. Không PR theo quy tắc từ G4.
+- Ghi mốc trên branch đã fast-forward tới merge, rồi fast-forward main
+  tới commit nhật ký; không commit trực tiếp main. Không đưa secret,
+  ảnh tài khoản Chrome, .env hoặc thư mục tạm vào commit.
