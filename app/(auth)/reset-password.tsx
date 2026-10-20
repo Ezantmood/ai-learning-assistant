@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { Redirect, router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
 import { Banner, Button, ProgressBar, Text } from 'react-native-paper';
 
@@ -38,7 +38,7 @@ export default function ResetPasswordScreen() {
   );
   const [apiError, setApiError] = useState<string | null>(null);
 
-  const { control, handleSubmit, setError, watch } =
+  const { control, handleSubmit, setError } =
     useForm<ResetPasswordFormValues>({
       defaultValues: { confirmPassword: '', newPassword: '' },
     });
@@ -89,7 +89,7 @@ export default function ResetPasswordScreen() {
     }
   };
 
-  const strength = getPasswordStrength(watch('newPassword') ?? '');
+  const strength = getPasswordStrength(useWatch({ control, name: 'newPassword' }) ?? '');
 
   if (isLoading || pendingEmail === undefined) {
     return <LoadingState message="Đang kiểm tra phiên đặt lại mật khẩu…" />;

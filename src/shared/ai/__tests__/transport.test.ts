@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals
 
 import { SUMMARY_MODEL } from '../models';
 import {
+  AI_TIMEOUT_MS,
+  GeminiTimeoutError,
   GeminiConfigError,
   GeminiNetworkError,
   GeminiQuotaError,
@@ -49,8 +51,8 @@ afterEach(() => {
 });
 
 describe('SUMMARY_MODEL (hằng số duy nhất)', () => {
-  it("là 'gemini-3.5-flash'", () => {
-    expect(SUMMARY_MODEL).toBe('gemini-3.5-flash');
+  it("là 'gemini-3.6-flash'", () => {
+    expect(SUMMARY_MODEL).toBe('gemini-3.6-flash');
   });
 });
 
@@ -156,4 +158,28 @@ describe('summarizeWithGemini — map lỗi', () => {
       summarizeWithGemini({ base64Data: 'AAA', kind: 'pdf' }),
     ).rejects.toThrow('không trả về nội dung tóm tắt');
   });
+});
+
+it('key ở header, thinking minimal, không đưa key lên URL', async () => {
+  mockFetchJson(200, { candidates: [{ content: { parts: [{ text: 'Tóm tắt' }] } }] });
+  await summarizeWithGemini({ kind: 'txt', textContent: 'Nội dung' });
+  const [url, init] = fetchMock.mock.calls[0] ?? [];
+  expect(url).not.toContain(FAKE_KEY);
+  expect(init?.headers).toMatchObject({ 'x-goog-api-key': FAKE_KEY });
+  expect(lastBody()).toMatchObject({ generationConfig: { thinkingConfig: { thinkingLevel: 'minimal' } } });
+});
+
+
+it('timeout ngắt fetch và trả lỗi tiếng Việt, không tự retry', async () => {
+  jest.useFakeTimers();
+  try {
+    fetchMock.mockImplementation((_url, init) => new Promise((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+    }));
+    const pending = summarizeWithGemini({ kind: 'txt', textContent: 'Bài học' });
+    const assertion = expect(pending).rejects.toBeInstanceOf(GeminiTimeoutError);
+    await jest.advanceTimersByTimeAsync(AI_TIMEOUT_MS);
+    await assertion;
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  } finally { jest.useRealTimers(); }
 });

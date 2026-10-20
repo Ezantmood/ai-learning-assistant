@@ -7,7 +7,7 @@ import { useRequestSolution, useSolution } from '../queries';
 import { FormTextInput } from '../../../shared/components/FormTextInput';
 import type { DocumentWithSubject } from '../../../shared/types/database';
 import type { SolutionRequest } from '../api';
-import { GeminiQuotaError } from '../../../lib/ai/transport';
+import { GeminiQuotaError } from '../../../shared/ai/transport';
 
 jest.mock('../queries', () => ({ useRequestSolution: jest.fn(), useSolution: jest.fn() }));
 const queryMock = jest.mocked(useSolution);
@@ -59,6 +59,6 @@ describe('SolutionSection theo PDF', () => {
     const tree = render();
     await act(async () => { button(tree, 'solution-hint')?.props.onPress(); });
     expect(mutateAsync).toHaveBeenCalledTimes(2);
-    expect(JSON.stringify(tree.toJSON())).toContain('giới hạn');
+    expect(JSON.stringify(tree.toJSON())).toContain('hạn mức');
   });
 });

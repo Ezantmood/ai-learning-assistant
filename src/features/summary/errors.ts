@@ -5,7 +5,7 @@ import {
   GeminiNetworkError,
   GeminiQuotaError,
   GeminiServerError,
-} from '../../lib/ai/transport';
+} from '../../shared/ai/transport';
 
 /**
  * Lỗi guard CN3 (quyền sở hữu, DOCX, vượt ngưỡng, gọi lặp, input rỗng)

@@ -20,7 +20,7 @@ export function QaSection({ doc, userId }: { doc: DocumentWithSubject; userId: s
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const lock = useRef(false);
-  const ask = useAskQuestion(userId, doc.id);
+  const ask = useAskQuestion(userId);
   const save = useSaveConversation(userId, doc.id);
   const hasContext = doc.file_ext !== 'docx' && Boolean(doc.extracted_text?.trim());
   const saved = useQuestions(userId, doc.id, hasContext);

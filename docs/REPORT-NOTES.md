@@ -1,3 +1,41 @@
+# Nguyên liệu báo cáo — hiện hành 2026-10-20
+
+Nguồn chuẩn: SPEC.md theo PDF gốc; bảng trước/sau ở FR-AUDIT.md. Không dùng
+bảng FR cũ vốn gán quota/RLS/retry thay yêu cầu nghiệp vụ để tuyên bố 45/45 đạt.
+
+Khung báo cáo phải bao quát 6 chức năng, 45 FR; thêm các ảnh chọn mức độ và
+chương, lịch sử nhiều bản, hội thoại theo phiên và lựa chọn lưu, sửa OCR,
+gợi ý tiếp/giải thích/lời giải riêng/hỏi tiếp. Mỗi ảnh có nguồn kiểm chứng,
+che dữ liệu thật/key. Ảnh web mẫu ở evidence/fr-audit-20261020.png; ảnh Expo Go
+trên điện thoại vẫn cần chụp theo TEST-CHECKLIST mục 19→22.
+
+Giải thích khi vấn đáp:
+
+- Vì sao sửa đặc tả? Đối chiếu từng FR với 3 trang đề, phát hiện 13 thiếu,
+  5 một phần; giữ bằng chứng trước sửa, không đánh tráo ID FR.
+- Ngữ cảnh hội thoại? Gửi câu hỏi/câu trả lời các lượt trước theo role, chỉ
+  trong phiên hiện tại; phiên mới rỗng, lưu snapshot khi người dùng lựa chọn.
+- Gợi ý khác lời giải? Mode/prompt/nút/nhãn riêng; mỗi gợi ý một bước, chỉ
+  mode solution mới yêu cầu lời giải đầy đủ; hỏi tiếp có lịch sử.
+- Vì sao RLS phải kiểm document_id? user_id đúng vẫn có thể trỏ tài liệu B;
+  proof cũ thiếu ca này. Restrictive policy kiểm sở hữu tài liệu cha; 43/51
+  trước sửa, 51/51 sau sửa. Không chỉ lọc client.
+- Model? 3.6 Flash stable đã sinh nội dung thật; 3.8 probe timeout/503.
+  Minimal/low/medium theo tác vụ, timeout 90s, không auto retry; không hứa
+  latency cố định. OCR mẫu mất 67,6s, cần thừa nhận phụ thuộc dịch vụ.
+- Gói Pro? Google AI Pro và Gemini Developer API có quota/billing riêng.
+  Không suy từ thuê bao Gemini rằng API của app có hạn mức trả phí.
+- Key? Demo vẫn có EXPO_PUBLIC_GEMINI_API_KEY trong bundle, dù dùng header;
+  cần backend proxy trước phát hành thật. Service-role chỉ script local.
+- Kiểm thử? Unit/web/API/RLS/schema/export có bằng chứng riêng; chưa thay
+  thế các ca OTP/camera/quyền/picker trên Expo Go. Types đồng bộ tay đã đối
+  chiếu 57 cột catalog; chưa cài CLI nên không ghi đã regen.
+
+Các ghi chép cũ bên dưới là lịch sử phát triển; số test/model/phạm vi ở đó
+không thay thế bản hiện hành phía trên và FR-TRACEABILITY.
+
+---
+
 # Nguyên liệu báo cáo và vấn đáp
 
 Chỉ điền bằng bằng chứng từ code/test thực tế. Không tuyên bố FR “đạt” trước khi `FR-TRACEABILITY.md` và checklist đã cập nhật.

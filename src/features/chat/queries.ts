@@ -4,7 +4,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 
-import type { ConversationTurn } from '../../lib/ai/transport';
+import type { ConversationTurn } from '../../shared/ai/transport';
 import type { DocumentQuestionRow } from '../../shared/types/database';
 
 import {
@@ -40,18 +40,8 @@ export function useQuestions(
  * Mutation "hỏi trên tài liệu". Xong thì invalidate đúng key lịch sử
  * của tài liệu đó; không invalidate toàn bộ cache.
  */
-export function useAskQuestion(userId: string, documentId: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (input: { document: ChatDocument; question: string; history?: ConversationTurn[] }) =>
-      askQuestion({ ...input, userId }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: questionsKey(documentId),
-      });
-    },
-  });
+export function useAskQuestion(userId: string) {
+  return useMutation({ mutationFn: (input: { document: ChatDocument; question: string; history?: ConversationTurn[] }) => askQuestion({ ...input, userId }) });
 }
 
 export function useSaveConversation(userId: string, documentId: string) {

@@ -1,310 +1,75 @@
-# Mô hình dữ liệu và RLS
+# Dữ liệu và RLS — hiện hành 2026-10-20
 
-## Nguyên tắc
+DDL thật ở supabase/migrations; types tại src/shared/types/database.ts.
+Đối chiếu 57 cột Row/nullability/kiểu cơ bản với catalog remote đạt.
+Types CN2+ đồng bộ tay; CLI Supabase chưa có trên máy, không ghi đã regen.
 
-- `auth.users` do Supabase Auth quản lý; app không đọc trực tiếp.
-- Mọi bảng public bật RLS và mọi policy ràng buộc bằng `auth.uid()`.
-- UUID user lấy từ JWT, không nhận `user_id` tùy ý từ form.
-- Migration duy nhất ban đầu: `supabase/migrations/0001_account_manager.sql`.
+## Bảng và vòng đời
 
-## Bảng `public.profiles`
-
-| Cột | Kiểu/ràng buộc | Ý nghĩa |
+| Bảng | Cột nghiệp vụ | Quan hệ/giới hạn |
 |---|---|---|
-| `id` | `uuid primary key references auth.users(id) on delete cascade` | Đồng thời là user id |
-| `full_name` | `text not null default ''`, kiểm tra tối đa 100 ký tự | Họ tên hiển thị |
-| `student_code` | `text not null unique`, trim khác rỗng, tối đa 30 ký tự | Mã sinh viên; duy nhất và phân biệt hoa/thường |
-| `avatar_path` | `text null` | Path trong bucket, không phải URL |
-| `created_at` | `timestamptz not null default now()` | Thời điểm tạo |
-| `updated_at` | `timestamptz not null default now()` | Thời điểm sửa cuối |
+| profiles | id, full_name, student_code, avatar_path | id = auth.users.id; mã sinh viên duy nhất; user xóa → CASCADE |
+| study_notes | id, user_id, title, content | ghi chú riêng, có created_at/updated_at |
+| subjects | id, user_id, name | tên theo tài khoản, tối đa 60 ký tự |
+| documents | id, user_id, subject_id, display_name, storage_path, file_ext, mime_type, file_size, extracted_text, extraction_status | path UNIQUE; tên 1–120; tệp 1–10 MB; subject SET NULL khi xóa |
+| document_summaries | id, document_id, user_id, summary_text, model, summary_level, summary_scope, section_title | nhiều bản/tài liệu từ 0008; text 1–20.000; level short/medium/detailed; scope whole/sections; title ≤200 |
+| document_questions | id, document_id, user_id, conversation_id, question, answer, model | chỉ lưu theo lựa chọn; question 1–500, answer 1–20.000; conversation_id nullable cho row cũ |
+| document_solutions | id, document_id, user_id, solution_text, model, response_type, hint_step | UNIQUE(document_id); kết quả gần nhất; text 1–20.000; response_type 5 loại, hint_step ≥0 |
 
-RLS policies:
+Các bảng đều có created_at/updated_at. set_updated_at tái dùng từ 0001;
+handle_new_user tạo profile khi đăng ký. user_id FK auth.users CASCADE.
+Ba bảng kết quả FK documents CASCADE: xóa tài liệu dọn các kết quả/lịch sử.
+App xóa object Storage trước rồi mới xóa row, tránh bản ghi trỏ object mất.
+Xóa chủ đề không xóa tài liệu, chỉ documents.subject_id trở thành NULL.
 
-| Lệnh | `USING` | `WITH CHECK` |
-|---|---|---|
-| SELECT | `auth.uid() = id` | — |
-| INSERT | — | `auth.uid() = id` |
-| UPDATE | `auth.uid() = id` | `auth.uid() = id` |
-| DELETE | Không cấp policy | Không cho client xóa profile |
+## RLS
 
-Validate đang enforce (đúng SPEC/G3, quyết định G5): `full_name` chỉ giới hạn
-độ dài (tối đa 100 ký tự, cho phép rỗng); `student_code` bắt buộc, trim khác
-rỗng, tối đa 30 ký tự, **duy nhất và phân biệt hoa/thường** (unique constraint
-`profiles_student_code_unique`, `SV001` và `sv001` cùng tồn tại). **Không
-enforce regex** ở DB lẫn client (`profileSchema` = `signUpSchema` G3:
-không pattern); mã trùng đúng hoa/thường do Postgres báo 23505 và app map
-sang tiếng Việt, không lộ raw error.
+Mọi bảng public bật RLS; 4 policy CRUD sở hữu dùng auth.uid(). authenticated
+chỉ được thao tác row của mình, anon không được dữ liệu riêng. Publishable
+key chỉ xác định project, không thay thế JWT/policy. Service-role chỉ local
+proof/vận hành và không xuất hiện trong bundle app.
 
-## Bảng `public.study_notes`
+Migration 0011 bổ sung policy restrictive (AND với policy CRUD cũ):
 
-| Cột | Kiểu/ràng buộc | Ý nghĩa |
-|---|---|---|
-| `id` | `uuid primary key default gen_random_uuid()` | ID ghi chú |
-| `user_id` | `uuid not null references auth.users(id) on delete cascade` | Chủ sở hữu |
-| `title` | `text not null`, trim khác rỗng, tối đa 120 ký tự | Tiêu đề |
-| `content` | `text not null default ''`, tối đa 5000 ký tự | Nội dung |
-| `created_at` | `timestamptz not null default now()` | Thời điểm tạo |
-| `updated_at` | `timestamptz not null default now()` | Thời điểm sửa cuối |
+- documents: user_id đúng; Storage path bắt đầu bằng uid/; subject_id nếu có
+  phải là môn của cùng tài khoản. Kiểm khi INSERT/UPDATE.
+- document_summaries/questions/solutions: document_id phải thuộc tài khoản
+  hiện tại cả khi đọc/ghi/xóa. Chỉ kiểm user_id không đủ: trước sửa có thể
+  tạo row user A gắn document B hoặc đổi document_id sang B.
 
-Index: `study_notes_user_updated_idx on study_notes(user_id, updated_at desc)`.
+Có 4 policy CRUD + 1 restrictive tại documents và 3 bảng kết quả, subjects
+vẫn 4. Không tắt RLS/không tạo quyền công khai để khắc phục lỗi.
 
-RLS policies cho cả bốn lệnh:
+## Storage
 
-| Lệnh | `USING` | `WITH CHECK` |
-|---|---|---|
-| SELECT | `auth.uid() = user_id` | — |
-| INSERT | — | `auth.uid() = user_id` |
-| UPDATE | `auth.uid() = user_id` | `auth.uid() = user_id` |
-| DELETE | `auth.uid() = user_id` | — |
+- avatars private, 2 MB, JPEG/PNG/WEBP, path uid/...; signed URL TTL 3600 giây.
+- documents private, 10 MB, PDF/DOCX/TXT và PNG/JPEG/WEBP/HEIC/HEIF (8 MIME).
+  .jpg/.jpeg cùng image/jpeg; ảnh từ base64 picker chuẩn hóa .jpg.
+- 4 policy mỗi bucket ràng buộc thư mục đầu uid; user khác không download,
+  signed URL, ghi/xóa. Không chỉ filter user_id phía client.
 
-`WITH CHECK` ở UPDATE ngăn đổi `user_id` để chuyển row sang tài khoản khác. Test RLS phải gọi Data API bằng session A/B, không chỉ xem UI. Kịch bản chi tiết xem `docs/RLS-PROOF.md`.
+## Trạng thái trích xuất
 
-## Vì sao chỉ lọc ở client là không an toàn
+pending → processing → done/failed; DOCX → unsupported, không gọi AI.
+PDF/TXT lưu extracted_text cho hỏi đáp/giải bài. Ảnh OCR lưu text và có thể
+sửa; sửa chỉ cập nhật extracted_text, không thay ảnh gốc. Processing treo
+15 phút được client thu hồi khi mở màn. JSON bị cắt có thể cứu một phần
+và cảnh báo; cần dùng tài liệu ngắn hơn để trích đầy đủ.
 
-`.eq('user_id', uid)` chỉ là câu lọc do app tự thêm vào request. Nó chạy
-trên máy người dùng: ai cũng có thể mở devtools, sửa JS, xóa dòng `.eq`,
-thay `uid` thành id người khác, hoặc gọi thẳng PostgREST bằng publishable
-key mà không qua app. Server lúc đó vẫn trả dữ liệu vì không có ai kiểm tra
-lại — filter client chỉ giúp UX gọn, không phải bảo mật.
+## Thứ tự migration
 
-RLS chạy trong Postgres, áp dụng cho **mọi** request qua Data API. Postgres
-lấy `auth.uid()` từ JWT đã được Supabase ký và xác thực chữ ký, client không
-tự bịa được. Mỗi policy `USING (auth.uid() = user_id)` / `WITH CHECK (...)`
-được kiểm tra trước khi đọc/ghi row. Kể cả khi attacker bỏ `.eq` hay gửi
-`user_id` của nạn nhân, database vẫn loại hoặc từ chối row.
+0001 → 0002 → 0004 → 0005 → 0006 → 0007 → 0008 → 0009 → 0010 → 0011.
+Không có 0003. Không chạy lại migration cũ sau migration mới (0004 tái tạo
+UNIQUE document_id sẽ xung đột với lịch sử nhiều bản). Không sửa file đã áp.
 
-Hệ quả thực tế: SELECT chéo trả về **0 dòng chứ không ném lỗi permission**,
-vì `USING` chỉ lọc row (xem `docs/RLS-PROOF.md` mục 2); còn INSERT sai chủ
-hoặc UPDATE đổi `user_id` sang người khác thì bị `WITH CHECK` từ chối.
-Trả lời trước giáo viên có thể nói gọn: “Client do người dùng kiểm soát nên
-filter bỏ được; RLS chạy ở database, đối chiếu JWT qua `auth.uid()` cho mọi
-request nên mới là ranh giới bảo mật. Publishable key nằm ở client được, an
-toàn dữ liệu phụ thuộc RLS.”
+0008 giữ lịch sử tóm tắt và metadata; 0009 thêm conversation_id;
+0010 thêm loại phản hồi/bước; 0011 khóa quyền tài liệu cha/môn/path.
+Cả 4 migration đợt audit đã áp thành công qua kết nối Postgres hiện có.
 
-## Trigger
+## Bằng chứng
 
-1. `public.handle_new_user()` là `security definer set search_path = ''`; sau insert trên `auth.users`, insert `public.profiles(id, full_name, student_code)` từ `new.id` và metadata do form đăng ký gửi. `student_code` thiếu/trùng làm sign-up thất bại; dùng `on conflict (id) do nothing` chỉ để idempotent theo user id.
-2. `public.set_updated_at()` gán `new.updated_at = now()` trước UPDATE; gắn riêng cho `profiles` và `study_notes`.
-3. Không tạo trigger nghiệp vụ khác.
-
-Quyền execute/search path trong migration phải tối thiểu; function trigger không nhận tham số từ client.
-
-## Supabase Storage
-
-- Bucket: `avatars`, **private**, giới hạn 2 MB, MIME đề xuất `image/jpeg`, `image/png`, `image/webp`.
-- Object path timestamp (quyết định chủ dự án G5): `{auth.uid()}/avatar_<timestamp-ms>.jpg`.
-  Mỗi lần đổi avatar tạo object mới; sau khi update `profiles.avatar_path`
-  thành công thì xóa object cũ best-effort (lỗi xóa không fail luồng chính).
-  Migration G2 đã apply vẫn ghi chú thích `avatar.{ext}` — giữ nguyên file
-  migration đã apply, quy ước mới chỉ ghi ở đây và code (`buildAvatarPath`).
-- `profiles.avatar_path` lưu đúng path; UI tạo signed URL ngắn hạn (TTL 3600s,
-  cache 55 phút) khi hiển thị.
-
-Policies trên `storage.objects` giới hạn `bucket_id = 'avatars'` và `(storage.foldername(name))[1] = auth.uid()::text`:
-
-| Lệnh | Quyền |
-|---|---|
-| SELECT | Chỉ object trong thư mục user hiện tại |
-| INSERT | Chỉ tạo trong thư mục user hiện tại |
-| UPDATE | Chỉ object trong thư mục user hiện tại, `WITH CHECK` giữ cùng chủ |
-| DELETE | Chỉ object trong thư mục user hiện tại |
-
-Không tạo bucket public, không lưu avatar dạng base64 trong Postgres, không dùng service-role để vượt policy.
-
-## Bảng `public.subjects` (CN2, FR-12)
-
-> DDL chính thức chạy được: `supabase/migrations/0002_cn2_documents.sql`.
-> Khi hai bên lệch nhau thì file migration là nguồn sự thật, tài liệu phải sửa theo.
-
-| Cột | Kiểu/ràng buộc | Ý nghĩa |
-|---|---|---|
-| `id` | `uuid primary key default gen_random_uuid()` | ID môn học |
-| `user_id` | `uuid not null references auth.users(id) on delete cascade` | Chủ sở hữu |
-| `name` | `text not null`, `check (char_length(name) between 1 and 60)`, `unique (user_id, name)` | Tên môn học; mỗi user không trùng tên |
-| `created_at` | `timestamptz not null default now()` | Thời điểm tạo |
-| `updated_at` | `timestamptz not null default now()` | Thời điểm sửa cuối |
-
-Index: `subjects_user_idx on subjects(user_id)`.
-
-RLS policies cho cả bốn lệnh (`auth.uid() = user_id` cho `USING`/`WITH CHECK`
-tương tự `study_notes`); grants `authenticated` CRUD như CN1.
-
-Xóa môn học đang có tài liệu: `documents.subject_id` dùng
-`references subjects(id) on delete set null` — tài liệu rơi về “Chưa phân
-loại”, không bị xóa theo. Lý do: môn học là nhãn tổ chức, xóa nhãn không được
-phép kéo theo mất dữ liệu gốc của user.
-
-## Bảng `public.documents` (CN2, FR-06 → FR-13)
-
-> DDL chính thức chạy được: `supabase/migrations/0002_cn2_documents.sql`.
-> Khi hai bên lệch nhau thì file migration là nguồn sự thật, tài liệu phải sửa theo.
-
-| Cột | Kiểu/ràng buộc | Ý nghĩa |
-|---|---|---|
-| `id` | `uuid primary key default gen_random_uuid()` | ID tài liệu |
-| `user_id` | `uuid not null references auth.users(id) on delete cascade` | Chủ sở hữu |
-| `subject_id` | `uuid null references subjects(id) on delete set null` | Môn học; NULL = “Chưa phân loại” |
-| `display_name` | `text not null`, `check (char_length(display_name) between 1 and 120)` | Tên hiển thị (tên gốc đã chuẩn hóa); FR-10 chỉ đổi cột này, không đổi object |
-| `storage_path` | `text not null unique` | Đường dẫn object `{user_id}/{uuid}.{ext}`; bất biến sau khi tạo (FR-10 không đổi) |
-| `file_ext` | `text not null`, `documents_file_ext_whitelist` ban đầu cho `pdf/docx/txt`; migration `0006_cn5_scan_images.sql` mở thêm `png/jpg/jpeg/webp/heic/heif` | Phần mở rộng đã lowercase (FR-07 và CN5) |
-| `mime_type` | `text not null` | MIME đã đối chiếu với `file_ext` ở client |
-| `file_size` | `bigint not null`, `check (file_size > 0 and file_size <= 10485760)` | Byte; tối đa 10 MB |
-| `extracted_text` | `text null` | Nội dung trích cho AI; NULL cho tới khi CN3 đổ vào |
-| `extraction_status` | `text not null default 'pending'`, `check (extraction_status in ('pending', 'processing', 'done', 'failed', 'unsupported'))` | Trạng thái trích xuất (xem ánh xạ tiếng Việt bên dưới) |
-| `created_at` | `timestamptz not null default now()` | Ngày tải lên (FR-09) |
-| `updated_at` | `timestamptz not null default now()` | Thời điểm sửa cuối |
-
-Index:
-
-- `documents_user_created_idx on documents(user_id, created_at desc)` — phục vụ FR-08 liệt kê theo user, mới nhất trước.
-- `documents_subject_idx on documents(subject_id)` — phục vụ lọc theo môn học (FR-12).
-
-`extraction_status` ánh xạ UI tiếng Việt: `pending` → “Chưa xử lý”,
-`processing` → “Đang xử lý”, `done` → “Thành công”, `failed` → “Thất bại”,
-`unsupported` → “Không hỗ trợ”. PDF/TXT mới tải lên nhận `pending`;
-DOCX nhận `unsupported` ngay khi upload (giới hạn có chủ đích, xem SPEC).
-CN2 chỉ làm hạ tầng hai cột này; CN3 gọi AI trích nội dung rồi đổ vào —
-FR-13 tách đôi, không phải bỏ sót.
-
-RLS policies cho cả bốn lệnh (`USING`/`WITH CHECK` ràng buộc
-`auth.uid() = user_id`, `WITH CHECK` ở UPDATE ngăn đổi `user_id`);
-grants `authenticated` CRUD như CN1. Policy DELETE cho phép FR-11 xóa thẳng;
-thứ tự xóa storage-trước-DB-sau xem `docs/ARCHITECTURE.md`.
-Trigger `updated_at` tái dùng
-`public.set_updated_at()` có sẵn, không tạo function mới.
-
-## Supabase Storage — bucket `documents` (CN2)
-
-> DDL chính thức chạy được: `supabase/migrations/0002_cn2_documents.sql`
-> (mục 6, `on conflict do update` nên bucket tạo tay trước vẫn đúng cấu hình).
-> Khi hai bên lệch nhau thì file migration là nguồn sự thật, tài liệu phải sửa theo.
-
-- Bucket: `documents`, **private**, giới hạn 10 MB, whitelist MIME
-  `application/pdf`,
-  `application/vnd.openxmlformats-officedocument.wordprocessingml.document`,
-  `text/plain`. Migration `0006_cn5_scan_images.sql` mở thêm `image/png`,
-  `image/jpeg`, `image/webp`, `image/heic`, `image/heif`; không mở GIF.
-- Quy ước đường dẫn object: `{user_id}/{uuid}.{ext}` (`uuid` sinh ở client
-  bằng `Crypto.randomUUID()` của `expo-crypto` — cấm `crypto.randomUUID()`
-  toàn cục vì Hermes trên Expo Go không đảm bảo có, thiếu thì nổ đúng lúc
-  bấm upload chứ không lỗi lúc build).
-  DB chỉ lưu đường dẫn này ở `documents.storage_path`, không lưu URL.
-- Tên file trên storage là UUID, không dùng tên gốc (tên gốc có dấu tiếng
-  Việt, khoảng trắng, ký tự lạ và có thể trùng). Tên gốc đã chuẩn hóa lưu ở
-  `documents.display_name` làm nhãn.
-- Xem/tải bằng signed URL TTL 3600s, cache qua TanStack Query (giống avatar CN1).
-
-Policies trên `storage.objects` giới hạn `bucket_id = 'documents'` và
-`(storage.foldername(name))[1] = auth.uid()::text`:
-
-| Lệnh | Quyền |
-|---|---|
-| SELECT | Chỉ object trong thư mục user hiện tại |
-| INSERT | Chỉ tạo trong thư mục user hiện tại (`WITH CHECK` giữ cùng chủ) |
-| UPDATE | Chỉ object trong thư mục user hiện tại, `WITH CHECK` giữ cùng chủ |
-| DELETE | Chỉ object trong thư mục user hiện tại |
-
-Không tạo bucket public, không lưu nội dung tệp dạng base64 trong Postgres,
-không dùng service-role để vượt policy.
-
-## Bảng `public.document_summaries` (CN3, FR-14 → FR-22)
-
-> DDL chính thức chạy được: `supabase/migrations/0004_cn3_summaries.sql`.
-> Khi hai bên lệch nhau thì file migration là nguồn sự thật, tài liệu phải sửa theo.
-> (File `0003` không tồn tại: CN2 đã xác nhận không cần bản vá, xem DEVLOG.)
-
-Quyết định CN3-SCHEMA: bảng riêng thay vì thêm cột vào `documents`. Lý do:
-tách vòng đời tóm tắt (tóm tắt lại chỉ UPDATE 1 row), không phình `documents`
-(`extracted_text` giữ cho CN4 hỏi đáp), `UNIQUE(document_id)` đảm bảo 1-1,
-RLS độc lập theo `user_id`, xóa document cascade xóa summary theo.
-
-| Cột | Kiểu/ràng buộc | Ý nghĩa |
-|---|---|---|
-| `id` | `uuid primary key default gen_random_uuid()` | ID bản tóm tắt |
-| `document_id` | `uuid not null unique`, FK về `documents(id) on delete cascade` (`document_summaries_document_id_fkey`, `document_summaries_document_unique`) | Tài liệu được tóm tắt; UNIQUE = mỗi tài liệu tối đa một bản đang dùng, tóm tắt lại là ghi đè |
-| `user_id` | `uuid not null references auth.users(id) on delete cascade` | Chủ sở hữu; denormalized từ `documents.user_id` để policy RLS viết trực tiếp `auth.uid() = user_id`, không join |
-| `summary_text` | `text not null`, `check (char_length(summary_text) between 1 and 20000)` (`document_summaries_summary_rules`) | Bản tóm tắt tiếng Việt |
-| `model` | `text not null default 'gemini-2.5-flash'`, `check (char_length(model) between 1 and 100)` (`document_summaries_model_rules`) | Model đã sinh bản này; để sau này đổi model không lẫn. Default giữ nguyên theo migration đã apply; app CN3-G1 luôn ghi tường minh `gemini-3.5-flash` (2.5-flash có lịch shutdown sớm nhất 16/10/2026) |
-| `created_at` | `timestamptz not null default now()` | Lần tóm tắt đầu |
-| `updated_at` | `timestamptz not null default now()` | Lần ghi đè cuối (trigger `set_updated_at()` tái dùng, không tạo function mới) |
-
-Index: `document_summaries_user_idx on document_summaries(user_id)`; tra theo
-document dùng unique index có sẵn của `document_summaries_document_unique`.
-
-RLS policies cho cả bốn lệnh (`USING`/`WITH CHECK` ràng buộc
-`auth.uid() = user_id`, `WITH CHECK` ở UPDATE ngăn đổi `user_id`);
-grants `authenticated` CRUD, `service_role` full, `revoke anon` như CN1/CN2.
-An toàn khi `document_id` bị tráo: row summary mang `user_id` của chủ tài liệu
-(do chủ tạo, `WITH CHECK` chặn ghi hộ), nên SELECT/UPDATE/DELETE chéo vẫn bị
-`USING` chặn dù attacker đoán đúng `document_id`.
-
-Xóa tài liệu (FR-11) không cần bước xóa summary riêng: FK CASCADE dọn kèm.
-Xóa user xóa cả hai bảng theo dây chuyền `auth.users → documents →
-document_summaries` và `auth.users → document_summaries`.
-
-## Bảng `public.document_questions` (CN4, FR-26 → FR-30)
-
-> DDL chính thức chạy được: `supabase/migrations/0005_cn4_questions.sql`.
-> Khi hai bên lệch nhau thì file migration là nguồn sự thật, tài liệu phải sửa theo.
-> (SPEC gốc không có FR-23 → FR-30; lịch sử append-only theo lệnh session
-> `cn3g2-cn4`: lượt hỏi lỗi không tạo row, không sửa/xóa từng câu.)
-
-| Cột | Kiểu/ràng buộc | Ý nghĩa |
-|---|---|---|
-| `id` | `uuid primary key default gen_random_uuid()` | ID lượt hỏi |
-| `document_id` | `uuid not null`, FK về `documents(id) on delete cascade` (`document_questions_document_id_fkey`) | Tài liệu được hỏi; xóa tài liệu kéo theo mất lịch sử |
-| `user_id` | `uuid not null references auth.users(id) on delete cascade` | Chủ sở hữu; denormalized để RLS viết trực tiếp `auth.uid() = user_id` |
-| `question` | `text not null`, `check (1–500)` (chung CHECK `document_questions_qa_rules` với answer) | Câu hỏi (đã trim ở app) |
-| `answer` | `text not null`, `check (1–20000)` | Câu trả lời tiếng Việt |
-| `model` | `text not null default 'gemini-3.5-flash'`, `check (1–100)` (`document_questions_model_rules`) | Model đã trả lời |
-| `created_at` | `timestamptz not null default now()` | Mốc sắp lịch sử mới nhất trước |
-| `updated_at` | `timestamptz not null default now()` | Trigger `set_updated_at()` tái dùng |
-
-Index: `document_questions_doc_created_idx on document_questions(document_id, created_at desc)`
-— phục vụ liệt kê lịch sử mới nhất trước.
-
-RLS policies cho cả bốn lệnh (`USING`/`WITH CHECK` ràng buộc
-`auth.uid() = user_id`, `WITH CHECK` ở UPDATE ngăn đổi `user_id`);
-grants `authenticated` CRUD, `service_role` full, `revoke anon` như CN3.
-
-## Máy trạng thái `extraction_status` trong CN3 (FR-19, FR-20)
-```
-pending → processing → done
-             └───────→ failed →(user bấm thử lại)→ processing
-unsupported (DOCX, trạng thái cuối, CN3 không chạm)
-```
-
-- Ai đặt, lúc nào: app (client) đặt `pending → processing` bằng UPDATE
-  `documents` ngay trước khi gọi Gemini; `processing → done` sau khi lưu xong
-  row `document_summaries`; `processing → failed` khi bất kỳ bước nào lỗi
-  (kèm lỗi đã chuẩn hóa, không lộ raw). Không có trigger/Edge nào đặt hộ.
-- Retry: chỉ khi `failed`, chỉ do user bấm “Thử lại” (không auto-retry để khỏi
-  đốt quota free; lỗi 429/quota báo rõ và cũng không retry).
-- App bị kill giữa chừng (`processing` treo): không có cron server nên client
-  tự thu hồi — khi mở màn chi tiết, nếu `extraction_status = 'processing'` mà
-  `updated_at` quá 15 phút (hằng số app) thì coi như `failed` (UPDATE về
-  `failed`) rồi cho thử lại. Mốc 15 phút dựa trên trigger `updated_at` có sẵn,
-  không thêm cột.
-
-## Đối chiếu PDF 2026-10-20 — lịch sử tóm tắt
-
-Migration `0008_summary_history.sql` bỏ UNIQUE(document_id) để giữ mỗi bản
-đã tạo (FR-21/22), thêm summary_level, summary_scope, section_title có CHECK.
-Không xóa row cũ; mặc định medium/whole. Giữ FK CASCADE, RLS hiện có.
-
-
-## Đối chiếu PDF — hội thoại theo lựa chọn (0009)
-
-`document_questions.conversation_id` UUID nullable nhóm các lượt được chọn
-lưu; row cũ NULL được xem là phiên riêng theo id. Không cần bảng phiên mới:
-metadata tiêu đề lấy từ câu đầu. Chưa bấm Lưu thì không ghi Postgres.
-Lưu snapshot bằng upsert theo id để bấm lại không nhân đôi lượt. RLS/FK
-hiện có vẫn áp từng row; xóa tài liệu kéo theo lịch sử.
-
-
-## Đối chiếu PDF — chế độ giải bài (0010)
-
-`document_solutions` giữ row gần nhất/tài liệu, thêm response_type có CHECK
-analysis/hint/explanation/solution/follow_up và hint_step >= 0. Row cũ mặc
-định hint/0. Lịch sử các lượt của phiên giữ trong component để hỏi tiếp;
-không thêm bảng transcript ngoài yêu cầu. Xóa tài liệu vẫn CASCADE.
+scripts/fr-audit-proof.mjs: 43/51 trước sửa, 51/51 sau 0011; tài khoản/object
+test được dọn. Bao gồm CRUD A/B, giả user và giả document_id, Storage,
+SET NULL/CASCADE, nhiều phiên bản. scripts/cn2-schema-verify.sql 14/14 và
+cn3-schema-verify.sql 10/10 đã cập nhật schema hiện hành, không còn kiểm
+UNIQUE của summary hay whitelist 3 MIME cũ. Chi tiết RLS-PROOF.md.

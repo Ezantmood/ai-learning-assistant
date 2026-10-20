@@ -1,8 +1,6 @@
-// Database types cho AI Learning Assistant.
-// Sinh bằng CLI từ schema Supabase remote (2026-09-17):
-//   supabase gen types typescript --db-url "$SUPABASE_DB_URL" > src/types/database.ts
-// ($SUPABASE_DB_URL lấy từ .env.local, session pooler; không commit secret.)
-// Không sửa phần sinh tự động; alias tiện ích của project nằm ở cuối file.
+// Database types đồng bộ migrations 0001..0010; RLS bổ sung ở 0011.
+// Nền sinh CLI 2026-09-17, các bảng/cột sau đó đồng bộ tay và đối chiếu catalog.
+// CLI Supabase chưa có trong máy hiện tại; không ghi đè nhãn thành "đã regen".
 
 export type Json =
   | string

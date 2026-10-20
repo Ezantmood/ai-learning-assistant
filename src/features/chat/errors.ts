@@ -5,7 +5,7 @@ import {
   GeminiNetworkError,
   GeminiQuotaError,
   GeminiServerError,
-} from '../../lib/ai/transport';
+} from '../../shared/ai/transport';
 
 /**
  * Lỗi guard CN4 (quyền sở hữu, DOCX, chưa có extracted_text, câu hỏi

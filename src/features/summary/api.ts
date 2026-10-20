@@ -1,10 +1,10 @@
-import { SUMMARY_MODEL } from '../../lib/ai/models';
+import { SUMMARY_MODEL } from '../../shared/ai/models';
 import {
   GeminiEmptyError,
   type SummaryOptions,
   parseExtractionJson,
   summarizeWithGemini,
-} from '../../lib/ai/transport';
+} from '../../shared/ai/transport';
 import { supabase } from '../../shared/lib/supabase';
 import type {
   DocumentRow,
@@ -13,16 +13,8 @@ import type {
 import { SummaryGuardError, SummaryTruncatedError } from './errors';
 import { summaryOptionsSchema, summarySourceSchema, summaryTextSchema } from './schemas';
 
-/**
- * Tầng dữ liệu CN3-G1 (FR-14 → FR-22, nhánh key trực tiếp).
- * Chưa có màn hình: G2 truyền nội dung tệp đã tải vào `source`.
- * Mọi lỗi ném ra đã qua chuẩn hóa ở errors.ts trước khi hiển thị.
- */
-
-/** Tóm tắt tối đa 20.000 ký tự (CHECK ở DB, xem schemas.ts). */
 export const SUMMARY_MAX_CHARS = 20000;
 
-/** FR-22: tất cả phiên bản đã lưu, mới nhất trước. */
 export async function listSummaries(input: { documentId: string; userId: string }): Promise<DocumentSummaryRow[]> {
   const { data, error } = await supabase.from('document_summaries').select('*')
     .eq('document_id', input.documentId).eq('user_id', input.userId)
@@ -31,13 +23,10 @@ export async function listSummaries(input: { documentId: string; userId: string 
   return data ?? [];
 }
 
-/** `processing` quá 15 phút (so trên `updated_at`) coi như treo (FR-20). */
 export const STALE_PROCESSING_MINUTES = 15;
 
-/** Ngưỡng inline PDF của Gemini 50 MB (SPEC CN3-SIZE); vượt thì từ chối, không chunk. */
 export const PDF_INLINE_MAX_BYTES = 50 * 1024 * 1024;
 
-/** Trường tối thiểu của tài liệu mà requestSummary cần (đọc qua tham số, không import feature documents). */
 export type SummaryDocument = Pick<
   DocumentRow,
   | 'extraction_status'
@@ -48,7 +37,6 @@ export type SummaryDocument = Pick<
   | 'user_id'
 >;
 
-/** FR-22: đọc bản tóm tắt của mình. Chéo user → RLS trả rỗng, báo chung một câu. */
 export async function getSummary(input: {
   documentId: string;
   userId: string;
@@ -70,7 +58,6 @@ export async function getSummary(input: {
   return data;
 }
 
-/** `processing` mà `updated_at` quá 15 phút thì coi như app bị kill giữa chừng. */
 export function isStaleProcessing(
   document: SummaryDocument,
   now: Date = new Date(),
@@ -85,7 +72,6 @@ export function isStaleProcessing(
   return now.getTime() - updatedAt > STALE_PROCESSING_MINUTES * 60 * 1000;
 }
 
-/** Thu hồi `processing` treo về `failed` để user thử lại (FR-20). Trả true khi đã thu hồi. */
 export async function reclaimStaleProcessing(
   document: SummaryDocument,
 ): Promise<boolean> {
@@ -110,12 +96,7 @@ async function setExtractionStatus(
   }
 }
 
-/**
- * FR-14/FR-17/FR-19/FR-20: guard → `processing` → gọi Gemini → insert
- * (thêm phiên bản mới, không ghi đè) → `done`; lỗi bất kỳ sau khi đặt
- * `processing` → `failed` + ném lỗi đã chuẩn hóa. Không retry tự động,
- * mỗi lần gọi tối đa một request Gemini.
- */
+/** Tạo và lưu một phiên bản mới; lỗi không ghi đè các bản đã có. */
 export async function requestSummary(input: {
   document: SummaryDocument;
   source: unknown;
@@ -129,7 +110,7 @@ export async function requestSummary(input: {
     throw new SummaryGuardError('Bạn không có quyền tóm tắt tài liệu này.');
   }
 
-  // 2. DOCX/unsupported: gắn trạng thái cuối, KHÔNG gọi Gemini (FR-16).
+  // 2. DOCX/unsupported: gắn trạng thái cuối, KHÔNG gọi Gemini.
   if (
     document.file_ext === 'docx' ||
     document.extraction_status === 'unsupported'
@@ -148,7 +129,7 @@ export async function requestSummary(input: {
   }
 
   // 4. Đang `processing`: treo (> 15 phút) thì thu hồi về `failed` rồi làm
-  // tiếp; còn hạn thì chặn gọi lặp (FR-19: nút disabled + guard này).
+  // tiếp; còn hạn thì chặn gọi lặp.
   if (document.extraction_status === 'processing') {
     if (isStaleProcessing(document)) {
       await setExtractionStatus(document.id, 'failed');
@@ -212,8 +193,7 @@ export async function requestSummary(input: {
         saved = data;
       }
       // Gộp extracted_text + done trong CÙNG một lần update.
-      // Legacy/plain (mock cũ): extracted rỗng → chỉ lật done để test cũ
-      // `toEqual([{processing},{done}])` vẫn xanh.
+      // Không có toàn văn mới thì giữ extracted_text hiện có.
       const donePayload =
         extraction.extractedText.trim() !== ''
           ? {
@@ -293,7 +273,7 @@ export async function requestSummary(input: {
       throw error;
     }
     // Mọi lỗi khác sau khi đã đặt `processing` đều đưa về `failed` để user
-    // thử lại (FR-20), KHÔNG insert rỗng nên summary cũ được giữ.
+    // thử lại, KHÔNG insert rỗng nên summary cũ được giữ.
     // Giữ lỗi gốc để UI báo đúng (quota/mạng/5xx/rỗng).
     try {
       await setExtractionStatus(document.id, 'failed');
@@ -304,7 +284,6 @@ export async function requestSummary(input: {
   }
 }
 
-/** FR-20: thử lại — chỉ chạy khi lần trước `failed`, do user bấm. */
 export async function retrySummary(input: {
   document: SummaryDocument;
   source: unknown;

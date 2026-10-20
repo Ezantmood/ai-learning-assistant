@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
-import { SUMMARY_MODEL } from '../../../lib/ai/models';
+import { SUMMARY_MODEL } from '../../../shared/ai/models';
 import {
   GeminiQuotaError,
   answerWithGemini,
-} from '../../../lib/ai/transport';
+} from '../../../shared/ai/transport';
 import { supabase } from '../../../shared/lib/supabase';
 import {
   askQuestion,
@@ -30,8 +30,8 @@ jest.mock('../../../shared/lib/supabase', () => ({
   },
 }));
 
-jest.mock('../../../lib/ai/transport', () => {
-  const actual = jest.requireActual('../../../lib/ai/transport') as Record<
+jest.mock('../../../shared/ai/transport', () => {
+  const actual = jest.requireActual('../../../shared/ai/transport') as Record<
     string,
     unknown
   >;
@@ -182,7 +182,7 @@ describe('askQuestion — Gemini lỗi', () => {
         question: 'Hỏi gì đó?',
         userId: 'user-1',
       }),
-    ).rejects.toThrow('giới hạn miễn phí');
+    ).rejects.toThrow('hạn mức');
     expect(insertMock).not.toHaveBeenCalled();
     expect(fromMock).toHaveBeenCalledTimes(0);
   });
@@ -275,7 +275,7 @@ describe('chat schemas/errors/keys', () => {
       toChatErrorMessage(new ChatGuardError('Câu guard.')),
     ).toBe('Câu guard.');
     expect(toChatErrorMessage(new GeminiQuotaError())).toContain(
-      'giới hạn miễn phí',
+      'hạn mức',
     );
     expect(
       toChatErrorMessage(new Error('Network request failed')),

@@ -1,3 +1,7 @@
+> Mục 0→18 giữ ca hồi quy lịch sử; nhãn FR ở đó có thể theo SPEC cũ.
+> Khi nghiệm thu đề PDF dùng SPEC/FR-TRACEABILITY hiện tại và mục 19→23.
+> Không tự tick ca thiết bị dựa trên unit/API/web.
+
 # Checklist chạy một lượt trước buổi bảo vệ (6 chức năng FR-01 → FR-45)
 
 > Chạy từ mục 0 đến mục 18 theo đúng thứ tự trong một buổi duy nhất.
@@ -372,3 +376,19 @@ không chuyển màn. 329/329 PASS; thiết bị chưa chạy.
 
 Unit UI/transport/API kiểm chế độ, bước tiếp và ngữ cảnh, intent OCR/quota;
 331/331 PASS. Chất lượng nội dung cần smoke API thật và kiểm thiết bị.
+
+
+## 23. Bằng chứng đợt audit 2026-10-20
+
+- [x] tsc, lint (0 lỗi/0 warning), 336/336 Jest, check:functions.
+- [x] Android bundle export, không prebuild/không sinh ios/android.
+- [x] Proof RLS A/B 51/51 sau vá 8 ca forged-parent/subject/path.
+- [x] Schema CN2 14/14, CN3 10/10; types Row/nullability/kiểu cơ bản 57 cột.
+- [x] Web thật: chọn chương, mở 2 bản; hỏi AI → lưu → phiên mới → mở lại.
+- [x] API thật: tóm tắt text theo chương, hỏi/đáp có lịch sử, các chế độ solver.
+- [x] OCR JPEG giả đọc đúng phương trình (67,6 giây; không cam kết latency).
+- [ ] PDF với model 3.6: 2 lượt HTTP 503, chưa xác nhận bản mới đạt smoke PDF.
+- [ ] Expo Go thật: mục 19→22 và các ca cũ chưa tick vẫn cần kiểm trên máy.
+
+Ảnh web chỉ có dữ liệu giả ở docs/evidence/fr-audit-20261020.png.
+Gemini Pro/API billing tách biệt, không đổi gói/bật billing trong đợt này.

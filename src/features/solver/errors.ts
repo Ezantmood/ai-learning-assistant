@@ -2,7 +2,7 @@ import { isNetworkError } from '../../shared/lib/network';
 import {
   GeminiConfigError, GeminiError, GeminiNetworkError,
   GeminiQuotaError, GeminiServerError,
-} from '../../lib/ai/transport';
+} from '../../shared/ai/transport';
 
 export class SolverGuardError extends Error {
   constructor(message: string) {

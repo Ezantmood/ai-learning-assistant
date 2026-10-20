@@ -1,4 +1,4 @@
--- Kiem chung CN3 sau khi ap 0004_cn3_summaries.sql. FILE CHI DOC, khong sua gi.
+-- Kiem chung CN3 sau khi ap tat ca migration den 0011. FILE CHI DOC, khong sua gi.
 -- Cach chay: SQL Editor chi hien ket qua cau CUOI, nen copy TOAN BO file
 -- (da gop bang union all thanh mot cau duy nhat) roi Run mot lan.
 -- Mong doi: moi dong deu DAT. Dong nao KHONG DAT thi ap migration chua dung.
@@ -18,22 +18,22 @@ select 'RLS da bat tren document_summaries',
     then 'DAT' else 'KHONG DAT' end,
   'pg_class.relrowsecurity cua public.document_summaries'
 union all
-select 'document_summaries du 4 policy (hien co ' ||
+select 'document_summaries du 4 CRUD + 1 restrictive (hien co ' ||
   (select count(*)::text from pg_policies
     where schemaname = 'public' and tablename = 'document_summaries') || ')',
   case when (select count(*) from pg_policies
-              where schemaname = 'public' and tablename = 'document_summaries') = 4
+              where schemaname = 'public' and tablename = 'document_summaries') = 5
     then 'DAT' else 'KHONG DAT' end,
   (select string_agg(policyname, ', ') from pg_policies
     where schemaname = 'public' and tablename = 'document_summaries')
 union all
-select 'unique document_id ton tai',
-  case when exists (
-    select 1 from pg_constraint
-    where conname = 'document_summaries_document_unique'
-  ) then 'DAT' else 'KHONG DAT' end,
-  (select pg_get_constraintdef(oid) from pg_constraint
-    where conname = 'document_summaries_document_unique')
+select 'lich su nhieu ban + metadata ton tai',
+  case when not exists (select 1 from pg_constraint where conname = 'document_summaries_document_unique')
+    and exists (select 1 from pg_indexes where schemaname = 'public' and indexname = 'document_summaries_doc_created_idx')
+    and (select count(*) from information_schema.columns where table_schema = 'public' and table_name = 'document_summaries'
+      and column_name in ('summary_level', 'summary_scope', 'section_title')) = 3
+    then 'DAT' else 'KHONG DAT' end,
+  'Migration 0008 giu lich su, 0011 them policy parent ownership'
 union all
 select 'FK document_id la CASCADE ve documents',
   case when (select pg_get_constraintdef(oid) from pg_constraint

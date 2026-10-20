@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
-import { GeminiEmptyError, GeminiServerError, ocrWithGemini } from '../../../lib/ai/transport';
+import { GeminiEmptyError, GeminiServerError, ocrWithGemini } from '../../../shared/ai/transport';
 import { supabase } from '../../../shared/lib/supabase';
 import { runScan, updateScanText } from '../api';
 import { ScanTruncatedError, toScanErrorMessage } from '../errors';
@@ -9,8 +9,8 @@ import type { ScanImage } from '../schemas';
 jest.mock('../../../shared/lib/supabase', () => ({
   supabase: { auth: { getUser: jest.fn() }, from: jest.fn(), storage: { from: jest.fn() } },
 }));
-jest.mock('../../../lib/ai/transport', () => {
-  const actual = jest.requireActual('../../../lib/ai/transport') as Record<string, unknown>;
+jest.mock('../../../shared/ai/transport', () => {
+  const actual = jest.requireActual('../../../shared/ai/transport') as Record<string, unknown>;
   return { ...actual, ocrWithGemini: jest.fn() };
 });
 jest.mock('expo-crypto', () => ({ randomUUID: () => 'uuid-1' }));

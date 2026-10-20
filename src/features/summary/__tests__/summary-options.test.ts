@@ -1,5 +1,5 @@
 import { test, expect } from '@jest/globals';
-import { buildSummaryPrompt } from '../../../lib/ai/transport';
+import { buildSummaryPrompt } from '../../../shared/ai/transport';
 import { summaryOptionsSchema } from '../schemas';
 
 test.each(['short', 'medium', 'detailed'] as const)('mức %s thay đổi chỉ dẫn, giữ cấu trúc và nguồn', (level) => {

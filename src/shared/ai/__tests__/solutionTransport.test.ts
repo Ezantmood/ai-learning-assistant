@@ -58,3 +58,11 @@ it('phân biệt phân tích, một gợi ý tiếp, giải thích, lời giải
   expect(buildSolutionPrompt({ contextText: 'đề', kind: 'solution' })).toContain('đã yêu cầu lời giải');
   expect(buildSolutionPrompt({ contextText: 'đề', kind: 'follow_up', question: 'Vì sao?' })).toContain('Vì sao?');
 });
+
+it('lời giải đầy đủ dùng medium và gửi ngữ cảnh trước', async () => {
+  response(200, { candidates: [{ content: { parts: [{ text: '{"solution_text":"Lời giải"}' }] } }] });
+  await solveWithGemini({ contextText: 'Đề', kind: 'solution', history: [{ kind: 'hint', text: 'Gợi ý trước' }] });
+  const body = JSON.parse(fetchMock.mock.calls[0]?.[1]?.body as string);
+  expect(body.generationConfig.thinkingConfig.thinkingLevel).toBe('medium');
+  expect(body.contents[1]).toMatchObject({ role: 'model', parts: [{ text: 'Gợi ý trước' }] });
+});

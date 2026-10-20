@@ -4,7 +4,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 
-import type { SummarySource, SummaryOptions } from '../../lib/ai/transport';
+import type { SummarySource, SummaryOptions } from '../../shared/ai/transport';
 import {
   getSummary,
   listSummaries,
@@ -12,21 +12,14 @@ import {
   type SummaryDocument,
 } from './api';
 
-/** Bản tóm tắt của một tài liệu. */
 export function summaryKey(documentId: string) {
   return ['summary', documentId] as const;
 }
 
-/**
- * Key trạng thái trích xuất của màn chi tiết CN2. Dựng literal cùng hình
- * dạng với `documentKey` của feature documents để invalidate — KHÔNG
- * import chéo từ feature documents (cấm theo AGENTS.md).
- */
 export function documentDetailKey(documentId: string) {
   return ['document', documentId] as const;
 }
 
-/** FR-18 (dữ liệu): đọc bản tóm tắt mới nhất, null khi chưa có. */
 export function useSummary(
   userId: string | undefined,
   documentId: string | undefined,
@@ -42,11 +35,6 @@ export function useSummary(
   });
 }
 
-/**
- * FR-14: mutation "tóm tắt tài liệu". G2 truyền `source` (nội dung tệp đã
- * tải: PDF base64 / TXT text). Xong thì invalidate key tóm tắt + key chi
- * tiết tài liệu + danh sách tài liệu của user; không invalidate toàn cache.
- */
 export function useRequestSummary(userId: string) {
   const queryClient = useQueryClient();
 

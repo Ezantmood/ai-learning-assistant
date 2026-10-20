@@ -1358,7 +1358,7 @@ https://supabase.com/docs/guides/platform/access-control`
 **Mốc Git**
 
 - Commit tính năng: `176f035` (branch `fix/upload-db-permission`, đã push)
-- Commit merge: `278b0b6335d5837c3bc3ece4c3ab972596f0a4dd` (merge --no-ff)
+- Commit merge: `278b0b6336d5837c3bc3ece4c3ab972596f0a4dd` (merge --no-ff)
 - Branch: `fix/upload-db-permission`
 - Tag: `fix-upload-db` (tạo + push cùng lệnh với push main)
 - PR: không mở PR; tự merge `--no-ff` vào `main` sau khi cổng chất lượng xanh
@@ -2307,3 +2307,41 @@ https://supabase.com/docs/guides/platform/access-control`
   Bỏ import chéo solver→documents; thêm guard ngữ cảnh/câu hỏi, giữ khóa gọi.
 - Cổng tsc 0; lint 0 lỗi/2 warning cũ; 42 suites, 331/331 PASS. UI unit kiểm
   gợi ý bước 1→2, full opt-in, hỏi tiếp và intent OCR. Expo Go mục 22 mở.
+
+
+### AUDIT-06 — RLS, model stable và kiểm chứng cuối — 2026-10-20
+
+- Probe model chính thức + models API: 3.8 có nhưng generate timeout 90s,
+  25s và 503; 3.7 timeout; 3.6 có lượt 503 và lượt sinh nội dung thành công.
+  Chọn gemini-3.6-flash stable. Bản 3.5 cũ là alias deprecated theo Google;
+  không dùng preview, không thêm dependency/không bật billing. Gói Google AI
+  Pro không tự chuyển quota của Gemini Developer API sang trả phí.
+- Minimal hỏi đáp/OCR/summary text, low PDF/gợi ý, medium full solution.
+  Tái dùng extracted_text khi tóm tắt lại, bỏ refetch lịch sử khi chưa lưu.
+  Key qua header, timeout AbortController 90s, không auto retry; quota bỏ
+  số lượt 1.500/ngày/reset cố định không có căn cứ. Parser chặn JSON null.
+- Chuyển AI dùng chung src/lib/ai → src/shared/ai đúng AGENTS.md, không
+  thêm abstraction; cập nhật import/test/script/docs. Hai warning watch()
+  kế thừa đổi sang useWatch đúng thư viện sẵn có; lint 0 lỗi/0 warning.
+- Proof mới hai user thật phát hiện 8 lỗ RLS trong 51 ca: own user_id vẫn
+  gắn document/subject/path B. Migration 0011 restrictive đã áp; chạy lại
+  51/51 PASS, cleanup xong. Verify SQL cập nhật whitelist 8 MIME, 5 policy
+  và history summary: CN2 14/14, CN3 10/10. Row types so catalog 57/57 cột;
+  CLI Supabase chưa có nên không ghi đã regen bằng CLI.
+- Cổng: tsc 0, lint sạch; 43 suites, 336/336 PASS; check:functions 0.
+  Android export lại với đường dẫn shared cuối đạt (5,5 MB Hermes bundle). Jest vẫn có cảnh báo open handle kế thừa sau suite,
+  không lỗi assertion/type/lint.
+- AI thật các mẫu: summary theo phần 9,23s, Q/A 9,22s, follow-up 12,53s,
+  analysis 7,70s, hint 7,96s/20,07s, explanation 13,68s, full 12,02s,
+  solution follow-up 2,37s, OCR 67,62s; nội dung kiểm đạt. PDF hai lượt
+  HTTP 503, chưa ghi pass; cần kiểm lại khi dịch vụ ổn định. Không hứa
+  model mới luôn nhanh hơn; 3.6 low Q/A từng timeout, minimal sau đó đạt.
+- Web thật với tài khoản giả: chọn chương/mở 2 bản, hỏi Gemini, chọn lưu,
+  phiên mới rỗng, mở lại lịch sử đạt. Ảnh evidence/fr-audit-20261020.png.
+  Expo Go/OTP/camera/quyền/picker thật còn checklist mở, không tự nghiệm thu.
+- Viết lại docs hiện hành theo PDF, giữ nhật ký/bằng chứng cũ như lịch sử;
+  README/traceability không còn tuyên bố toàn bộ 45 FR đã kiểm thiết bị.
+
+- Đã dọn tài khoản/fixture web sau chụp ảnh; không để dữ liệu test trong project.
+- Bổ sung FR-05 cache: AuthProvider dọn Query cache khi hết phiên/đổi user,
+  giữ cache khi refresh cùng user; regression mới nâng tổng lên 43 suites/336.

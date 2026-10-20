@@ -1,5 +1,5 @@
-import { SUMMARY_MODEL } from '../../lib/ai/models';
-import { answerWithGemini, type ConversationTurn } from '../../lib/ai/transport';
+import { SUMMARY_MODEL } from '../../shared/ai/models';
+import { answerWithGemini, type ConversationTurn } from '../../shared/ai/transport';
 import { supabase } from '../../shared/lib/supabase';
 import type {
   DocumentQuestionRow,
@@ -8,20 +8,11 @@ import type {
 import { ChatGuardError } from './errors';
 import { answerSchema, questionSchema } from './schemas';
 
-/**
- * Tầng dữ liệu CN4 (hỏi đáp trên `extracted_text`, FR-23 → FR-30).
- * CẤM vector DB/RAG/chunking: toàn văn `extracted_text` nhồi thẳng vào
- * prompt trong MỘT request Gemini duy nhất. Lịch sử là append-only theo
- * từng tài liệu (lượt hỏi lỗi không tạo row nửa vời).
- */
-
-/** Trường tối thiểu của tài liệu mà askQuestion cần (đọc qua tham số, không import feature documents). */
 export type ChatDocument = Pick<
   DocumentRow,
   'extracted_text' | 'extraction_status' | 'file_ext' | 'id' | 'user_id'
 >;
 
-/** Lịch sử hỏi đáp của mình trên một tài liệu, mới nhất trước. */
 export async function listQuestions(input: {
   documentId: string;
   userId: string;
@@ -40,11 +31,7 @@ export async function listQuestions(input: {
   return data ?? [];
 }
 
-/**
- * Hỏi một câu trên tài liệu: guard → gọi Gemini đúng một lần → validate
- * câu trả lời → insert lịch sử. Không retry tự động; lỗi Gemini/mạng ném
- * lên để UI báo và cho hỏi lại tay (không tạo row khi lỗi).
- */
+/** Tạo lượt trả lời trong bộ nhớ; saveConversation chỉ chạy khi chọn lưu. */
 export async function askQuestion(input: {
   document: ChatDocument;
   question: string;
@@ -128,7 +115,6 @@ export async function saveConversation(input: {
   if (error) throw error;
 }
 
-/** Lịch sử cũ (chưa có conversation_id) vẫn mở lại được. */
 export function groupConversations(rows: DocumentQuestionRow[]) {
   const groups = new Map<string, DocumentQuestionRow[]>();
   for (const row of rows) {

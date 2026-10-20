@@ -3,7 +3,7 @@
 ## Phạm vi và mục tiêu
 
 - Hệ thống duy nhất **AI Learning Assistant**: 6 chức năng, 45 FR (FR-01 → FR-45).
-- Chức năng 1 (tài khoản, FR-01 → FR-05) đã hoàn thành; FR-06 → FR-45 làm ở session sau.
+- Cả 6 chức năng đã có code; yêu cầu chuẩn lấy từ PDF qua `docs/SPEC.md`. Trạng thái kiểm chứng xem `docs/FR-TRACEABILITY.md`; không đồng nhất có code với đã kiểm tay.
 - Mỗi session chỉ làm đúng phạm vi được giao; không tạo module, bảng, route hay abstraction dự phòng.
 - Ưu tiên code ngắn, rõ, sinh viên có thể tự giải thích và bảo vệ.
 

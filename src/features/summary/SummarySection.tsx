@@ -16,7 +16,7 @@ import { ListSkeleton } from '../../shared/components/LoadingState';
 import type { DocumentWithSubject } from '../../shared/types/database';
 import { AiResultText } from '../../shared/components/ai-result-text';
 import { FormTextInput } from '../../shared/components/FormTextInput';
-import { DEFAULT_SUMMARY_OPTIONS, type SummaryOptions } from '../../lib/ai/transport';
+import { DEFAULT_SUMMARY_OPTIONS, type SummaryOptions } from '../../shared/ai/transport';
 
 import {
   isStaleProcessing,
@@ -79,7 +79,7 @@ export function SummarySection({
   // setState đồng bộ trong effect).
   const reclaimedRef = useRef<string | null>(null);
 
-  // FR-20: `processing` treo (> 15 phút, app từng bị kill giữa chừng)
+  // Thu hồi `processing` treo (> 15 phút, app từng bị kill giữa chừng)
   // tự thu hồi về `failed` khi mở màn, không kẹt vĩnh viễn.
   useEffect(() => {
     const candidate = toSummaryDocument(doc);
@@ -124,11 +124,9 @@ export function SummarySection({
     runLock.current = true;
     setLoadError(null);
     setLoadingFile(true);
-    loadSummarySource({
-      file_ext: doc.file_ext,
-      id: doc.id,
-      storage_path: doc.storage_path,
-    })
+    (doc.extracted_text?.trim() && doc.extraction_status === 'done'
+      ? Promise.resolve({ kind: 'txt' as const, textContent: doc.extracted_text })
+      : loadSummarySource({ file_ext: doc.file_ext, id: doc.id, storage_path: doc.storage_path }))
       .then((source) => {
         setLoadingFile(false);
         requestMutation.mutate({

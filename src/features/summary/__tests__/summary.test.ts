@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
-import { SUMMARY_MODEL } from '../../../lib/ai/models';
+import { SUMMARY_MODEL } from '../../../shared/ai/models';
 import {
   GeminiQuotaError,
   summarizeWithGemini,
-} from '../../../lib/ai/transport';
+} from '../../../shared/ai/transport';
 import { supabase } from '../../../shared/lib/supabase';
 import {
   getSummary,
@@ -24,8 +24,8 @@ jest.mock('../../../shared/lib/supabase', () => ({
   },
 }));
 
-jest.mock('../../../lib/ai/transport', () => {
-  const actual = jest.requireActual('../../../lib/ai/transport') as Record<
+jest.mock('../../../shared/ai/transport', () => {
+  const actual = jest.requireActual('../../../shared/ai/transport') as Record<
     string,
     unknown
   >;
@@ -80,7 +80,7 @@ beforeEach(() => {
 });
 
 describe('requestSummary — PDF thành công', () => {
-  it("processing → insert (model gemini-3.5-flash) → done, đúng một request Gemini", async () => {
+  it("processing → insert (model gemini-3.6-flash) → done, đúng một request Gemini", async () => {
     const updates: Record<string, unknown>[] = [];
     let insertPayload: Record<string, unknown> = {};
     mockFrom((table) => {
@@ -118,7 +118,7 @@ describe('requestSummary — PDF thành công', () => {
     ]);
     expect(insertPayload).toMatchObject({
       document_id: 'doc-1',
-      model: 'gemini-3.5-flash',
+      model: 'gemini-3.6-flash',
       summary_text: 'Bản tóm tắt tiếng Việt.',
       user_id: 'user-1',
     });
@@ -177,7 +177,7 @@ describe('requestSummary — Gemini lỗi thì status về failed', () => {
       { extraction_status: 'processing' },
       { extraction_status: 'failed' },
     ]);
-    expect(toSummaryErrorMessage(error)).toContain('1.500');
+    expect(toSummaryErrorMessage(error)).toContain('hạn mức');
   });
 });
 
@@ -358,7 +358,7 @@ describe('toSummaryErrorMessage', () => {
     expect(toSummaryErrorMessage(new Error('boom'))).toBe(
       'Không tạo được bản tóm tắt. Hãy thử lại.',
     );
-    expect(toSummaryErrorMessage(new GeminiQuotaError())).toContain('1.500');
+    expect(toSummaryErrorMessage(new GeminiQuotaError())).toContain('hạn mức');
   });
 });
 

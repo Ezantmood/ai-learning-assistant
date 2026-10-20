@@ -1,6 +1,6 @@
 import { File, Paths } from 'expo-file-system';
 
-import type { SummarySource } from '../../lib/ai/transport';
+import type { SummarySource } from '../../shared/ai/transport';
 import { isNetworkError } from '../../shared/lib/network';
 import { supabase } from '../../shared/lib/supabase';
 import { SummaryGuardError } from './errors';

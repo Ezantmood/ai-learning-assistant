@@ -1,19 +1,19 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { solveWithGemini, GeminiEmptyError, GeminiQuotaError } from '../../../lib/ai/transport';
+import { solveWithGemini, GeminiEmptyError, GeminiQuotaError } from '../../../shared/ai/transport';
 import { supabase } from '../../../shared/lib/supabase';
 import { getSolution, requestSolution, type SolverDocument } from '../api';
 import { isSolverQuotaError, SolverTruncatedError, toSolverErrorMessage } from '../errors';
 import { solutionKey } from '../queries';
 
 jest.mock('../../../shared/lib/supabase', () => ({ supabase: { from: jest.fn() } }));
-jest.mock('../../../lib/ai/transport', () => {
-  const actual = jest.requireActual('../../../lib/ai/transport') as Record<string, unknown>;
+jest.mock('../../../shared/ai/transport', () => {
+  const actual = jest.requireActual('../../../shared/ai/transport') as Record<string, unknown>;
   return { ...actual, solveWithGemini: jest.fn() };
 });
 const solveMock = jest.mocked(solveWithGemini);
 const fromMock = jest.mocked(supabase.from);
 const doc: SolverDocument = { id: 'doc-a', user_id: 'a', file_ext: 'pdf', extraction_status: 'done', extracted_text: ' Đề toán ' };
-const row = { id: 's1', document_id: 'doc-a', user_id: 'a', solution_text: 'Bước 1', model: 'gemini-3.5-flash' };
+const row = { id: 's1', document_id: 'doc-a', user_id: 'a', solution_text: 'Bước 1', model: 'gemini-3.6-flash' };
 beforeEach(() => { jest.clearAllMocks(); });
 
 describe('solver API', () => {
@@ -34,7 +34,7 @@ describe('solver API', () => {
     await expect(requestSolution({ document: doc, userId: 'a' })).resolves.toEqual(row);
     expect(solveMock).toHaveBeenCalledTimes(1);
     expect(solveMock).toHaveBeenCalledWith(expect.objectContaining({ contextText: 'Đề toán', kind: 'hint', hintStep: 1 }));
-    expect(payload).toMatchObject({ document_id: 'doc-a', user_id: 'a', solution_text: 'Bước 1', model: 'gemini-3.5-flash' });
+    expect(payload).toMatchObject({ document_id: 'doc-a', user_id: 'a', solution_text: 'Bước 1', model: 'gemini-3.6-flash' });
     expect(solutionKey('doc-a')).toEqual(['solution', 'doc-a']);
   });
   it('cứu phần dở rồi báo cắt, rỗng không ghi đè cũ', async () => {
@@ -59,7 +59,7 @@ describe('solver API', () => {
     solveMock.mockRejectedValueOnce(new GeminiQuotaError());
     await expect(requestSolution({ document: doc, userId: 'a' })).rejects.toThrow(GeminiQuotaError);
     expect(isSolverQuotaError(new GeminiQuotaError())).toBe(true);
-    expect(toSolverErrorMessage(new GeminiQuotaError())).toMatch(/giới hạn/);
+    expect(toSolverErrorMessage(new GeminiQuotaError())).toMatch(/hạn mức/);
   });
   it('getSolution lọc user_id và document_id', async () => {
     const eq = jest.fn().mockReturnThis();

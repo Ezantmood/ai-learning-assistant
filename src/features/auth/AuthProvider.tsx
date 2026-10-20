@@ -9,6 +9,7 @@ import {
 } from 'react';
 
 import { supabase } from '../../shared/lib/supabase';
+import { queryClient } from '../../shared/lib/queryClient';
 
 type AuthState = {
   isLoading: boolean;
@@ -35,33 +36,28 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     let isMounted = true;
+    let activeUserId: string | null | undefined;
+    const acceptSession = (session: Session | null) => {
+      if (!isMounted) return;
+      const userId = session?.user.id ?? null;
+      // FR-05: hết phiên/đổi tài khoản cũng dọn cache, không chỉ nút Đăng xuất.
+      if (activeUserId !== userId) queryClient.clear();
+      activeUserId = userId;
+      setState({ isLoading: false, session, user: session?.user ?? null });
+    };
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (isMounted) {
-        setState({
-          isLoading: false,
-          session,
-          user: session?.user ?? null,
-        });
-      }
+      acceptSession(session);
     });
 
     async function restoreSession() {
       try {
         const { data } = await supabase.auth.getSession();
-        if (isMounted) {
-          setState({
-            isLoading: false,
-            session: data.session,
-            user: data.session?.user ?? null,
-          });
-        }
+        acceptSession(data.session);
       } catch {
-        if (isMounted) {
-          setState({ isLoading: false, session: null, user: null });
-        }
+        acceptSession(null);
       } finally {
         await SplashScreen.hideAsync().catch(() => undefined);
       }

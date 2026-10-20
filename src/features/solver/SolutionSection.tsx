@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Banner, Button, Card, List, Text, useTheme } from 'react-native-paper';
-import { SOLUTION_LABELS, type SolutionKind, type SolutionTurn } from '../../lib/ai/transport';
+import { SOLUTION_LABELS, type SolutionKind, type SolutionTurn } from '../../shared/ai/transport';
 import type { DocumentWithSubject } from '../../shared/types/database';
 import { AiResultText } from '../../shared/components/ai-result-text';
 import { FormTextInput } from '../../shared/components/FormTextInput';

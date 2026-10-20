@@ -58,3 +58,33 @@ theo PDF; các kiểm soát kỹ thuật vẫn giữ nhưng không thay thế FR
 
 Kết quả trước sửa: 27 FR có code, 5 FR một phần, 13 FR thiếu.
 Không tính bảo mật/độ đúng AI đã được chứng minh chỉ bằng việc tồn tại file.
+
+## Sau bổ sung
+
+AUDIT-02 thêm độ dài/chương/cấu trúc và nhiều bản tóm tắt; AUDIT-03 thêm phiên,
+ngữ cảnh và lựa chọn lưu; AUDIT-04 sửa/lưu OCR và chuyển bản đã kiểm tra;
+AUDIT-05 tách phân tích, gợi ý tiếp, giải thích, lời giải và hỏi tiếp.
+Không còn FR thiếu luồng code đã biết theo PDF. Checklist thiết bị vẫn mở;
+không kết luận toàn bộ 45 FR đã nghiệm thu trên Expo Go.
+
+AUDIT-06 thêm restrictive RLS: kiểm cả document_id/subject_id/path sở hữu,
+proof từ 43/51 lên 51/51. Types Row đối chiếu đủ 57 cột remote; verify CN2
+14/14, CN3 10/10. CLI types chưa chạy vì binary chưa có, ghi đúng trạng thái.
+Model chuyển từ 3.5 sang 3.6 Flash stable; 3.8 sinh nội dung timeout/503.
+Header thay query key, timeout 90s, không auto retry; tái dùng toàn văn khi
+chỉ đổi mức độ tóm tắt; minimal/low/medium theo tác vụ. Không bật billing.
+
+Số đo một lượt mẫu, không phải benchmark thống kê: summary theo phần 9,23s;
+Q/A 9,22s; hỏi tiếp 12,53s; phân tích 7,70s; gợi ý 7,96s và 20,07s;
+giải thích 13,68s; full solution 12,02s; hỏi tiếp lời giải 2,37s; OCR 67,62s.
+Các mẫu tương ứng đúng kiểm tra nội dung. Lượt PDF đầu lỗi 503; phải ghi
+kết quả kiểm riêng tiếp theo, không tô thành pass. Trước tối ưu có request
+3.8/3.6 timeout/503 và low Q/A timeout; các log lỗi được ghi nhận trong DEVLOG.
+
+
+Kiểm PDF riêng lần hai vẫn HTTP 503. Chưa kết luận smoke PDF mới đạt;
+FR-15 có code/parser/unit và bằng chứng PDF cũ, cần chạy lại dịch vụ khi
+ổn định. Giữ rõ giới hạn này trong bàn giao; không tự retry app.
+Web thật: đăng nhập user giả → chi tiết → chọn theo phần/mở 2 bản → hỏi
+Gemini thật → lưu → phiên mới rỗng → mở lại đủ lượt, đạt. Ảnh bằng chứng
+`evidence/fr-audit-20261020.png`; user giả được dọn sau kiểm thử.

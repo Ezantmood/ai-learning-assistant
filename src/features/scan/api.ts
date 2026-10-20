@@ -3,7 +3,7 @@ import * as Crypto from 'expo-crypto';
 import { decode } from 'base64-arraybuffer';
 import { Platform } from 'react-native';
 
-import { ocrWithGemini } from '../../lib/ai/transport';
+import { ocrWithGemini } from '../../shared/ai/transport';
 import { supabase } from '../../shared/lib/supabase';
 import type { DocumentRow } from '../../shared/types/database';
 import { ScanGuardError, ScanTruncatedError } from './errors';

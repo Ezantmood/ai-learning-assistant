@@ -1,3 +1,24 @@
+# Kiểm chứng RLS hiện hành — 2026-10-20
+
+Script `scripts/fr-audit-proof.mjs`, hai user A/B thật qua Data API bằng JWT,
+anon và Storage. Admin key chỉ tạo/dọn fixture local, không dùng để chứng
+minh thao tác người dùng. Không in credential/token.
+
+Trước 0011: **43/51**, thiếu 8 ca: document A gắn subject B/path B; cả ba
+bảng summary/questions/solutions cho A gắn document B với user_id A,
+và đổi document_id của row A sang B. Đây là khoảng trống của policy cũ.
+
+Sau 0011: **51/51**, exit 0. Các ca lỗi quyền cho INSERT/UPDATE tham chiếu
+sai trả 42501; SELECT/UPDATE/DELETE row B trả 0 row. Storage B không đọc,
+không ký URL, không ghi/xóa được; anon bị chặn. Giữ CRUD sở hữu, nhiều bản
+tóm tắt, xóa môn SET NULL và xóa tài liệu CASCADE. User/object test dọn xong.
+
+Schema verify hiện hành: CN2 **14/14**, CN3 **10/10**; Row types đối chiếu
+catalog **57/57 cột**. Các proof cũ bên dưới là bằng chứng tại thời điểm
+cũ; không thay thế các ca forged-parent bổ sung lần này.
+
+---
+
 # Bằng chứng RLS cho FR-05 (2 tài khoản A/B)
 
 Mục tiêu: chứng minh tài khoản A chỉ thao tác `study_notes` có

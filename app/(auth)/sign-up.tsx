@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { Link, router } from 'expo-router';
 import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
 import { Banner, Button, ProgressBar, Text } from 'react-native-paper';
 
@@ -24,7 +24,7 @@ export default function SignUpScreen() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [needsConfirm, setNeedsConfirm] = useState(false);
 
-  const { control, handleSubmit, setError, watch } =
+  const { control, handleSubmit, setError } =
     useForm<SignUpFormValues>({
       defaultValues: {
         confirmPassword: '',
@@ -77,7 +77,7 @@ export default function SignUpScreen() {
     }
   };
 
-  const strength = getPasswordStrength(watch('password') ?? '');
+  const strength = getPasswordStrength(useWatch({ control, name: 'password' }) ?? '');
 
   return (
     <ScreenContainer

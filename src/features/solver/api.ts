@@ -1,5 +1,5 @@
-import { SUMMARY_MODEL } from '../../lib/ai/models';
-import { solveWithGemini, type SolutionKind, type SolutionTurn } from '../../lib/ai/transport';
+import { SUMMARY_MODEL } from '../../shared/ai/models';
+import { solveWithGemini, type SolutionKind, type SolutionTurn } from '../../shared/ai/transport';
 import { supabase } from '../../shared/lib/supabase';
 import type { DocumentRow, DocumentSolutionRow } from '../../shared/types/database';
 import { SolverGuardError, SolverTruncatedError } from './errors';

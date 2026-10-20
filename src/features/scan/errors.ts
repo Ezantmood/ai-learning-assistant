@@ -6,7 +6,7 @@ import {
   GeminiNetworkError,
   GeminiQuotaError,
   GeminiServerError,
-} from '../../lib/ai/transport';
+} from '../../shared/ai/transport';
 
 export class ScanGuardError extends Error {
   constructor(message: string) {
