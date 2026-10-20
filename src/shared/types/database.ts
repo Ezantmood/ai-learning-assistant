@@ -195,6 +195,7 @@ export type Database = {
       }
       document_questions: {
         Row: {
+          conversation_id: string | null
           answer: string
           created_at: string
           document_id: string
@@ -205,6 +206,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          conversation_id?: string | null
           answer: string
           created_at?: string
           document_id: string
@@ -215,6 +217,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          conversation_id?: string | null
           answer?: string
           created_at?: string
           document_id?: string

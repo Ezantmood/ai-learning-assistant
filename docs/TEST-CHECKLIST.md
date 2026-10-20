@@ -332,3 +332,16 @@ Theo đúng khuôn `scripts/rls-proof.ts` của FR-05 (2 user test A/B, tự d�
 
 Tự động: prompt/schema mới + hồi quy Jest 322/322; remote smoke tạo hai
 phiên bản với metadata thành công và dọn user test. Chưa kiểm thiết bị.
+
+
+## 20. Hội thoại theo PDF (FR-26→FR-30)
+
+- [ ] Hỏi một câu rồi hỏi “vì sao?”: trả lời đúng dựa trên lượt trước và tài liệu.
+- [ ] Chưa bấm Lưu: phiên không xuất hiện trong lịch sử; bấm Lưu rồi mở lại đủ các lượt.
+- [ ] Hỏi thêm trong phiên đã lưu, bấm Lưu lại: không nhân đôi lượt cũ.
+- [ ] Hội thoại mới: trống ngữ cảnh; mở bản cũ vẫn đầy đủ.
+- [ ] Mạng lỗi khi hỏi/lưu: câu hỏi và kết quả hiện có còn nguyên; không tự retry.
+- [ ] Đổi tài liệu/tài khoản: không lẫn hội thoại.
+
+UI unit mô phỏng hỏi hai lượt → lưu → phiên mới; transport kiểm role/thứ tự;
+remote smoke save/reopen/resave 2 lượt đạt. Kiểm Expo Go còn mở.

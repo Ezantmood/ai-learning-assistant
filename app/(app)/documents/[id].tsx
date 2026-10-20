@@ -286,9 +286,9 @@ export default function DocumentDetailScreen() {
         Mở tài liệu
       </Button>
 
-      <SummarySection doc={doc} userId={userId ?? ''} />
+      <SummarySection key={`summary-${doc.id}`} doc={doc} userId={userId ?? ''} />
 
-      <QaSection doc={doc} userId={userId ?? ''} />
+      <QaSection key={`qa-${doc.id}`} doc={doc} userId={userId ?? ''} />
 
       <SolutionSection doc={doc} key={`solution-${doc.id}`} userId={userId ?? ''} />
 

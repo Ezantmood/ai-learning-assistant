@@ -2269,3 +2269,17 @@ https://supabase.com/docs/guides/platform/access-control`
 - tsc 0; lint 0 lỗi/2 warning cũ; 40 suites, 322/322 PASS. Smoke remote bằng
   user test: lưu 2 phiên bản khác mức độ cùng tài liệu PASS, dọn user xong.
   Chưa có thiết bị để kiểm Expo Go; mục 19 checklist giữ mở.
+
+### AUDIT-03 — Hội thoại đúng FR-26→FR-30 — 2026-10-20
+
+- Gửi các lượt trước theo role user/model; giao diện hội thoại theo thứ tự,
+  phiên mới rỗng ngữ cảnh. Không ghi DB trong askQuestion; Lưu hội thoại
+  là mutation riêng, lưu lại idempotent theo id; có mở lại/tiếp tục.
+- Migration 0009 đã áp Postgres: thêm conversation_id nullable + index,
+  không sửa/xóa dữ liệu cũ. Row legacy mở như phiên riêng. Không tạo bảng dư.
+- Tách type dùng chung khỏi import chéo; route key theo tài liệu bảo đảm
+  không tái sử dụng state hội thoại khi đổi doc. Ngữ cảnh quá dài báo rõ.
+- Cổng tsc 0; lint 0 lỗi/2 warning cũ; 41 suites, 327/327 PASS.
+  Unit UI thực hiện hỏi hai lượt → chọn lưu → phiên mới và kiểm payload.
+  Remote smoke save/reopen/resave 2 lượt PASS, dọn user test. Expo Go mục 20
+  chưa chạy, không tick đã đạt tay.

@@ -1,5 +1,5 @@
 import { SUMMARY_MODEL } from '../../lib/ai/models';
-import { answerWithGemini } from '../../lib/ai/transport';
+import { answerWithGemini, type ConversationTurn } from '../../lib/ai/transport';
 import { supabase } from '../../shared/lib/supabase';
 import type {
   DocumentQuestionRow,
@@ -49,7 +49,8 @@ export async function askQuestion(input: {
   document: ChatDocument;
   question: string;
   userId: string;
-}): Promise<DocumentQuestionRow> {
+  history?: ConversationTurn[];
+}): Promise<{ question: string; answer: string; model: string }> {
   const { document, userId } = input;
 
   // 1. Quyền sở hữu: document của người khác → từ chối ngay, chưa chạm gì.
@@ -83,7 +84,17 @@ export async function askQuestion(input: {
     );
   }
 
+  const history = input.history ?? [];
+  if (context.length + history.reduce((n, turn) => n + turn.question.length + turn.answer.length, 0) > 300000) {
+    throw new ChatGuardError('Ngữ cảnh quá dài. Hãy lưu hội thoại rồi bắt đầu phiên mới hoặc dùng tài liệu ngắn hơn.');
+  }
+  for (const turn of history) {
+    if (!questionSchema.safeParse(turn.question).success || !answerSchema.safeParse(turn.answer).success) {
+      throw new ChatGuardError('Ngữ cảnh hội thoại không hợp lệ. Hãy bắt đầu phiên mới.');
+    }
+  }
   const answer = await answerWithGemini({
+    ...(input.history ? { history } : {}),
     contextText: context,
     question: parsedQuestion.data,
   });
@@ -94,21 +105,37 @@ export async function askQuestion(input: {
     );
   }
 
-  const { data, error } = await supabase
-    .from('document_questions')
-    .insert({
-      answer: parsedAnswer.data,
-      document_id: document.id,
-      model: SUMMARY_MODEL,
-      question: parsedQuestion.data,
-      user_id: userId,
-    })
-    .select()
-    .single();
+  // FR-30: chưa lưu DB; chỉ khi người dùng bấm Lưu hội thoại.
+  return { question: parsedQuestion.data, answer: parsedAnswer.data, model: SUMMARY_MODEL };
+}
 
-  if (error || !data) {
-    throw error ?? new ChatGuardError('Không lưu được câu trả lời.');
+export async function saveConversation(input: {
+  documentId: string; userId: string; conversationId: string; turns: DocumentQuestionRow[];
+}): Promise<void> {
+  if (!/^[0-9a-f-]{36}$/i.test(input.conversationId) || !input.turns.length) {
+    throw new ChatGuardError('Hội thoại chưa có nội dung để lưu.');
   }
+  const rows = input.turns.map((turn) => {
+    if (turn.user_id !== input.userId || turn.document_id !== input.documentId) {
+      throw new ChatGuardError('Bạn không có quyền lưu hội thoại này.');
+    }
+    const question = questionSchema.safeParse(turn.question);
+    const answer = answerSchema.safeParse(turn.answer);
+    if (!question.success || !answer.success) throw new ChatGuardError('Nội dung hội thoại không hợp lệ.');
+    return { ...turn, question: question.data, answer: answer.data, conversation_id: input.conversationId };
+  });
+  const { error } = await supabase.from('document_questions').upsert(rows, { onConflict: 'id' });
+  if (error) throw error;
+}
 
-  return data;
+/** Lịch sử cũ (chưa có conversation_id) vẫn mở lại được. */
+export function groupConversations(rows: DocumentQuestionRow[]) {
+  const groups = new Map<string, DocumentQuestionRow[]>();
+  for (const row of rows) {
+    const id = row.conversation_id ?? row.id;
+    const turns = groups.get(id) ?? [];
+    turns.push(row);
+    groups.set(id, turns);
+  }
+  return [...groups].map(([id, turns]) => ({ id, turns: turns.sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id)) }));
 }

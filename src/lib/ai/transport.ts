@@ -324,6 +324,7 @@ async function postGenerate(
   emptyMessage: string,
   generationConfig?: typeof EXTRACTION_GENERATION_CONFIG | typeof OCR_GENERATION_CONFIG | typeof SOLUTION_GENERATION_CONFIG,
   emptyAsGeminiEmpty = false,
+  history: ConversationTurn[] = [],
 ): Promise<string> {
   const apiKey = readApiKey();
 
@@ -333,7 +334,10 @@ async function postGenerate(
       `${GEMINI_GENERATE_URL}?key=${encodeURIComponent(apiKey)}`,
       {
         body: JSON.stringify({
-          contents: [{ parts }],
+          contents: [...history.flatMap((turn) => [
+            { role: 'user', parts: [{ text: turn.question }] },
+            { role: 'model', parts: [{ text: turn.answer }] },
+          ]), { role: 'user', parts }],
           ...(generationConfig ? { generationConfig } : {}),
         }),
         headers: { 'Content-Type': 'application/json' },
@@ -382,7 +386,10 @@ export async function summarizeWithGemini(source: SummarySource, options?: Summa
 }
 
 /** Đầu vào hỏi đáp CN4: câu hỏi + toàn văn `extracted_text` nhồi vào prompt. */
+export type ConversationTurn = { question: string; answer: string };
+
 export type QuestionSource = {
+  history?: ConversationTurn[];
   contextText: string;
   question: string;
 };
@@ -419,6 +426,7 @@ export async function answerWithGemini(
   return postGenerate(
     buildQuestionParts(source),
     'Gemini không trả về câu trả lời. Hãy thử lại.',
+    undefined, false, source.history,
   );
 }
 

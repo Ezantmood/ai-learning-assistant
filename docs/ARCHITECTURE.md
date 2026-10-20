@@ -498,3 +498,9 @@ EXPO_PUBLIC_REQUIRE_EMAIL_CONFIRMATION=false
 CN3 chọn mức độ/phạm vi tại SummarySection, gửi options qua API đến prompt.
 Mỗi lần tạo thêm một document_summaries, không ghi đè; xem lại bằng lịch sử
 trên cùng màn chi tiết. AiResultText hiển thị tiêu đề/ý chính, không HTML.
+
+
+CN4 giữ lượt hỏi/đáp theo phiên tại QaSection, truyền lịch sử theo role
+user/model đến transport. Lưu bằng mutation riêng; mở lại nhóm conversation_id
+và tiếp tục. Phiên mới tạo UUID khác, rỗng ngữ cảnh; bản đã lưu giữ nguyên.
+Component có key theo document id để không lẫn ngữ cảnh giữa tài liệu.

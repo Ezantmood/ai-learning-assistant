@@ -4,9 +4,13 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 
+import type { ConversationTurn } from '../../lib/ai/transport';
+import type { DocumentQuestionRow } from '../../shared/types/database';
+
 import {
   askQuestion,
   listQuestions,
+  saveConversation,
   type ChatDocument,
 } from './api';
 
@@ -40,12 +44,20 @@ export function useAskQuestion(userId: string, documentId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (input: { document: ChatDocument; question: string }) =>
+    mutationFn: (input: { document: ChatDocument; question: string; history?: ConversationTurn[] }) =>
       askQuestion({ ...input, userId }),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: questionsKey(documentId),
       });
     },
+  });
+}
+
+export function useSaveConversation(userId: string, documentId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { conversationId: string; turns: DocumentQuestionRow[] }) => saveConversation({ ...input, userId, documentId }),
+    onSuccess: () => { void client.invalidateQueries({ queryKey: questionsKey(documentId) }); },
   });
 }

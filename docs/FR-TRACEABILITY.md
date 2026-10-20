@@ -31,11 +31,11 @@ Bằng chứng thiếu trước sửa được giữ ở FR-AUDIT.md.
 | FR-23 | Hệ thống phải cho phép sinh viên đặt câu hỏi liên quan đến tài liệu đã tải lên. | `src/features/chat/` | có code; hồi quy thiết bị còn mở |
 | FR-24 | AI phải sử dụng nội dung tài liệu làm nguồn thông tin để trả lời câu hỏi. | `src/features/chat/` | có code; hồi quy thiết bị còn mở |
 | FR-25 | Hệ thống phải ưu tiên trả lời dựa trên nội dung tài liệu thay vì tạo câu trả lời không liên quan. | `src/features/chat/` | có code; hồi quy thiết bị còn mở |
-| FR-26 | Hệ thống phải hiển thị câu trả lời của AI trong giao diện hội thoại. | `src/features/chat/` | có code; hồi quy thiết bị còn mở |
-| FR-27 | Hệ thống phải duy trì ngữ cảnh của cuộc hội thoại trong phiên học tập. | `src/features/chat/` | thiếu; chờ bổ sung |
-| FR-28 | Sinh viên phải có thể đặt câu hỏi tiếp theo dựa trên câu trả lời trước đó. | `src/features/chat/` | thiếu; chờ bổ sung |
-| FR-29 | Hệ thống phải cho phép người dùng bắt đầu một cuộc hội thoại mới. | `src/features/chat/` | thiếu; chờ bổ sung |
-| FR-30 | Hệ thống phải lưu lịch sử các cuộc hội thoại nếu người dùng lựa chọn lưu. | `src/features/chat/` | thiếu; chờ bổ sung |
+| FR-26 | Hệ thống phải hiển thị câu trả lời của AI trong giao diện hội thoại. | `src/features/chat/` | có code + unit ngữ cảnh/phiên mới/lựa chọn lưu; chờ Expo Go |
+| FR-27 | Hệ thống phải duy trì ngữ cảnh của cuộc hội thoại trong phiên học tập. | `src/features/chat/` | có code + unit ngữ cảnh/phiên mới/lựa chọn lưu; chờ Expo Go |
+| FR-28 | Sinh viên phải có thể đặt câu hỏi tiếp theo dựa trên câu trả lời trước đó. | `src/features/chat/` | có code + unit ngữ cảnh/phiên mới/lựa chọn lưu; chờ Expo Go |
+| FR-29 | Hệ thống phải cho phép người dùng bắt đầu một cuộc hội thoại mới. | `src/features/chat/` | có code + unit ngữ cảnh/phiên mới/lựa chọn lưu; chờ Expo Go |
+| FR-30 | Hệ thống phải lưu lịch sử các cuộc hội thoại nếu người dùng lựa chọn lưu. | `src/features/chat/` | có code + unit ngữ cảnh/phiên mới/lựa chọn lưu; chờ Expo Go |
 | FR-31 | Hệ thống phải cho phép sinh viên chụp ảnh đề bài bằng camera. | `src/features/scan/` | có code; hồi quy thiết bị còn mở |
 | FR-32 | Hệ thống phải cho phép sinh viên tải ảnh đề bài từ thiết bị. | `src/features/scan/` | có code; hồi quy thiết bị còn mở |
 | FR-33 | Hệ thống phải sử dụng OCR hoặc multimodal AI để nhận dạng nội dung trong hình ảnh. | `src/features/scan/` | có code; hồi quy thiết bị còn mở |

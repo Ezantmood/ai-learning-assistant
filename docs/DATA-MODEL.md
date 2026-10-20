@@ -291,3 +291,12 @@ unsupported (DOCX, trạng thái cuối, CN3 không chạm)
 Migration `0008_summary_history.sql` bỏ UNIQUE(document_id) để giữ mỗi bản
 đã tạo (FR-21/22), thêm summary_level, summary_scope, section_title có CHECK.
 Không xóa row cũ; mặc định medium/whole. Giữ FK CASCADE, RLS hiện có.
+
+
+## Đối chiếu PDF — hội thoại theo lựa chọn (0009)
+
+`document_questions.conversation_id` UUID nullable nhóm các lượt được chọn
+lưu; row cũ NULL được xem là phiên riêng theo id. Không cần bảng phiên mới:
+metadata tiêu đề lấy từ câu đầu. Chưa bấm Lưu thì không ghi Postgres.
+Lưu snapshot bằng upsert theo id để bấm lại không nhân đôi lượt. RLS/FK
+hiện có vẫn áp từng row; xóa tài liệu kéo theo lịch sử.
