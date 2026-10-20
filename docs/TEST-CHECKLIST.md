@@ -345,3 +345,15 @@ phiên bản với metadata thành công và dọn user test. Chưa kiểm thi�
 
 UI unit mô phỏng hỏi hai lượt → lưu → phiên mới; transport kiểm role/thứ tự;
 remote smoke save/reopen/resave 2 lượt đạt. Kiểm Expo Go còn mở.
+
+
+## 21. Chỉnh OCR và gửi phân tích (FR-36/37)
+
+- [ ] Quét ảnh → sửa lỗi nhận dạng → Lưu → mở lại vẫn đúng chữ đã sửa.
+- [ ] Xóa trắng → báo lỗi; ảnh gốc giữ nguyên.
+- [ ] Sửa công thức rồi bấm Phân tích đề bài đã kiểm tra: AI nhận bản sửa.
+- [ ] Mất mạng khi lưu: giữ nội dung đang sửa, không chuyển màn/gọi AI.
+- [ ] Mở lại ảnh cũ trong Tài liệu: vẫn chỉnh OCR được; A không sửa ảnh B.
+
+Unit API chặn rỗng, ghi extracted_text; unit UI kiểm đúng bản sửa và lưu lỗi
+không chuyển màn. 329/329 PASS; thiết bị chưa chạy.

@@ -504,3 +504,9 @@ CN4 giữ lượt hỏi/đáp theo phiên tại QaSection, truyền lịch sử 
 user/model đến transport. Lưu bằng mutation riêng; mở lại nhóm conversation_id
 và tiếp tục. Phiên mới tạo UUID khác, rỗng ngữ cảnh; bản đã lưu giữ nguyên.
 Component có key theo document id để không lẫn ngữ cảnh giữa tài liệu.
+
+
+CN5 dùng ScanTextEditor tại màn quét và chi tiết ảnh. API updateScanText
+lưu extracted_text có RLS, không upload lại ảnh; invalidation detail/list/latest.
+Lưu thành công mới chuyển detail với intent analyze; solver xử lý intent
+ở AUDIT-05. Không import trực tiếp scan→solver.

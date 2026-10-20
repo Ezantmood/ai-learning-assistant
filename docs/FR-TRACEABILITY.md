@@ -41,8 +41,8 @@ Bằng chứng thiếu trước sửa được giữ ở FR-AUDIT.md.
 | FR-33 | Hệ thống phải sử dụng OCR hoặc multimodal AI để nhận dạng nội dung trong hình ảnh. | `src/features/scan/` | có code; hồi quy thiết bị còn mở |
 | FR-34 | Hệ thống phải chuyển nội dung nhận dạng thành văn bản có thể xử lý. | `src/features/scan/` | có code; hồi quy thiết bị còn mở |
 | FR-35 | Hệ thống phải hiển thị nội dung đã nhận dạng để sinh viên kiểm tra. | `src/features/scan/` | có code; hồi quy thiết bị còn mở |
-| FR-36 | Sinh viên phải có thể chỉnh sửa nội dung OCR nếu nhận dạng không chính xác. | `src/features/scan/` | thiếu; chờ bổ sung |
-| FR-37 | Hệ thống phải cho phép sinh viên gửi đề bài đã nhận dạng đến AI để phân tích. | `src/features/scan/` | một phần; chờ bổ sung |
+| FR-36 | Sinh viên phải có thể chỉnh sửa nội dung OCR nếu nhận dạng không chính xác. | `src/features/scan/` | có code + unit chỉnh OCR/lưu trước điều hướng; chờ Expo Go |
+| FR-37 | Hệ thống phải cho phép sinh viên gửi đề bài đã nhận dạng đến AI để phân tích. | `src/features/scan/` | có code + unit chỉnh OCR/lưu trước điều hướng; chờ Expo Go |
 | FR-38 | AI phải phân tích nội dung đề bài. | `src/features/solver/` | một phần; chờ bổ sung |
 | FR-39 | AI phải xác định loại bài toán hoặc chủ đề liên quan. | `src/features/solver/` | thiếu; chờ bổ sung |
 | FR-40 | AI phải cung cấp gợi ý từng bước (step-by-step hints). | `src/features/solver/` | một phần; chờ bổ sung |

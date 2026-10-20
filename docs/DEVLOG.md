@@ -2283,3 +2283,14 @@ https://supabase.com/docs/guides/platform/access-control`
   Unit UI thực hiện hỏi hai lượt → chọn lưu → phiên mới và kiểm payload.
   Remote smoke save/reopen/resave 2 lượt PASS, dọn user test. Expo Go mục 20
   chưa chạy, không tick đã đạt tay.
+
+
+### AUDIT-04 — Sửa OCR và chuyển đề đã kiểm tra — 2026-10-20
+
+- ScanTextEditor có sửa/lưu và chuyển phân tích, dùng ở scan lẫn chi tiết
+  ảnh cũ. Nội dung rỗng/qua giới hạn bị chặn; API update đúng id/user/ảnh,
+  ảnh gốc không đổi. RLS vẫn là lớp quyền thực tế.
+- Luồng chuyển màn chờ lưu thành công; lỗi giữ draft. OCR cắt cụt có id
+  để người dùng sửa phần cứu được. Không thêm bảng/dependency.
+- tsc 0; lint 0 lỗi/2 warning cũ; 42 suites, 329/329 PASS. Test UI mô phỏng
+  sửa→lưu→chuyển detail và lưu lỗi không điều hướng. Kiểm Expo Go mục 21 mở.

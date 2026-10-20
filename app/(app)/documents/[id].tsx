@@ -22,6 +22,7 @@ import {
 } from '../../../src/shared/components/FeedbackSnackbar';
 import { FormTextInput } from '../../../src/shared/components/FormTextInput';
 import { ListSkeleton } from '../../../src/shared/components/LoadingState';
+import { ScanTextEditor } from '../../../src/features/scan/scan-text-editor';
 import { QaSection } from '../../../src/features/chat/QaSection';
 import { SummarySection } from '../../../src/features/summary/SummarySection';
 import { SolutionSection } from '../../../src/features/solver/SolutionSection';
@@ -286,6 +287,8 @@ export default function DocumentDetailScreen() {
         Mở tài liệu
       </Button>
 
+      {doc.file_ext === 'jpg' && doc.extracted_text ? <ScanTextEditor key={`ocr-${doc.id}`}
+        documentId={doc.id} userId={userId ?? ''} initialText={doc.extracted_text} /> : null}
       <SummarySection key={`summary-${doc.id}`} doc={doc} userId={userId ?? ''} />
 
       <QaSection key={`qa-${doc.id}`} doc={doc} userId={userId ?? ''} />
