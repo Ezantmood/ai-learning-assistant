@@ -69,13 +69,43 @@ export class GeminiNetworkError extends GeminiError {
   }
 }
 
+export type QuotaLimitType = 'daily' | 'rate' | 'unavailable' | 'unknown';
 export class GeminiQuotaError extends GeminiError {
-  constructor() {
-    super(
-      'Đã chạm hạn mức AI hoặc gửi yêu cầu quá nhanh. Hãy chờ một lúc rồi thử lại.',
-    );
+  constructor(readonly limitType: QuotaLimitType = 'unknown', readonly retryAfterSeconds?: number) {
+    const messages: Record<QuotaLimitType, string> = {
+      daily: 'Đã hết hạn mức AI trong ngày của dự án.',
+      rate: 'Đang gửi yêu cầu AI quá nhanh hoặc quá nhiều nội dung trong một phút.',
+      unavailable: 'Dự án chưa được cấp hạn mức cho model AI này. Hãy kiểm tra model và gói API.',
+      unknown: 'Đã chạm hạn mức AI. Hãy kiểm tra hạn mức của dự án hoặc thử lại sau.',
+    };
+    const minutes = Math.ceil((retryAfterSeconds ?? 0) / 60);
+    const wait = minutes >= 60 ? `${Math.floor(minutes / 60)} giờ ${minutes % 60} phút`
+      : minutes > 0 ? `${minutes} phút` : '';
+    super(messages[limitType] + (wait && limitType !== 'unavailable'
+      ? ` Có thể thử lại sau khoảng ${wait}.` : limitType === 'daily' ? ' Chờ hạn mức được đặt lại hoặc kiểm tra gói API của dự án.' : ''));
     this.name = 'GeminiQuotaError';
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+/** Chỉ đọc metadata quota, không đưa message/URL/key thô của nhà cung cấp lên UI. */
+function parseQuotaError(body: unknown): GeminiQuotaError {
+  const error = isRecord(body) && isRecord(body.error) ? body.error : null;
+  const details = error && Array.isArray(error.details) ? error.details : [];
+  const violations = details.filter(isRecord)
+    .filter((detail) => detail['@type'] === 'type.googleapis.com/google.rpc.QuotaFailure')
+    .flatMap((detail) => Array.isArray(detail.violations) ? detail.violations.filter(isRecord) : []);
+  const ids = violations.map((item) => typeof item.quotaId === 'string' ? item.quotaId : '');
+  const limitType: QuotaLimitType = violations.some((item) => item.quotaValue === '0' || item.quotaValue === 0)
+    ? 'unavailable' : ids.some((id) => /PerDay/i.test(id)) ? 'daily'
+    : ids.some((id) => /PerMinute/i.test(id)) ? 'rate' : 'unknown';
+  const retry = details.filter(isRecord).find((detail) => detail['@type'] === 'type.googleapis.com/google.rpc.RetryInfo');
+  const raw = retry?.retryDelay;
+  const seconds = typeof raw === 'string' && /^\d+(?:\.\d+)?s$/.test(raw) ? Number(raw.slice(0, -1)) : NaN;
+  return new GeminiQuotaError(limitType, Number.isFinite(seconds) && seconds > 0 && seconds <= 7 * 86400 ? Math.ceil(seconds) : undefined);
 }
 
 export class GeminiServerError extends GeminiError {
@@ -317,7 +347,11 @@ async function postGenerate(
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
       method: 'POST', signal: controller.signal,
     });
-    if (res.status === 429) throw new GeminiQuotaError();
+    if (res.status === 429) {
+      const body: unknown = await res.json().catch(() => null);
+      throw parseQuotaError(body);
+    }
+    if (res.status === 402) throw new GeminiError('Số dư thanh toán Gemini API đã hết hoặc chưa được kích hoạt. Hãy kiểm tra Billing trong AI Studio.');
     if (res.status >= 500) throw new GeminiServerError(res.status);
     if (res.status === 401 || res.status === 403) throw new GeminiError('Chưa được cấp quyền sử dụng AI. Hãy kiểm tra cấu hình Gemini API.');
     if (!res.ok) throw new GeminiError(`Gemini trả lỗi HTTP ${res.status}. Hãy thử lại sau.`);

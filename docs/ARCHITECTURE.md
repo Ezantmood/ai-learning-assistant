@@ -88,10 +88,12 @@ các lượt của phiên tại UI. Phân tích bắt đầu lại các bước.
 
 ## Transport, lỗi và key
 
-Một postGenerate dùng model stable gemini-3.6-flash. Minimal cho hỏi đáp,
+Một postGenerate dùng model stable gemini-3.5-flash-lite. Minimal cho hỏi đáp,
 OCR và summary text; low cho trích PDF/gợi ý; medium cho full solution.
 Không auto retry; khóa thao tác pending, timeout AbortController 90 giây.
-429 → hạn mức, 5xx → server bận, mạng/timeout/rỗng có thông báo tiếng Việt.
+429 đọc QuotaFailure/RetryInfo, phân biệt ngày/phút/quota chưa cấp; 402
+báo số dư API, 5xx báo server bận. Metadata lỗi sai vẫn normalize an toàn;
+không đưa message/key thô lên UI. Mạng/timeout/rỗng có thông báo tiếng Việt.
 AiResultText hiển thị heading/bullet/bold, không chạy HTML/Markdown code.
 
 App demo gọi Gemini trực tiếp, key từ EXPO_PUBLIC_GEMINI_API_KEY nằm trong

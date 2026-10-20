@@ -416,3 +416,31 @@ Tên nút trong mục cũ là lịch sử. Hiện tại: chọn mục Tóm tắt
 Ảnh chỉ dữ liệu giả: evidence/ui-simplify-home.png, ui-simplify-document.png,
 ui-simplify-scan-dark.png, ui-simplify-error-320.png. AI/backend không đổi trong
 đợt UI; hạn mức/lỗi dịch vụ ở mục 23 vẫn áp dụng.
+
+
+## 25. Hạn mức AI và preflight — 2026-10-21
+
+- [x] API key thật/model 3.6 trả quota 20 yêu cầu/ngày, RetryInfo khoảng 13 giờ; không nhầm với tốc độ gửi/phút.
+- [x] CLI --only=preflight gửi một lượt, báo lỗi quota ngày tiếng Việt, exit 1; không in raw error/key.
+- [x] Unit: quota ngày/phút/0, RetryInfo, metadata thiếu/sai/JSON vỡ, 402 số dư; mỗi lỗi chỉ một fetch.
+- [x] Chrome đã đăng nhập, AI Studio đúng project: 3.5 Lite Free Tier 15 RPM/250K TPM/500 RPD; 3.6 cũ 5 RPM/250K TPM/20 RPD.
+- [ ] Expo Go: kiểm thông báo hạn mức thực tế và các ca lỗi mạng AI; không tự đánh dấu đạt từ CLI/unit.
+
+Paid Tier/credits không áp dụng đợt này: chủ dự án chọn miễn phí; không bật
+billing, không nạp tiền. Trước demo vẫn đọc lại quota và chạy preflight.
+
+
+## 26. Model demo gemini-3.5-flash-lite — 2026-10-21
+
+- [x] Model stable trong docs/models API, sinh nội dung thật bằng key hiện có.
+- [x] Summary chỉ Chương 2; hỏi/đáp có ngữ cảnh; đủ 5 loại hỗ trợ, gợi ý không lộ đáp án cuối.
+- [x] Ảnh JPEG đọc đúng 2x+3=7 (6,53s); PDF mẫu có extracted_text/summary_text đầy đủ (7,08s).
+- [x] Preflight sau đổi model: 1/1, 16,54s, đúng một request.
+- [x] Đọc quota trực tiếp: 15 RPM/250K TPM/500 RPD. Peak usage 28 ngày là 4 RPM/1,18K TPM/13 RPD, không coi là số lượt còn lại hôm nay.
+- [x] Giữ Free Tier theo lựa chọn miễn phí; không thay billing hoặc claim credits có điều kiện thanh toán.
+- [x] tsc/lint đạt, 44 suites/342 tests PASS; Android bundle export đạt.
+- [ ] Expo Go thật: chạy luồng tài liệu→hỏi đáp và quét→sửa→phân tích bằng model mới.
+
+Bằng chứng mẫu: evidence/ai-demo-quota-20261021.txt. Không kiểm tất cả tài
+liệu/đề; latency và khả năng phục vụ phụ thuộc dịch vụ. Không tự retry,
+không fallback provider, không giả lập câu trả lời khi hết quota.

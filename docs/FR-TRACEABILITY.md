@@ -71,3 +71,17 @@ Lời giải trong Cách hỗ trợ khác, phản hồi gần nhất và các b�
 regression `documents/__tests__/document-study-tabs.test.tsx` kiểm giữ bản
 nháp, vùng ẩn accessibility, intent OCR. Tổng 44 suites/338 test; web thực
 và Android export đạt theo checklist 24. Camera/Expo Go vẫn chưa nghiệm thu.
+
+
+## Model phục vụ demo — 2026-10-21
+
+FR-14→45 giữ nguyên chức năng, đổi model chung sang gemini-3.5-flash-lite.
+Smoke API thật 10/10 gồm summary theo phần, Q/A hai lượt có ngữ cảnh,
+phân tích/gợi ý 2 bước/giải thích/lời giải/hỏi tiếp, OCR và trích PDF mẫu.
+PDF trước đây 3.6 gặp 503; mẫu mới trên 3.5 Lite đạt, không suy mọi PDF đạt.
+Preflight một lượt trên code đã đổi đạt 1/1. Transport phân biệt quota
+ngày/phút/chưa cấp và số dư 402, không retry/đổi key/model tự động.
+44 suites/342 tests; bằng chứng ở evidence/ai-demo-quota-20261021.txt và
+checklist 25/26. AI Studio đúng project xác nhận Free Tier 15 RPM/250K TPM/
+500 RPD (2026-10-21), hạn mức ngày gấp 25 lần 3.6 cũ; không bật billing.
+Peak usage 28 ngày không đo số lượt còn lại. Expo Go vẫn cần kiểm thiết bị.

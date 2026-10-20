@@ -80,7 +80,7 @@ beforeEach(() => {
 });
 
 describe('requestSummary — PDF thành công', () => {
-  it("processing → insert (model gemini-3.6-flash) → done, đúng một request Gemini", async () => {
+  it("processing → insert (model chung) → done, đúng một request Gemini", async () => {
     const updates: Record<string, unknown>[] = [];
     let insertPayload: Record<string, unknown> = {};
     mockFrom((table) => {
@@ -118,7 +118,7 @@ describe('requestSummary — PDF thành công', () => {
     ]);
     expect(insertPayload).toMatchObject({
       document_id: 'doc-1',
-      model: 'gemini-3.6-flash',
+      model: SUMMARY_MODEL,
       summary_text: 'Bản tóm tắt tiếng Việt.',
       user_id: 'user-1',
     });

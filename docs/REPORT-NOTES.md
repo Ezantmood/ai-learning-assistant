@@ -1,4 +1,4 @@
-# Nguyên liệu báo cáo — hiện hành 2026-10-20
+# Nguyên liệu báo cáo — hiện hành 2026-10-21
 
 Nguồn chuẩn: SPEC.md theo PDF gốc; bảng trước/sau ở FR-AUDIT.md. Không dùng
 bảng FR cũ vốn gán quota/RLS/retry thay yêu cầu nghiệp vụ để tuyên bố 45/45 đạt.
@@ -20,11 +20,16 @@ Giải thích khi vấn đáp:
 - Vì sao RLS phải kiểm document_id? user_id đúng vẫn có thể trỏ tài liệu B;
   proof cũ thiếu ca này. Restrictive policy kiểm sở hữu tài liệu cha; 43/51
   trước sửa, 51/51 sau sửa. Không chỉ lọc client.
-- Model? 3.6 Flash stable đã sinh nội dung thật; 3.8 probe timeout/503.
-  Minimal/low/medium theo tác vụ, timeout 90s, không auto retry; không hứa
-  latency cố định. OCR mẫu mất 67,6s, cần thừa nhận phụ thuộc dịch vụ.
-- Gói Pro? Google AI Pro và Gemini Developer API có quota/billing riêng.
-  Không suy từ thuê bao Gemini rằng API của app có hạn mức trả phí.
+- Model? 3.5 Flash-Lite stable, smoke 10/10 cả PDF/ảnh/ngữ cảnh/solver.
+  Mẫu OCR 6,53s, PDF 7,08s; các tác vụ text 7,25–55,11s, không hứa latency
+  cố định. Giữ minimal/low/medium theo tác vụ, timeout 90s, không auto retry.
+- Quota? AI Studio đúng project, Free Tier ngày 2026-10-21: 3.5 Lite có
+  15 RPM/250K TPM/500 RPD, so với 3.6 cũ 5 RPM/250K TPM/20 RPD. Hạn mức
+  ngày tăng 25 lần; các chức năng AI dùng chung. Peak usage 28 ngày không
+  đo số lượt còn lại hôm nay; cần kiểm lại trước demo, không hứa vô hạn.
+- Gói Pro? Có $10 Cloud credits/tháng qua Developer Program theo Google
+  One hiện tại, cần claim/gắn billing và kiểm điều kiện Prepay. Thuê bao
+  không tự nâng key đang Free Tier; chủ tài khoản tự xác nhận thanh toán.
 - Key? Demo vẫn có EXPO_PUBLIC_GEMINI_API_KEY trong bundle, dù dùng header;
   cần backend proxy trước phát hành thật. Service-role chỉ script local.
 - Kiểm thử? Unit/web/API/RLS/schema/export có bằng chứng riêng; chưa thay
