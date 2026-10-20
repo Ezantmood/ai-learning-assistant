@@ -65,6 +65,9 @@ export function ScreenContainer({
 const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
+    width: '100%',
+    maxWidth: 720,
+    alignSelf: 'center',
     gap: spacing.md,
     justifyContent: 'center',
     padding: spacing.lg,

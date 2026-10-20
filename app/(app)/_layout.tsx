@@ -49,7 +49,7 @@ export default function AppTabsLayout() {
       <Tabs.Screen
         name="dashboard"
         options={{
-          tabBarAccessibilityLabel: 'Trang chủ, lưới 6 chức năng',
+          tabBarAccessibilityLabel: 'Trang chủ, bắt đầu buổi học',
           tabBarIcon: ({ color, size }) => (
             <TabIcon color={color} name={TAB_BAR_ICONS.home} size={size} />
           ),

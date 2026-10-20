@@ -2364,3 +2364,16 @@ https://supabase.com/docs/guides/platform/access-control`
 - Cổng cuối: tsc 0, lint 0 lỗi/0 warning, 43 suites/336 PASS,
   check:functions 0; Android export 5,5 MB đạt; RLS cuối 51/51, dọn fixture.
   Test tay web đạt; PDF API 503 hai lượt và Expo Go vẫn là các ô mở rõ ràng.
+
+
+## UI-01 — 2026-10-21: bắt đầu buổi học rõ ràng
+
+- Trang chủ còn hai lối Tải tài liệu/Quét đề, kho tài liệu và hai liên kết
+  ghi chú/môn học; bỏ mã FR và trạng thái phát triển khỏi UI. Câu dẫn đăng
+  nhập ngắn hơn; vùng đọc cuộn giới hạn 720 px trên màn rộng.
+- Danh sách tài liệu thu gọn bộ lọc môn, hiển thị số kết quả; trạng thái
+  không tìm thấy có nút xóa bộ lọc, kho rỗng có một CTA tải tệp.
+- tsc/lint đạt, 43 suites/336 tests PASS. Jest còn cảnh báo open handle
+  kế thừa. Web thật tài khoản fixture: đăng nhập, trang chủ light/dark,
+  khung 390×844, tải tệp từ CTA, mở kho và lọc chưa phân loại đạt.
+  Ảnh: evidence/ui-simplify-home.png. Chưa thay thế kiểm Expo Go thiết bị.
