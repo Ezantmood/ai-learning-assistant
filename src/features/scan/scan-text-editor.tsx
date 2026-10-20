@@ -30,10 +30,12 @@ export function ScanTextEditor({ documentId, userId, initialText }: {
     finally { lock.current = false; }
   };
   return <View style={{ gap: spacing.sm }}>
-    <FormTextInput label="Kiểm tra và chỉnh sửa nội dung OCR" value={text} onChangeText={setText}
+    <FormTextInput label="Nội dung đề bài" value={text} onChangeText={setText}
       multiline numberOfLines={6} disabled={mutation.isPending} testID="scan-edit-text" />
-    <Button disabled={mutation.isPending} loading={mutation.isPending} onPress={() => void save(false)} testID="scan-save-text">Lưu chỉnh sửa</Button>
-    <Button disabled={mutation.isPending} mode="contained" onPress={() => void save(true)} testID="scan-analyze">Phân tích đề bài đã kiểm tra</Button>
+    <Button contentStyle={{ minHeight: spacing.xl * 2 }} disabled={mutation.isPending || !text.trim()} loading={mutation.isPending} mode="contained"
+      onPress={() => void save(true)} testID="scan-analyze">Tiếp tục với AI</Button>
+    <Button contentStyle={{ minHeight: spacing.xl * 2 }} disabled={mutation.isPending || !text.trim()} onPress={() => void save(false)} testID="scan-save-text">Lưu nội dung</Button>
+    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>Nội dung được lưu trước khi AI phân tích.</Text>
     {error ? <Text style={{ color: theme.colors.error }}>{error}</Text> : message ? <Text accessibilityLiveRegion="polite">{message}</Text> : null}
   </View>;
 }

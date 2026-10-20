@@ -286,7 +286,7 @@ export default function DocumentDetailScreen() {
           />
         </View>
 
-      <Button
+      <Button contentStyle={styles.touchTarget}
         accessibilityLabel="Mở tài liệu bằng ứng dụng ngoài"
         disabled={opening}
         icon={AppIcons.openInNew}
@@ -310,7 +310,7 @@ export default function DocumentDetailScreen() {
         <Text variant="titleSmall">Môn học</Text>
         <Menu
           anchor={
-            <Button
+            <Button contentStyle={styles.touchTarget}
               accessibilityLabel={`Môn hiện tại: ${currentSubjectName}. Chạm để đổi.`}
               disabled={busy}
               icon={AppIcons.tagOutline}
@@ -341,7 +341,7 @@ export default function DocumentDetailScreen() {
         </Menu>
       </View>
 
-      <Button
+      <Button contentStyle={styles.touchTarget}
         accessibilityLabel="Xóa tài liệu này"
         disabled={deleteMutation.isPending}
         icon={AppIcons.trashCanOutline}
@@ -361,7 +361,7 @@ export default function DocumentDetailScreen() {
         chat={<QaSection doc={doc} userId={userId ?? ''} />}
         solver={<View style={styles.content}>
           {doc.file_ext === 'jpg' && doc.extracted_text ? <>
-            <Button icon={AppIcons.pencil} onPress={() => setOcrVisible(!ocrVisible)} testID="document-edit-ocr">
+            <Button contentStyle={styles.touchTarget} icon={AppIcons.pencil} onPress={() => setOcrVisible(!ocrVisible)} testID="document-edit-ocr">
               {ocrVisible ? 'Thu gọn đề bài' : 'Xem & sửa nội dung đề'}
             </Button>
             <View style={!ocrVisible && styles.hidden} accessibilityElementsHidden={!ocrVisible}
@@ -385,8 +385,8 @@ export default function DocumentDetailScreen() {
             </Text>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setDeleteDialogVisible(false)}>Hủy</Button>
-            <Button
+            <Button contentStyle={styles.touchTarget} onPress={() => setDeleteDialogVisible(false)}>Hủy</Button>
+            <Button contentStyle={styles.touchTarget}
               loading={deleteMutation.isPending}
               onPress={handleDelete}
               testID="document-delete-confirm"
@@ -477,7 +477,7 @@ function RenameDocumentForm({
         testID="document-rename-input"
         value={value}
       />
-      <Button
+      <Button contentStyle={styles.touchTarget}
         accessibilityLabel="Lưu tên tài liệu mới"
         disabled={renameMutation.isPending}
         icon={AppIcons.contentSave}
@@ -493,6 +493,7 @@ function RenameDocumentForm({
 }
 
 const styles = StyleSheet.create({
+  touchTarget: { minHeight: spacing.xl * 2 },
   content: { gap: spacing.md, justifyContent: 'flex-start' },
   hidden: { display: 'none' },
   row: { gap: spacing.xs },

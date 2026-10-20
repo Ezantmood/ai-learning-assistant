@@ -21,9 +21,9 @@ export function DocumentStudyTabs({ summary, chat, solver, initialMode, analysis
     <SegmentedButtons value={active}
       onValueChange={(mode) => setSelection({ mode: mode as StudyMode, intent: analysisRequest })}
       buttons={[
-        { value: 'summary', label: 'Tóm tắt', testID: 'study-summary' },
-        { value: 'chat', label: 'Hỏi đáp', testID: 'study-chat' },
-        { value: 'solver', label: 'Giải bài', testID: 'study-solver' },
+        { value: 'summary', label: 'Tóm tắt', labelStyle: styles.tabLabel, testID: 'study-summary' },
+        { value: 'chat', label: 'Hỏi đáp', labelStyle: styles.tabLabel, testID: 'study-chat' },
+        { value: 'solver', label: 'Giải bài', labelStyle: styles.tabLabel, testID: 'study-solver' },
       ]} />
     {([{ mode: 'summary', content: summary }, { mode: 'chat', content: chat }, { mode: 'solver', content: solver }] as const).map((panel) => (
       <View key={panel.mode} testID={`study-panel-${panel.mode}`}
@@ -36,4 +36,4 @@ export function DocumentStudyTabs({ summary, chat, solver, initialMode, analysis
   </View>;
 }
 
-const styles = StyleSheet.create({ content: { gap: spacing.lg }, hidden: { display: 'none' } });
+const styles = StyleSheet.create({ tabLabel: { paddingVertical: spacing.xs }, content: { gap: spacing.lg }, hidden: { display: 'none' } });

@@ -65,7 +65,7 @@ export function SolutionSection({ doc, userId, analysisRequest }: {
     <Card.Content style={styles.content}>
       {!available ? <Banner visible>Hãy tóm tắt PDF/TXT hoặc quét ảnh để có nội dung đề bài. DOCX cần chuyển sang PDF.</Banner>
         : query.isPending ? <Text>Đang tải lần hỗ trợ gần nhất…</Text>
-        : query.isError ? <Button onPress={() => { void query.refetch(); }}>Thử tải lại</Button>
+        : query.isError ? <Button contentStyle={styles.touchTarget} onPress={() => { void query.refetch(); }}>Thử tải lại</Button>
         : <>
           {history.length > 1 ? <List.Accordion title={`Các bước trước (${history.length - 1})`}>
             {history.slice(0, -1).map((turn, index) => <View key={index} style={styles.content}>
@@ -78,26 +78,27 @@ export function SolutionSection({ doc, userId, analysisRequest }: {
             <AiResultText text={history[history.length - 1].text} testID={`solution-text-${history.length - 1}`} />
             <Text variant="bodySmall">Đã tự động lưu lần hỗ trợ gần nhất.</Text>
           </View> : <Text>Nhận một gợi ý nhỏ để bắt đầu. Bạn có thể yêu cầu thêm từng bước.</Text>}
-          {mutation.isPending ? <Button disabled loading testID="solution-running">AI đang xử lý…</Button> : null}
+          {mutation.isPending ? <Button contentStyle={styles.touchTarget} disabled loading testID="solution-running">AI đang xử lý…</Button> : null}
           {error ? <Text accessibilityLiveRegion="polite" style={{ color: theme.colors.error }}>{error}</Text> : null}
-          <Button disabled={mutation.isPending} mode="contained" testID="solution-hint" onPress={() => void run('hint')}>
+          <Button contentStyle={styles.touchTarget} disabled={mutation.isPending} mode="contained" testID="solution-hint" onPress={() => void run('hint')}>
             {hintStep ? `Gợi ý tiếp theo (bước ${hintStep + 1})` : 'Gợi ý đầu tiên'}
           </Button>
           {history.length ? <>
             <FormTextInput label="Hỏi thêm về bước này" value={question} onChangeText={setQuestion}
               multiline maxLength={500} disabled={mutation.isPending} testID="solution-question" />
-            <Button disabled={mutation.isPending || !question.trim()} icon={AppIcons.send}
+            <Button contentStyle={styles.touchTarget} disabled={mutation.isPending || !question.trim()} icon={AppIcons.send}
               testID="solution-follow-up" onPress={() => void run('follow_up')}>Gửi câu hỏi</Button>
           </> : null}
           <List.Accordion title="Cách hỗ trợ khác" testID="solution-more"
             expanded={moreVisible} onPress={() => setMoreVisible(!moreVisible)}>
-            <Button disabled={mutation.isPending} testID="solution-analysis" onPress={() => void run('analysis')}>Phân tích đề bài</Button>
-            <Button disabled={mutation.isPending} testID="solution-explain" onPress={() => void run('explanation')}>Giải thích khái niệm</Button>
-            <Button disabled={mutation.isPending} mode="outlined" testID="solution-full" onPress={() => void run('solution')}>Yêu cầu lời giải tham khảo</Button>
+            <Button contentStyle={styles.touchTarget} disabled={mutation.isPending} testID="solution-analysis" onPress={() => void run('analysis')}>Phân tích đề bài</Button>
+            <Button contentStyle={styles.touchTarget} disabled={mutation.isPending} testID="solution-explain" onPress={() => void run('explanation')}>Giải thích khái niệm</Button>
+            <Button contentStyle={styles.touchTarget} disabled={mutation.isPending} mode="outlined" testID="solution-full" onPress={() => void run('solution')}>Xem lời giải tham khảo</Button>
             <Text variant="bodySmall">Phân tích đề sẽ bắt đầu lại các bước. Lời giải đầy đủ chỉ hiện khi bạn yêu cầu.</Text>
           </List.Accordion>
         </>}
     </Card.Content>
   </Card>;
 }
-const styles = StyleSheet.create({ content: { gap: spacing.sm } });
+const styles = StyleSheet.create({
+  touchTarget: { minHeight: spacing.xl * 2 }, content: { gap: spacing.sm } });

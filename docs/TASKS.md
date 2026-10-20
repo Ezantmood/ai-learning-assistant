@@ -459,6 +459,6 @@ Mỗi checkbox commit/push riêng, tsc/lint/test trước commit; G4+ merge --no
   vùng; đổi mục không mất draft/lượt chat. Thu gọn thông tin/quản lý tài liệu,
   tùy chọn tóm tắt và thao tác giải bài phụ; giữ đầy đủ lịch sử/chọn mức độ/
   chương/lưu/phiên mới/gợi ý tiếp/giải thích/full/hỏi tiếp. FR-09→FR-30/36→FR-45.
-- [ ] UI-03: Luồng ảnh rõ Chọn/chụp → Đọc → Kiểm tra → Học với AI; tinh gọn
+- [x] UI-03: Luồng ảnh rõ Chọn/chụp → Đọc → Kiểm tra → Học với AI; tinh gọn
   biên tập OCR. Kiểm giao diện nhỏ/light/dark, tab/draft/error/loading và
   Android export; cập nhật thiết kế/checklist/traceability/DEVLOG. FR-31→FR-37.

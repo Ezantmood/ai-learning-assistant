@@ -392,3 +392,27 @@ Unit UI/transport/API kiểm chế độ, bước tiếp và ngữ cảnh, inten
 
 Ảnh web chỉ có dữ liệu giả ở docs/evidence/fr-audit-20261020.png.
 Gemini Pro/API billing tách biệt, không đổi gói/bật billing trong đợt này.
+
+
+## 24. Giao diện tinh gọn — 2026-10-21
+
+Tên nút trong mục cũ là lịch sử. Hiện tại: chọn mục Tóm tắt/Hỏi đáp/Giải
+ bài trong chi tiết; phạm vi tóm tắt mở thêm; Phân tích/Giải thích/Lời giải
+ tham khảo trong Cách hỗ trợ khác; nút gửi đề đã sửa là Tiếp tục với AI.
+
+- [x] Web fixture: đăng nhập → Trang chủ → Tải tài liệu / Tài liệu của tôi / Quét đề.
+- [x] Web: mở lọc môn, chọn chưa phân loại; đổi ba mục học; draft câu hỏi còn nguyên.
+- [x] Web: chọn chương, mở lựa chọn solver và Thông tin & quản lý; mở lại hai bản tóm tắt.
+- [x] Web ảnh JPEG mẫu: chọn → preview → đọc; pending khóa nút; ra đúng phương trình 2x+3=7.
+- [x] Xóa trắng nội dung → nút tiếp tục disabled; sửa tiếng Việt → lưu → mở chi tiết còn đúng chữ.
+- [x] Tiếp tục với AI mở đúng Giải bài. Lượt phân tích gặp Gemini quota (429), lỗi rõ và đề còn nguyên; không ghi nội dung phân tích đạt.
+- [x] Soi 320×693, 390×844, màn rộng; sáng/tối; rút ngắn nhãn và tăng vùng nút 48 px.
+- [x] tsc/lint đạt; 44 suites/338 tests; hồi quy draft/accessibility/intent và solver qua mục mở thêm.
+- [x] Android bundle export, không prebuild/eject, không sinh ios/android.
+- [ ] Expo Go: camera/picker/quyền thật, hotspot, bàn phím không che input, font hệ thống lớn.
+- [ ] Expo Go: VoiceOver/TalkBack chỉ đọc vùng đang chọn; quay lại/bottom tabs/đổi mục giữ dữ liệu như mong đợi.
+- [ ] Trên thiết bị, chạy lại checklist 19→22 và các ca lỗi mạng/tải lịch sử còn mở.
+
+Ảnh chỉ dữ liệu giả: evidence/ui-simplify-home.png, ui-simplify-document.png,
+ui-simplify-scan-dark.png, ui-simplify-error-320.png. AI/backend không đổi trong
+đợt UI; hạn mức/lỗi dịch vụ ở mục 23 vẫn áp dụng.

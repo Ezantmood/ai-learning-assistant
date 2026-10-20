@@ -162,7 +162,7 @@ export default function DocumentsScreen() {
           <Text style={{ color: theme.colors.onSurfaceVariant }} variant="bodySmall">
             {docsQuery.isPending ? 'Đang tải…' : `${docs.length} tài liệu${isSearching || effectiveFilter !== undefined ? ' phù hợp' : ''}`}
           </Text>
-          <Chip icon={AppIcons.folderOutline} selected={effectiveFilter !== undefined}
+          <Chip style={styles.chip} icon={AppIcons.folderOutline} selected={effectiveFilter !== undefined}
             accessibilityLabel="Hiện hoặc ẩn bộ lọc môn học" onPress={() => setFiltersVisible(!filtersVisible)}>
             {effectiveFilter === undefined ? 'Lọc theo môn' : filterLabel(effectiveFilter, subjects)}
           </Chip>
@@ -174,7 +174,7 @@ export default function DocumentsScreen() {
           showsHorizontalScrollIndicator={false}
         >
           <View style={styles.chips}>
-            <Chip
+            <Chip style={styles.chip}
               accessibilityLabel="Lọc: tất cả môn"
               onPress={() => setSubjectFilter(undefined)}
               selected={effectiveFilter === undefined}
@@ -183,7 +183,7 @@ export default function DocumentsScreen() {
               Tất cả
             </Chip>
             {subjects.map((subject) => (
-              <Chip
+              <Chip style={styles.chip}
                 accessibilityLabel={`Lọc môn: ${subject.name}`}
                 key={subject.id}
                 onPress={() => setSubjectFilter(subject.id)}
@@ -193,7 +193,7 @@ export default function DocumentsScreen() {
                 {subject.name}
               </Chip>
             ))}
-            <Chip
+            <Chip style={styles.chip}
               accessibilityLabel="Lọc: chưa phân loại"
               onPress={() => setSubjectFilter(null)}
               selected={effectiveFilter === null}
@@ -288,6 +288,7 @@ export default function DocumentsScreen() {
 }
 
 const styles = StyleSheet.create({
+  chip: { minHeight: spacing.xl * 2, justifyContent: 'center' },
   chips: {
     flexDirection: 'row',
     gap: spacing.sm,

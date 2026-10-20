@@ -2394,3 +2394,24 @@ https://supabase.com/docs/guides/platform/access-control`
   evidence/ui-simplify-document.png. Native Expo Go chưa chạy.
 - Regression mới kiểm draft/accessibility/intent; test solver đi qua mục
   mở thêm. Cổng tsc/lint đạt, 44 suites/338 tests PASS (open handle kế thừa).
+
+
+## UI-03 — 2026-10-21: thêm ảnh, đọc đề, kiểm tra, học
+
+- Màn quét chỉ đưa thao tác phù hợp bước hiện tại; thu gọn ảnh gốc sau
+  nhận dạng. Biên tập dùng nhãn Nội dung đề bài, Tiếp tục với AI và Lưu
+  nội dung; rỗng khóa nút. Giữ toàn bộ guard/khóa request/lưu trước intent.
+- Rà khung 320 px: rút nhãn mức trung bình thành Vừa, phạm vi Toàn bộ/
+  Chương/phần và nút lời giải. Nút/bộ chọn mới tăng cao 48 px bằng token.
+- Web thực với JPEG fixture: picker→preview→pending khóa→OCR đúng 2x+3=7;
+  sửa sang tiếng Việt→lưu→mở detail giữ bản sửa, tự chọn Giải bài. Phân
+  tích mẫu gặp hạn mức Gemini, UI báo rõ; không tự retry, không coi AI đạt.
+- Soi light/dark 320/390 px và màn rộng; giới hạn đọc 720 px, không thêm
+  màu, font, dependency, route hay migration. Không đổi model/API/prompt.
+- tsc/lint xanh, 44 suites/338 tests PASS; Android export đạt. Cảnh báo
+  open handle Jest kế thừa còn. Camera/quyền/keyboard/font lớn/trình đọc màn
+  hình Expo Go chưa kiểm, ghi ô mở trong checklist 24.
+- Cập nhật DESIGN-SYSTEM, ARCHITECTURE, README và traceability theo lối truy
+  cập mới; giữ nguyên nghĩa 45 FR và các giới hạn AI đã ghi trước đây.
+- Sau kiểm web đã dọn tài khoản fixture, object ảnh và row test; đóng
+  tab, trả viewport mặc định và dừng Metro thử nghiệm. Ảnh evidence chỉ dữ liệu giả.

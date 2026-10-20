@@ -17,6 +17,10 @@ Kiểm thử tự động và API không thay thế kiểm thử Expo Go trên �
 | Quét đề | 31–37 | Camera/thư viện, OCR, kiểm tra/sửa văn bản, gửi bản sửa sang phân tích |
 | Giải bài | 38–45 | Phân tích dạng bài, gợi ý tiếp, giải thích, lời giải theo yêu cầu, hỏi tiếp |
 
+Trang chủ có hai lối Tải tài liệu/Quét đề; chi tiết chia Tóm tắt/Hỏi đáp/
+Giải bài và giữ bản nháp khi đổi mục. Các thao tác quản lý/phạm vi/chế độ
+phụ mở khi cần. Luồng ảnh dẫn từng bước đến nội dung đã kiểm tra.
+
 ## Stack và chạy app
 
 Expo SDK 57, TypeScript strict, expo-router, Supabase Auth/Postgres/Storage,
@@ -45,7 +49,7 @@ node --env-file=.env --env-file=.env.local scripts/fr-audit-proof.mjs
 node --env-file=.env.local scripts/ai-smoke.mjs
 ```
 
-Mốc tự động: 43 suites / 336 test; lint 0 lỗi/0 warning; RLS A/B 51/51;
+Mốc tự động sau tinh gọn UI: 44 suites / 338 test; lint 0 lỗi/0 warning; RLS A/B 51/51;
 đối chiếu 57 cột types với schema remote, verify CN2 14/14 và CN3 10/10.
 Android bundle export đạt. Các ca thiết bị ở [TEST-CHECKLIST](docs/TEST-CHECKLIST.md)
 vẫn để mở nếu chưa chạy. Script proof tạo/dọn user/object test; service-role

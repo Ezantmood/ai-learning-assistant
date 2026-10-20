@@ -31,8 +31,8 @@ export default function DashboardScreen() {
       <Card.Content style={styles.start}>
         <Icon source={AppIcons.notebookOutline} color={theme.colors.onPrimaryContainer} size={32} />
         <Text style={{ color: theme.colors.onPrimaryContainer }} variant="titleLarge">Bắt đầu buổi học</Text>
-        <Button icon={AppIcons.upload} mode="contained" onPress={() => router.push('/documents/upload')} testID="home-upload">Tải tài liệu</Button>
-        <Button icon={AppIcons.camera} mode="outlined" onPress={() => openFeature('5')} testID="home-scan">Quét đề bài</Button>
+        <Button contentStyle={styles.touchTarget} icon={AppIcons.upload} mode="contained" onPress={() => router.push('/documents/upload')} testID="home-upload">Tải tài liệu</Button>
+        <Button contentStyle={styles.touchTarget} icon={AppIcons.camera} mode="outlined" onPress={() => openFeature('5')} testID="home-scan">Quét đề bài</Button>
         <Text style={{ color: theme.colors.onPrimaryContainer }} variant="bodySmall">Tải tệp → chọn cách học → xem lại khi cần.</Text>
       </Card.Content>
     </Card>
@@ -55,6 +55,7 @@ export default function DashboardScreen() {
   </ScreenContainer>;
 }
 const styles = StyleSheet.create({
+  touchTarget: { minHeight: spacing.xl * 2 },
   content: { justifyContent: 'flex-start', gap: spacing.xl },
   intro: { gap: spacing.sm },
   start: { gap: spacing.md, paddingVertical: spacing.xl },
