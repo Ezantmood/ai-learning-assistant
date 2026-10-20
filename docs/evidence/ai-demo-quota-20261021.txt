@@ -1,0 +1,56 @@
+KIỂM API THẬT 2026-10-21 — chỉ dữ liệu học tập giả, không key/tài khoản thật
+
+Probe model cũ bằng key hiện có:
+model=gemini-3.6-flash HTTP=429 status=RESOURCE_EXHAUSTED
+quotaId=GenerateRequestsPerDayPerProjectPerModel-FreeTier
+quotaValue=20 retryDelay=47578s
+
+Models API liệt kê gemini-3.5-flash-lite và gemini-3.1-flash-lite.
+Hai model trả OK cho probe tối thiểu; chỉ 3.5 Lite được chọn sau smoke đa phương thức.
+
+Smoke 3.5 Lite qua transport của dự án (mẫu nhỏ, không phải đo tải):
+MODEL gemini-3.5-flash-lite
+TIME summary-sections 55114ms
+PASS summary correct section
+TIME question 15265ms
+TIME follow-up 14768ms
+PASS question/follow-up grounded
+TIME analysis 13962ms
+PASS analysis identifies topic
+TIME hint-1 10359ms
+PASS hint does not reveal final answer
+TIME hint-2 7773ms
+PASS next hint differs
+TIME explanation 7245ms
+PASS explanation nonempty
+TIME full-solution 18901ms
+PASS full solution on request
+TIME solution-follow-up 26486ms
+PASS solution follow-up
+TIME ocr 6534ms
+PASS OCR reads equation
+TIME pdf-extraction 7084ms
+PASS PDF extraction/summary
+AI_SMOKE 10/10
+
+Preflight qua code đã ghim model:
+MODEL gemini-3.5-flash-lite
+TIME preflight 16541ms
+PASS preflight model responds
+AI_SMOKE 1/1
+
+AI Studio, Chrome đã đăng nhập, đúng project chứa key, tier Free, 2026-10-21:
+https://aistudio.google.com/rate-limit?timeRange=last-28-days
+Model                       RPM limit   TPM limit   RPD limit
+Gemini 3.6 Flash             5           250K        20
+Gemini 3.5 Flash Lite        15          250K        500
+Gemini 3.1 Flash Lite        15          250K        500
+
+Peak usage 28 ngày của 3.5 Lite hiển thị: 4/15 RPM, 1.18K/250K TPM, 13/500 RPD.
+Đây là peak usage trong khoảng đã chọn, không phải số lượt còn lại hôm nay.
+Dashboard báo số liệu có thể trễ tới 15 phút. Không đưa ảnh Chrome chứa thông
+tin tài khoản/project riêng vào Git; bảng trên chỉ chép số đo không có secret.
+Continue của hộp thoại điều khoản chỉ được bấm sau khi chủ tài khoản đồng ý
+rõ trong chat. Không bật billing/nạp tiền. Hạn mức ngày tăng 25 lần so với 3.6.
+Không suy hạn mức/latency bảo đảm từ các mẫu PASS; quota có thể thay đổi.
+Quota model cũ và test trước đây là lịch sử, không thay đổi kết quả cũ thành PASS.

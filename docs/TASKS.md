@@ -473,7 +473,7 @@ phép thay model/nhà cung cấp để giảm nguy cơ hết quota khi demo. Kh�
 - [x] AI-01: Xác minh quota từ lỗi API; phân biệt giới hạn ngày/phút/không
   được cấp quota, báo thời gian RetryInfo an toàn; thêm preflight một lượt
   vào script smoke hiện có và hướng dẫn trước demo. FR-16/23/33/38.
-- [ ] AI-02: Chọn model stable phù hợp có kiểm API thật text/ngữ cảnh/solver/
-  OCR/PDF; đổi cấu hình đã kiểm chứng, ghi rõ quota nào quan sát được và
-  giới hạn chưa đọc được trong AI Studio. Cập nhật tài liệu, hồi quy,
+- [x] AI-02: Chọn model stable phù hợp có kiểm API thật text/ngữ cảnh/solver/
+  OCR/PDF; đổi cấu hình đã kiểm chứng, đọc quota đúng project trong AI Studio
+  và ghi giới hạn của số đo. Cập nhật tài liệu, hồi quy,
   Android export, commit/push/merge/tag theo quy tắc. FR-14→45.

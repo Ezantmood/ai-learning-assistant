@@ -51,8 +51,8 @@ afterEach(() => {
 });
 
 describe('SUMMARY_MODEL (hằng số duy nhất)', () => {
-  it("là 'gemini-3.6-flash'", () => {
-    expect(SUMMARY_MODEL).toBe('gemini-3.6-flash');
+  it("ghim model stable đã smoke cho demo", () => {
+    expect(SUMMARY_MODEL).toBe('gemini-3.5-flash-lite');
   });
 });
 

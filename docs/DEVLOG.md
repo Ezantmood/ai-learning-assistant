@@ -2450,3 +2450,33 @@ https://supabase.com/docs/guides/platform/access-control`
 - Hồi quy cho metadata lỗi và không gọi lặp; không đổi stack, dependency,
   schema, route hay quyền dữ liệu. Expo Go/đọc quota trong Console còn mở.
 - Cổng AI-01: tsc/lint đạt, 44 suites/342 tests PASS; cảnh báo open handle Jest kế thừa còn.
+
+
+## AI-02 — 2026-10-21: model demo miễn phí có quota đã xác minh
+
+- Chủ dự án chọn miễn phí hoàn toàn. Ghim model stable chung sang
+  `gemini-3.5-flash-lite`, không đổi stack, prompt, schema hoặc provider.
+  Models API và gọi thật xác nhận model hoạt động với key hiện có.
+- Smoke transport thật 10/10: summary theo phần, Q/A có ngữ cảnh, phân
+  tích, hai bước gợi ý, giải thích, lời giải đầy đủ khi yêu cầu, hỏi tiếp,
+  OCR và PDF. Dữ liệu học tập giả; OCR 6,53s, PDF 7,08s, text 7,25–55,11s.
+  Preflight qua script repo sau đổi model 1/1, 16,54s, đúng một request.
+  Không suy tốc độ/chất lượng mọi tài liệu từ các mẫu này.
+- Chrome của chủ tài khoản, AI Studio đúng project chứa key, tier Free:
+  3.5 Lite 15 RPM/250K TPM/500 RPD; 3.6 cũ 5 RPM/250K TPM/20 RPD;
+  3.1 Lite cũng 15 RPM/250K TPM/500 RPD. Chọn 3.5 Lite đã kiểm đủ đa
+  phương thức, tăng hạn mức ngày 25 lần và phút 3 lần so với model cũ.
+- Bảng Peak usage 28 ngày hiện 3.5 Lite 4/15 RPM, 1,18K/250K TPM,
+  13/500 RPD; đây không phải số lượt còn lại hôm nay. Dashboard có thể trễ
+  15 phút. Quota theo project/model, các chức năng AI dùng chung; có thể
+  thay đổi, phải kiểm lại trước demo, không coi là khả năng phục vụ vô hạn.
+- Chỉ bấm Continue chấp thuận điều khoản AI Studio sau khi chủ tài khoản
+  đồng ý rõ trong chat; không bật billing, nạp tiền hay đổi gói. Bằng chứng
+  đã chép số liệu không có secret vào evidence/ai-demo-quota-20261021.txt;
+  ảnh Chrome chứa thông tin tài khoản riêng không đưa vào Git.
+- Cập nhật test payload dùng hằng model chung, README/SETUP/checklist/
+  traceability/báo cáo; hướng dẫn một lượt preflight và chuẩn bị kết quả đã
+  lưu có nhãn khi mạng lỗi. Không auto retry/fallback/luân phiên key.
+- Cổng AI-02: tsc/lint đạt, 44 suites/342 tests PASS, Android export 5,5 MB.
+  Cảnh báo open handle Jest kế thừa còn. Expo Go/camera/quyền và luồng AI
+  trên điện thoại vẫn để mở ở checklist 25/26; không đánh đồng CLI với kiểm tay.

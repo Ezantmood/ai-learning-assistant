@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { SUMMARY_MODEL } from '../../../shared/ai/models';
 import { solveWithGemini, GeminiEmptyError, GeminiQuotaError } from '../../../shared/ai/transport';
 import { supabase } from '../../../shared/lib/supabase';
 import { getSolution, requestSolution, type SolverDocument } from '../api';
@@ -13,7 +14,7 @@ jest.mock('../../../shared/ai/transport', () => {
 const solveMock = jest.mocked(solveWithGemini);
 const fromMock = jest.mocked(supabase.from);
 const doc: SolverDocument = { id: 'doc-a', user_id: 'a', file_ext: 'pdf', extraction_status: 'done', extracted_text: ' Đề toán ' };
-const row = { id: 's1', document_id: 'doc-a', user_id: 'a', solution_text: 'Bước 1', model: 'gemini-3.6-flash' };
+const row = { id: 's1', document_id: 'doc-a', user_id: 'a', solution_text: 'Bước 1', model: SUMMARY_MODEL };
 beforeEach(() => { jest.clearAllMocks(); });
 
 describe('solver API', () => {
@@ -34,7 +35,7 @@ describe('solver API', () => {
     await expect(requestSolution({ document: doc, userId: 'a' })).resolves.toEqual(row);
     expect(solveMock).toHaveBeenCalledTimes(1);
     expect(solveMock).toHaveBeenCalledWith(expect.objectContaining({ contextText: 'Đề toán', kind: 'hint', hintStep: 1 }));
-    expect(payload).toMatchObject({ document_id: 'doc-a', user_id: 'a', solution_text: 'Bước 1', model: 'gemini-3.6-flash' });
+    expect(payload).toMatchObject({ document_id: 'doc-a', user_id: 'a', solution_text: 'Bước 1', model: SUMMARY_MODEL });
     expect(solutionKey('doc-a')).toEqual(['solution', 'doc-a']);
   });
   it('cứu phần dở rồi báo cắt, rỗng không ghi đè cũ', async () => {

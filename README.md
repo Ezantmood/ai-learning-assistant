@@ -49,7 +49,7 @@ node --env-file=.env --env-file=.env.local scripts/fr-audit-proof.mjs
 node --env-file=.env.local scripts/ai-smoke.mjs
 ```
 
-Mốc tự động sau tinh gọn UI: 44 suites / 338 test; lint 0 lỗi/0 warning; RLS A/B 51/51;
+Mốc tự động sau xử lý quota: 44 suites / 342 test; lint 0 lỗi/0 warning; RLS A/B 51/51;
 đối chiếu 57 cột types với schema remote, verify CN2 14/14 và CN3 10/10.
 Android bundle export đạt. Các ca thiết bị ở [TEST-CHECKLIST](docs/TEST-CHECKLIST.md)
 vẫn để mở nếu chưa chạy. Script proof tạo/dọn user/object test; service-role
@@ -57,7 +57,12 @@ chỉ dùng local, không nằm trong app.
 
 ## AI và giới hạn thực tế
 
-Model chung: `gemini-3.6-flash` stable, đã gọi sinh nội dung thật.
+Model chung: `gemini-3.5-flash-lite` stable; smoke 10/10 gồm PDF, OCR và
+hội thoại/solver đã đạt ngày 2026-10-21. Model 3.6 cũ của project hết quota
+Free Tier 20 yêu cầu/ngày. AI Studio đúng project ngày 2026-10-21 xác nhận
+Flash-Lite: **15 yêu cầu/phút, 250K token/phút, 500 yêu cầu/ngày**; hạn mức
+ngày gấp 25 lần model cũ. Các chức năng AI dùng chung ngân sách của model
+trong project; đây không phải API vô hạn hay cam kết khả năng phục vụ.
 3.8 Flash gặp timeout/503 khi probe nên chưa chọn làm mặc định.
 Minimal cho hỏi đáp/OCR/tóm tắt văn bản, low cho trích PDF/gợi ý, medium
 cho lời giải đầy đủ. Tóm tắt lại tái dùng toàn văn đã trích. Timeout 90 giây;
@@ -65,8 +70,13 @@ không tự retry, không hứa hạn mức cố định hay thời gian phản 
 Xem số đo và các lỗi dịch vụ trong [FR-AUDIT](docs/FR-AUDIT.md).
 
 Gói Google AI Pro và Gemini Developer API có billing/quota riêng; app dùng
-API key của project trong AI Studio. Không tự bật billing/nâng gói.
-[Tài liệu billing Google](https://ai.google.dev/gemini-api/docs/billing).
+API key của project trong AI Studio. Pro hiện có quyền lợi $10 Cloud
+credits/tháng qua Developer Program, cần nhận và gắn đúng billing account;
+key hiện tại vẫn Free Tier. Không tự bật billing/nâng gói.
+[Quyền lợi Pro](https://support.google.com/googleone/answer/14534406?hl=en),
+[billing Google](https://ai.google.dev/gemini-api/docs/billing).
+Trước demo chạy một lượt `node --env-file=.env.local scripts/ai-smoke.mjs --only=preflight`;
+đọc RPM/RPD/TPM và hướng dẫn nhận credits trong [SETUP mục 7](docs/SETUP.md#7-trước-buổi-demo-kiểm-hạn-mức-api).
 Key EXPO_PUBLIC_GEMINI_API_KEY vẫn nằm trong bundle bản demo; cần backend
 proxy trước khi phát hành cho người dùng thật. Không đưa service-role vào app.
 
