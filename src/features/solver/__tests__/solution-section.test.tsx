@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { act, create } from 'react-test-renderer';
-import { Button, PaperProvider } from 'react-native-paper';
+import { Button, List, PaperProvider } from 'react-native-paper';
 import { SolutionSection } from '../SolutionSection';
 import { lightTheme } from '../../../shared/theme/theme';
 import { useRequestSolution, useSolution } from '../queries';
@@ -44,6 +44,8 @@ describe('SolutionSection theo PDF', () => {
     expect(mutateAsync.mock.calls[0]?.[0]).toMatchObject({ kind: 'hint', hintStep: 1, history: [] });
     expect(mutateAsync.mock.calls[1]?.[0]).toMatchObject({ kind: 'hint', hintStep: 2, history: [expect.objectContaining({ kind: 'hint' })] });
     expect(mutateAsync.mock.calls.some(([input]) => input.kind === 'solution')).toBe(false);
+    act(() => tree.root.findAllByType(List.Accordion).find((node) => node.props.testID === 'solution-more')?.props.onPress());
+    expect(button(tree, 'solution-full')).toBeDefined();
     await act(async () => { button(tree, 'solution-full')?.props.onPress(); });
     act(() => tree.root.findByType(FormTextInput).props.onChangeText('Vì sao dùng công thức đó?'));
     await act(async () => { button(tree, 'solution-follow-up')?.props.onPress(); });

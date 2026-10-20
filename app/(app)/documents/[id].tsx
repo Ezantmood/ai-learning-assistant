@@ -15,6 +15,7 @@ import {
   useTheme,
 } from 'react-native-paper';
 
+import { DocumentStudyTabs } from '../../../src/features/documents/document-study-tabs';
 import { EmptyState } from '../../../src/shared/components/EmptyState';
 import {
   FeedbackSnackbar,
@@ -85,6 +86,8 @@ export default function DocumentDetailScreen() {
   const subjects = subjectsQuery.data ?? [];
   const docUrlQuery = useDocumentUrl(doc?.storage_path);
 
+  const [detailsVisible, setDetailsVisible] = useState(false);
+  const [ocrVisible, setOcrVisible] = useState(false);
   const [subjectMenuVisible, setSubjectMenuVisible] = useState(false);
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const [opening, setOpening] = useState(false);
@@ -202,7 +205,7 @@ export default function DocumentDetailScreen() {
           <ScreenHeader
             onBack={() => goBackToDocuments(router)}
             showBack
-            title="Chi tiết tài liệu"
+            title="Học cùng tài liệu"
           />
         }
       >
@@ -218,7 +221,7 @@ export default function DocumentDetailScreen() {
           <ScreenHeader
             onBack={() => goBackToDocuments(router)}
             showBack
-            title="Chi tiết tài liệu"
+            title="Học cùng tài liệu"
           />
         }
       >
@@ -241,11 +244,12 @@ export default function DocumentDetailScreen() {
 
   return (
     <ScreenContainer
+      contentStyle={styles.content}
       header={
         <ScreenHeader
           onBack={() => goBackToDocuments(router)}
           showBack
-          title="Chi tiết tài liệu"
+          title="Học cùng tài liệu"
         />
       }
     >
@@ -264,16 +268,23 @@ export default function DocumentDetailScreen() {
           title={doc.display_name}
           titleNumberOfLines={3}
         />
-        <Divider />
-        <Card.Content style={styles.rows}>
+      </Card>
+
+      <List.Item title="Thông tin & quản lý" description="Mở tệp, đổi tên, chọn môn hoặc xóa"
+        accessibilityRole="button" accessibilityState={{ expanded: detailsVisible }}
+        onPress={() => setDetailsVisible(!detailsVisible)} testID="document-manage"
+        left={(props) => <List.Icon {...props} icon={AppIcons.information} />}
+        right={(props) => <List.Icon {...props} icon={AppIcons.chevronRight} />} />
+      <View style={[styles.content, !detailsVisible && styles.hidden]}
+        accessibilityElementsHidden={!detailsVisible} importantForAccessibility={detailsVisible ? 'auto' : 'no-hide-descendants'}>
+        <View style={styles.rows}>
           <InfoRow label="Môn học" value={currentSubjectName} />
           <InfoRow label="Ngày tải lên" value={formatDateTime(doc.created_at)} />
           <InfoRow
             label="Trạng thái trích xuất"
             value={getExtractionStatusLabel(doc.extraction_status)}
           />
-        </Card.Content>
-      </Card>
+        </View>
 
       <Button
         accessibilityLabel="Mở tài liệu bằng ứng dụng ngoài"
@@ -286,14 +297,6 @@ export default function DocumentDetailScreen() {
       >
         Mở tài liệu
       </Button>
-
-      {doc.file_ext === 'jpg' && doc.extracted_text ? <ScanTextEditor key={`ocr-${doc.id}`}
-        documentId={doc.id} userId={userId ?? ''} initialText={doc.extracted_text} /> : null}
-      <SummarySection key={`summary-${doc.id}`} doc={doc} userId={userId ?? ''} />
-
-      <QaSection key={`qa-${doc.id}`} doc={doc} userId={userId ?? ''} />
-
-      <SolutionSection doc={doc} key={`solution-${doc.id}`} userId={userId ?? ''} analysisRequest={analyze} />
 
       <RenameDocumentForm
         documentId={doc.id}
@@ -349,6 +352,25 @@ export default function DocumentDetailScreen() {
       >
         Xóa tài liệu
       </Button>
+
+      </View>
+
+      {doc.file_ext !== 'docx' ? <DocumentStudyTabs key={doc.id}
+        initialMode={analyze || doc.file_ext === 'jpg' ? 'solver' : 'summary'} analysisRequest={analyze}
+        summary={<SummarySection doc={doc} userId={userId ?? ''} />}
+        chat={<QaSection doc={doc} userId={userId ?? ''} />}
+        solver={<View style={styles.content}>
+          {doc.file_ext === 'jpg' && doc.extracted_text ? <>
+            <Button icon={AppIcons.pencil} onPress={() => setOcrVisible(!ocrVisible)} testID="document-edit-ocr">
+              {ocrVisible ? 'Thu gọn đề bài' : 'Xem & sửa nội dung đề'}
+            </Button>
+            <View style={!ocrVisible && styles.hidden} accessibilityElementsHidden={!ocrVisible}
+              importantForAccessibility={ocrVisible ? 'auto' : 'no-hide-descendants'}>
+              <ScanTextEditor key={`ocr-${doc.id}`} documentId={doc.id} userId={userId ?? ''} initialText={doc.extracted_text} />
+            </View>
+          </> : null}
+          <SolutionSection doc={doc} userId={userId ?? ''} analysisRequest={analyze} />
+        </View>} /> : null}
 
       <Portal>
         <Dialog
@@ -471,9 +493,9 @@ function RenameDocumentForm({
 }
 
 const styles = StyleSheet.create({
-  row: {
-    gap: 2,
-  },
+  content: { gap: spacing.md, justifyContent: 'flex-start' },
+  hidden: { display: 'none' },
+  row: { gap: spacing.xs },
   rows: {
     gap: spacing.sm,
     paddingVertical: spacing.sm,

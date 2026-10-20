@@ -145,20 +145,23 @@ export function SummarySection({
   return (
     <Card mode="outlined">
       <Card.Title
+        subtitleNumberOfLines={2}
         left={(props) => (
           <List.Icon {...props} icon={AppIcons.textBoxOutline} />
         )}
-        subtitle="Chọn mức độ và phạm vi; kết quả được tự động lưu"
-        title="Tóm tắt bằng AI"
+        subtitle="Nắm ý chính, tự động lưu để xem lại"
+        title="Hiểu nhanh tài liệu"
       />
       <Card.Content style={styles.content}>
         <Text variant="titleSmall">Mức độ tóm tắt</Text>
         <SegmentedButtons value={options.level} onValueChange={(level) => setOptions({ ...options, level: level as SummaryOptions['level'] })}
           buttons={[{ value: 'short', label: 'Ngắn', disabled: running }, { value: 'medium', label: 'Trung bình', disabled: running }, { value: 'detailed', label: 'Chi tiết', disabled: running }]} />
+        <List.Accordion title={options.scope === 'whole' ? 'Phạm vi: toàn tài liệu' : 'Phạm vi: chương / phần'}>
         <SegmentedButtons value={options.scope} onValueChange={(scope) => setOptions({ ...options, scope: scope as SummaryOptions['scope'] })}
           buttons={[{ value: 'whole', label: 'Toàn tài liệu', disabled: running }, { value: 'sections', label: 'Theo chương/phần', disabled: running }]} />
         {options.scope === 'sections' ? <FormTextInput label="Tên chương/phần (để trống: tất cả)" value={options.sectionTitle}
           maxLength={200} disabled={running} onChangeText={(sectionTitle) => setOptions({ ...options, sectionTitle })} testID="summary-section-title" /> : null}
+        </List.Accordion>
         {loadError || (requestMutation.error && !isTruncated) ? <Text style={{ color: theme.colors.error }}>
           {loadError ?? toSummaryErrorMessage(requestMutation.error)}
         </Text> : null}
@@ -239,7 +242,7 @@ export function SummarySection({
         ) : (
           <View style={styles.content}>
             <Text variant="bodyMedium">
-              Chưa có bản tóm tắt — bấm nút để tạo.
+              Chọn mức độ rồi tạo bản tóm tắt đầu tiên.
             </Text>
             <Button
               accessibilityLabel="Tóm tắt tài liệu bằng AI"

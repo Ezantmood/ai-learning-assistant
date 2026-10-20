@@ -2377,3 +2377,20 @@ https://supabase.com/docs/guides/platform/access-control`
   kế thừa. Web thật tài khoản fixture: đăng nhập, trang chủ light/dark,
   khung 390×844, tải tệp từ CTA, mở kho và lọc chưa phân loại đạt.
   Ảnh: evidence/ui-simplify-home.png. Chưa thay thế kiểm Expo Go thiết bị.
+
+
+## UI-02 — 2026-10-21: một việc học tại một thời điểm
+
+- Chi tiết tài liệu chia ba mục Tóm tắt/Hỏi đáp/Giải bài. Component cụ thể
+  DocumentStudyTabs nhận UI qua props, giữ mount/draft/ngữ cảnh; vùng ẩn
+  loại khỏi accessibility. Intent OCR mới luôn chuyển sang Giải bài.
+- Thông tin/đổi tên/môn/xóa/mở tệp nằm trong Thông tin & quản lý; đề ảnh
+  có nút mở sửa riêng. Mức độ tóm tắt luôn hiện, phạm vi/chương mở thêm.
+  Giải bài ưu tiên từng bước, các lựa chọn khác và bước trước được thu gọn.
+- Không đổi API, dữ liệu hay prompt. Hỏi đáp vẫn lưu tùy chọn/phiên mới,
+  lời giải đầy đủ vẫn chỉ chạy sau yêu cầu riêng.
+- Web 390×844: đổi 3 mục, soạn câu hỏi→đổi mục→quay lại còn nguyên, chọn
+  chương, mở các chế độ giải và quản lý tệp đạt. Ảnh document mới trong
+  evidence/ui-simplify-document.png. Native Expo Go chưa chạy.
+- Regression mới kiểm draft/accessibility/intent; test solver đi qua mục
+  mở thêm. Cổng tsc/lint đạt, 44 suites/338 tests PASS (open handle kế thừa).

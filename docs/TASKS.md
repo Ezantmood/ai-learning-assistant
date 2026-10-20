@@ -455,7 +455,7 @@ Mỗi checkbox commit/push riêng, tsc/lint/test trước commit; G4+ merge --no
 - [x] UI-01: Trang chủ hướng theo việc cần làm, hai lối Tải tài liệu/Quét đề;
   bỏ mã FR/trạng thái phát triển khỏi UI. Danh sách và đăng nhập có câu dẫn
   ngắn, hành động trống đúng ngữ cảnh, chiều rộng đọc phù hợp. FR-01/02/06/08/12/31/32.
-- [ ] UI-02: Chi tiết tài liệu chia Tóm tắt/Hỏi đáp/Giải bài, chỉ hiện một
+- [x] UI-02: Chi tiết tài liệu chia Tóm tắt/Hỏi đáp/Giải bài, chỉ hiện một
   vùng; đổi mục không mất draft/lượt chat. Thu gọn thông tin/quản lý tài liệu,
   tùy chọn tóm tắt và thao tác giải bài phụ; giữ đầy đủ lịch sử/chọn mức độ/
   chương/lưu/phiên mới/gợi ý tiếp/giải thích/full/hỏi tiếp. FR-09→FR-30/36→FR-45.
