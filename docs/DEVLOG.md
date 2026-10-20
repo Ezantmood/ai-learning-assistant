@@ -2345,3 +2345,22 @@ https://supabase.com/docs/guides/platform/access-control`
 - Đã dọn tài khoản/fixture web sau chụp ảnh; không để dữ liệu test trong project.
 - Bổ sung FR-05 cache: AuthProvider dọn Query cache khi hết phiên/đổi user,
   giữ cache khi refresh cùng user; regression mới nâng tổng lên 43 suites/336.
+
+**Mốc Git đợt đối chiếu PDF 2026-10-20**
+
+- Branch: `codex/fr-pdf-audit`, push ngay sau từng checkbox.
+- AUDIT-01: `c8cdbba088b9128a1b02a05b625eb0effbf29c22`.
+- AUDIT-02: `544c4339353dbd676d405d3ee13794e274ccefbd`.
+- AUDIT-03: `08615ece7f33f8b71affa4a5c75c6dabd7d3c5b0`.
+- AUDIT-04: `d8280f5218cadd66ce0f19bbd0622a0031a22f0f`.
+- AUDIT-05: `c3ee30164d6547f480d000593e6b310e167bb55e`.
+- AUDIT-06: `3df35b0d220189340bc95092948be8f717b17df7`.
+- Merge tính năng `--no-ff` vào main:
+  `a23bcfb0d960fe6bb0b50c4f6c56cfcec616904a` (đã push).
+- Tag `fr-pdf-audit-20261020` trỏ merge trên, tạo rồi push ngay, không di chuyển.
+- Không PR theo quy tắc tự merge từ G4. Nhật ký mốc Git được commit trên
+  branch sau khi fast-forward tới merge, rồi fast-forward main đến commit
+  nhật ký; không commit trực tiếp main, không tạo thêm merge đổi mốc tag.
+- Cổng cuối: tsc 0, lint 0 lỗi/0 warning, 43 suites/336 PASS,
+  check:functions 0; Android export 5,5 MB đạt; RLS cuối 51/51, dọn fixture.
+  Test tay web đạt; PDF API 503 hai lượt và Expo Go vẫn là các ô mở rõ ràng.
