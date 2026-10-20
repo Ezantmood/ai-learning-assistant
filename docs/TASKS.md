@@ -418,3 +418,18 @@ gốc khác thì sửa SPEC trước, không sửa code).
   thứ hai khi render lại sau lượt gợi ý. Đặt key riêng cho vùng gợi ý,
   chạy cổng chất lượng và ghi ca Expo Go còn chờ chủ dự án kiểm.
   Branch `fix/cn6-solution-key`; tag `cn6-solution-key-fix`.
+
+
+# Đợt đối chiếu PDF 2026-10-20 (quyền chủ dự án: kiểm tra và bổ sung toàn đề)
+
+Branch `codex/fr-pdf-audit`, tag `fr-pdf-audit-20261020`. Mỗi checkbox một
+commit, chạy tsc/lint/test và push ngay. G4+ tự merge --no-ff sau cổng xanh.
+Các task/mô tả FR phía trên là lịch sử; SPEC hiện tại và FR-AUDIT theo PDF
+thay thế việc diễn giải FR cũ. Không tick nợ test tay chưa chạy.
+
+- [x] AUDIT-01: Đọc/render PDF đủ 3 trang, đối chiếu 45 FR với code, sửa SPEC/traceability và ghi sai lệch trước sửa.
+- [ ] AUDIT-02: Bổ sung độ dài/chương/phần, cấu trúc kết quả và lưu/xem nhiều bản tóm tắt. FR-18→FR-22.
+- [ ] AUDIT-03: Hội thoại theo phiên có ngữ cảnh, bắt đầu mới, lựa chọn lưu và mở lại lịch sử. FR-26→FR-30.
+- [ ] AUDIT-04: Sửa/lưu OCR và gửi đề đã kiểm tra sang phân tích. FR-36→FR-37.
+- [ ] AUDIT-05: Phân tích/chủ đề, gợi ý tiếp, giải thích, lời giải theo yêu cầu, phân biệt loại, hỏi tiếp. FR-38→FR-45.
+- [ ] AUDIT-06: Xác minh/nâng model stable, tối ưu độ trễ có kiểm chứng, proof RLS A/B, hồi quy và hoàn thiện tài liệu.

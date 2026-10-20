@@ -2243,3 +2243,16 @@ https://supabase.com/docs/guides/platform/access-control`
   `3f858a58bec064ac5470af2ffc07696d95d21d84` (đã push); tag
   `release-docs` trỏ merge này, push cùng lệnh với main. Không mở PR
   theo quyết định G4+.)
+
+
+### AUDIT-01 — Đối chiếu PDF gốc — 2026-10-20
+
+- Đọc/extract/render toàn bộ 3 trang PDF trong thư mục cha; so từng FR với
+  screens/API/transport/DDL và bảng truy vết cũ. Trước sửa: 27 có code,
+  5 một phần, 13 thiếu (chi tiết FR-AUDIT.md).
+- SPEC cũ đổi nghĩa FR và bỏ nhầm yêu cầu ra ngoài phạm vi. Viết lại theo
+  đúng 45 FR gốc; traceability không còn khẳng định 45/45 đạt. TASKS thêm
+  từng checkbox sửa có commit riêng, theo yêu cầu chủ dự án kiểm tra toàn đề.
+- Không đổi stack/dependency. Hai mục untracked .DS_Store và supabase/.temp/
+  không đưa vào commit. Không đọc/in/commit giá trị secret.
+- Cổng nền: tsc exit 0; lint 0 lỗi/2 warning watch() kế thừa; Jest 39 suites, 318/318; check:functions exit 0. Kiểm tra PDF bằng mắt đủ 3 trang.
