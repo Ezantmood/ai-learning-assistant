@@ -34,8 +34,8 @@ export function useSaveScanText(userId: string) {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (input: { documentId: string; text: string }) => updateScanText({ ...input, userId }),
-    onSuccess: (document) => {
-      void client.invalidateQueries({ queryKey: ['document', document.id] });
+    onSuccess: async (document) => {
+      await client.invalidateQueries({ queryKey: ['document', document.id] });
       void client.invalidateQueries({ queryKey: ['documents', userId] });
       void client.invalidateQueries({ queryKey: ['latest-scan', userId] });
     },

@@ -19,7 +19,7 @@ it('lưu chữ đã sửa trước khi chuyển phân tích; lưu lỗi giữ m�
   const send = () => tree.root.findAllByType(Button).find((b) => b.props.testID === 'scan-analyze')?.props.onPress();
   await act(async () => { send(); });
   expect(save).toHaveBeenLastCalledWith({ documentId: 'doc', text: 'Đề đã kiểm tra' });
-  expect(router.push).toHaveBeenCalledWith({ pathname: '/documents/[id]', params: { id: 'doc', analyze: '1' } });
+  expect(router.push).toHaveBeenCalledWith({ pathname: '/documents/[id]', params: { id: 'doc', analyze: expect.any(String) } });
   jest.mocked(router.push).mockClear();
   save.mockRejectedValueOnce(new Error('offline'));
   await act(async () => { send(); });

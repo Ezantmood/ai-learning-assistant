@@ -43,11 +43,11 @@ Bằng chứng thiếu trước sửa được giữ ở FR-AUDIT.md.
 | FR-35 | Hệ thống phải hiển thị nội dung đã nhận dạng để sinh viên kiểm tra. | `src/features/scan/` | có code; hồi quy thiết bị còn mở |
 | FR-36 | Sinh viên phải có thể chỉnh sửa nội dung OCR nếu nhận dạng không chính xác. | `src/features/scan/` | có code + unit chỉnh OCR/lưu trước điều hướng; chờ Expo Go |
 | FR-37 | Hệ thống phải cho phép sinh viên gửi đề bài đã nhận dạng đến AI để phân tích. | `src/features/scan/` | có code + unit chỉnh OCR/lưu trước điều hướng; chờ Expo Go |
-| FR-38 | AI phải phân tích nội dung đề bài. | `src/features/solver/` | một phần; chờ bổ sung |
-| FR-39 | AI phải xác định loại bài toán hoặc chủ đề liên quan. | `src/features/solver/` | thiếu; chờ bổ sung |
-| FR-40 | AI phải cung cấp gợi ý từng bước (step-by-step hints). | `src/features/solver/` | một phần; chờ bổ sung |
-| FR-41 | Hệ thống phải cho phép sinh viên yêu cầu gợi ý tiếp theo. | `src/features/solver/` | thiếu; chờ bổ sung |
-| FR-42 | AI phải giải thích các khái niệm liên quan đến bài toán. | `src/features/solver/` | thiếu; chờ bổ sung |
-| FR-43 | Hệ thống có thể cung cấp lời giải tham khảo sau khi sinh viên yêu cầu. | `src/features/solver/` | thiếu; chờ bổ sung |
-| FR-44 | Hệ thống phải phân biệt giữa gợi ý, giải thích và lời giải hoàn chỉnh. | `src/features/solver/` | thiếu; chờ bổ sung |
-| FR-45 | Hệ thống phải cho phép sinh viên đặt câu hỏi tiếp theo về lời giải. | `src/features/solver/` | thiếu; chờ bổ sung |
+| FR-38 | AI phải phân tích nội dung đề bài. | `src/features/solver/` | có code + unit chế độ/gợi ý tiếp/hỏi tiếp; chờ smoke AI và Expo Go |
+| FR-39 | AI phải xác định loại bài toán hoặc chủ đề liên quan. | `src/features/solver/` | có code + unit chế độ/gợi ý tiếp/hỏi tiếp; chờ smoke AI và Expo Go |
+| FR-40 | AI phải cung cấp gợi ý từng bước (step-by-step hints). | `src/features/solver/` | có code + unit chế độ/gợi ý tiếp/hỏi tiếp; chờ smoke AI và Expo Go |
+| FR-41 | Hệ thống phải cho phép sinh viên yêu cầu gợi ý tiếp theo. | `src/features/solver/` | có code + unit chế độ/gợi ý tiếp/hỏi tiếp; chờ smoke AI và Expo Go |
+| FR-42 | AI phải giải thích các khái niệm liên quan đến bài toán. | `src/features/solver/` | có code + unit chế độ/gợi ý tiếp/hỏi tiếp; chờ smoke AI và Expo Go |
+| FR-43 | Hệ thống có thể cung cấp lời giải tham khảo sau khi sinh viên yêu cầu. | `src/features/solver/` | có code + unit chế độ/gợi ý tiếp/hỏi tiếp; chờ smoke AI và Expo Go |
+| FR-44 | Hệ thống phải phân biệt giữa gợi ý, giải thích và lời giải hoàn chỉnh. | `src/features/solver/` | có code + unit chế độ/gợi ý tiếp/hỏi tiếp; chờ smoke AI và Expo Go |
+| FR-45 | Hệ thống phải cho phép sinh viên đặt câu hỏi tiếp theo về lời giải. | `src/features/solver/` | có code + unit chế độ/gợi ý tiếp/hỏi tiếp; chờ smoke AI và Expo Go |

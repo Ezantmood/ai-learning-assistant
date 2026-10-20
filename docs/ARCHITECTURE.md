@@ -510,3 +510,10 @@ CN5 dùng ScanTextEditor tại màn quét và chi tiết ảnh. API updateScanTe
 lưu extracted_text có RLS, không upload lại ảnh; invalidation detail/list/latest.
 Lưu thành công mới chuyển detail với intent analyze; solver xử lý intent
 ở AUDIT-05. Không import trực tiếp scan→solver.
+
+
+CN6 tách các nút Phân tích (dạng bài/chủ đề), Gợi ý tiếp từng bước,
+Giải thích khái niệm, Lời giải tham khảo và Hỏi tiếp. Transport nhận kind,
+hintStep, history và question; cùng postGenerate, không có đường gọi thứ hai.
+Phân tích bắt đầu lại bước gợi ý. Intent analyze từ màn OCR chạy đúng một
+lần theo token sau khi lưu và refetch detail; mở tài liệu thường không tự gọi.

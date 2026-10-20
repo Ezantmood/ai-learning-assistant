@@ -239,6 +239,8 @@ export type Database = {
       }
       document_solutions: {
         Row: {
+          response_type: string
+          hint_step: number
           created_at: string
           document_id: string
           id: string
@@ -248,6 +250,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          response_type?: string
+          hint_step?: number
           created_at?: string
           document_id: string
           id?: string
@@ -257,6 +261,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          response_type?: string
+          hint_step?: number
           created_at?: string
           document_id?: string
           id?: string

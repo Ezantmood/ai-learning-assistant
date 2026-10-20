@@ -357,3 +357,18 @@ remote smoke save/reopen/resave 2 lượt đạt. Kiểm Expo Go còn mở.
 
 Unit API chặn rỗng, ghi extracted_text; unit UI kiểm đúng bản sửa và lưu lỗi
 không chuyển màn. 329/329 PASS; thiết bị chưa chạy.
+
+
+## 22. Hỗ trợ giải bài theo PDF (FR-38→FR-45)
+
+- [ ] Phân tích: nêu chủ đề/dạng bài, dữ kiện/yêu cầu, không tự giải hết.
+- [ ] Gợi ý đầu tiên rồi Gợi ý tiếp: chỉ một bước mới, tiếp nối và không lặp.
+- [ ] Giải thích: các khái niệm/công thức liên quan, nhãn riêng.
+- [ ] Chỉ sau Yêu cầu lời giải tham khảo mới có lời giải đầy đủ, nhãn riêng.
+- [ ] Hỏi “vì sao dùng công thức đó?”: dùng các lượt trước, giữ đề gốc.
+- [ ] Sửa OCR → Phân tích: dùng bản sửa, chỉ một request, không dùng đề cũ.
+- [ ] Mạng lỗi/quota/rỗng: giữ kết quả cũ, không tự retry; bấm nhanh không gửi đôi.
+- [ ] Mở lại tài liệu: thấy loại phản hồi/bước đã lưu gần nhất; A không xem B.
+
+Unit UI/transport/API kiểm chế độ, bước tiếp và ngữ cảnh, intent OCR/quota;
+331/331 PASS. Chất lượng nội dung cần smoke API thật và kiểm thiết bị.

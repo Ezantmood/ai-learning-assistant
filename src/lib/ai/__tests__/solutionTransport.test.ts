@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { SUMMARY_MODEL } from '../models';
 import { GeminiEmptyError, GeminiQuotaError, GeminiServerError,
-  parseSolutionJson, SOLUTION_GENERATION_CONFIG, SOLUTION_PROMPT, solveWithGemini } from '../transport';
+  parseSolutionJson, SOLUTION_GENERATION_CONFIG, buildSolutionPrompt, solveWithGemini } from '../transport';
 
 let fetchMock: jest.MockedFunction<typeof fetch>;
 const oldKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
@@ -33,7 +33,7 @@ describe('CN6 Gemini', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0]?.[0]).toContain(`${SUMMARY_MODEL}:generateContent`);
     const body = JSON.parse(fetchMock.mock.calls[0]?.[1]?.body as string);
-    expect(body.contents[0].parts).toEqual([{ text: `${SOLUTION_PROMPT}\n\n--- ĐỀ BÀI ---\n  Đề bài  ` }]);
+    expect(body.contents[0].parts).toEqual([{ text: `${buildSolutionPrompt({ contextText: '  Đề bài  ' })}\n\n--- ĐỀ BÀI ---\n  Đề bài  ` }]);
     expect(body.generationConfig).toEqual(SOLUTION_GENERATION_CONFIG);
     expect(JSON.stringify(body)).not.toMatch(/temperature|top_p|top_k|candidate_count|thinking_budget/);
   });
@@ -48,4 +48,13 @@ describe('CN6 Gemini', () => {
     await expect(solveWithGemini({ contextText: 'đề' })).rejects.toThrow(GeminiServerError);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
+});
+
+it('phân biệt phân tích, một gợi ý tiếp, giải thích, lời giải và hỏi tiếp', () => {
+  expect(buildSolutionPrompt({ contextText: 'đề', kind: 'analysis' })).toContain('chủ đề/dạng bài');
+  const hint = buildSolutionPrompt({ contextText: 'đề', kind: 'hint', hintStep: 2 });
+  expect(hint).toContain('MỘT gợi ý'); expect(hint).toContain('bước 2'); expect(hint).toContain('Không tiết lộ đáp án');
+  expect(buildSolutionPrompt({ contextText: 'đề', kind: 'explanation' })).toContain('khái niệm/công thức');
+  expect(buildSolutionPrompt({ contextText: 'đề', kind: 'solution' })).toContain('đã yêu cầu lời giải');
+  expect(buildSolutionPrompt({ contextText: 'đề', kind: 'follow_up', question: 'Vì sao?' })).toContain('Vì sao?');
 });

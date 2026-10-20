@@ -33,7 +33,7 @@ describe('solver API', () => {
     solveMock.mockResolvedValue({ solutionText: ' Bước 1 ', truncated: false });
     await expect(requestSolution({ document: doc, userId: 'a' })).resolves.toEqual(row);
     expect(solveMock).toHaveBeenCalledTimes(1);
-    expect(solveMock).toHaveBeenCalledWith({ contextText: 'Đề toán' });
+    expect(solveMock).toHaveBeenCalledWith(expect.objectContaining({ contextText: 'Đề toán', kind: 'hint', hintStep: 1 }));
     expect(payload).toMatchObject({ document_id: 'doc-a', user_id: 'a', solution_text: 'Bước 1', model: 'gemini-3.5-flash' });
     expect(solutionKey('doc-a')).toEqual(['solution', 'doc-a']);
   });
@@ -78,4 +78,15 @@ describe('solver API', () => {
     await expect(requestSolution({ document: doc, userId: 'a' })).rejects.toThrow('db down');
     expect(toSolverErrorMessage(new Error('db down'))).toMatch(/Không tạo được/);
   });
+});
+
+it('hỏi tiếp cần câu hỏi/ngữ cảnh; chế độ và bước được lưu riêng', async () => {
+  await expect(requestSolution({ document: doc, userId: 'a', kind: 'follow_up', question: '' })).rejects.toThrow('nhập câu hỏi');
+  expect(solveMock).not.toHaveBeenCalled();
+  const upsert = jest.fn(() => ({ select: () => ({ single: async () => ({ data: row, error: null }) }) }));
+  fromMock.mockImplementation((() => ({ upsert })) as unknown as typeof supabase.from);
+  solveMock.mockResolvedValue({ solutionText: 'Bước tiếp theo', truncated: false });
+  await requestSolution({ document: doc, userId: 'a', kind: 'hint', hintStep: 2, history: [{ kind: 'hint', text: 'Bước trước' }] });
+  expect(upsert).toHaveBeenCalledWith(expect.objectContaining({ response_type: 'hint', hint_step: 2 }), { onConflict: 'document_id' });
+  expect(solveMock).toHaveBeenCalledWith(expect.objectContaining({ history: [{ kind: 'hint', text: 'Bước trước' }] }));
 });

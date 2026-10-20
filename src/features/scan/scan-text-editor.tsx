@@ -25,7 +25,7 @@ export function ScanTextEditor({ documentId, userId, initialText }: {
     try {
       await mutation.mutateAsync({ documentId, text });
       setMessage('Đã lưu nội dung đã kiểm tra.');
-      if (openAnalysis) router.push({ pathname: '/documents/[id]', params: { id: documentId, analyze: '1' } });
+      if (openAnalysis) router.push({ pathname: '/documents/[id]', params: { id: documentId, analyze: String(Date.now()) } });
     } catch (reason) { setError(toScanErrorMessage(reason)); }
     finally { lock.current = false; }
   };

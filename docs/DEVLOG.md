@@ -2294,3 +2294,16 @@ https://supabase.com/docs/guides/platform/access-control`
   để người dùng sửa phần cứu được. Không thêm bảng/dependency.
 - tsc 0; lint 0 lỗi/2 warning cũ; 42 suites, 329/329 PASS. Test UI mô phỏng
   sửa→lưu→chuyển detail và lưu lỗi không điều hướng. Kiểm Expo Go mục 21 mở.
+
+
+### AUDIT-05 — Đủ luồng học từng bước FR-38→FR-45 — 2026-10-20
+
+- Nút/phản hồi riêng cho phân tích chủ đề/dạng bài, một gợi ý tiếp theo,
+  giải thích khái niệm, lời giải tham khảo theo yêu cầu và hỏi tiếp.
+  Prompt giữ dữ kiện đề, không tự lộ lời giải trong chế độ gợi ý; gửi lịch sử.
+- Migration 0010 đã áp: response_type CHECK + hint_step >=0; giữ row cũ.
+  Lưu lượt gần nhất và metadata; lịch sử phiên ở UI cho hỏi tiếp.
+- Nối intent OCR một lần sau lưu/refetch, không tự gọi khi mở tài liệu thường.
+  Bỏ import chéo solver→documents; thêm guard ngữ cảnh/câu hỏi, giữ khóa gọi.
+- Cổng tsc 0; lint 0 lỗi/2 warning cũ; 42 suites, 331/331 PASS. UI unit kiểm
+  gợi ý bước 1→2, full opt-in, hỏi tiếp và intent OCR. Expo Go mục 22 mở.

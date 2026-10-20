@@ -73,7 +73,7 @@ type Notice = {
  * tạo signed URL TTL 3600s rồi `Linking.openURL` ra app ngoài.
  */
 export default function DocumentDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, analyze } = useLocalSearchParams<{ id: string; analyze?: string }>();
   const { user } = useSession();
   const theme = useTheme<AppTheme>();
   const userId = user?.id;
@@ -293,7 +293,7 @@ export default function DocumentDetailScreen() {
 
       <QaSection key={`qa-${doc.id}`} doc={doc} userId={userId ?? ''} />
 
-      <SolutionSection doc={doc} key={`solution-${doc.id}`} userId={userId ?? ''} />
+      <SolutionSection doc={doc} key={`solution-${doc.id}`} userId={userId ?? ''} analysisRequest={analyze} />
 
       <RenameDocumentForm
         documentId={doc.id}

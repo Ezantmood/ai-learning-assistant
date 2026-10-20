@@ -300,3 +300,11 @@ lưu; row cũ NULL được xem là phiên riêng theo id. Không cần bảng p
 metadata tiêu đề lấy từ câu đầu. Chưa bấm Lưu thì không ghi Postgres.
 Lưu snapshot bằng upsert theo id để bấm lại không nhân đôi lượt. RLS/FK
 hiện có vẫn áp từng row; xóa tài liệu kéo theo lịch sử.
+
+
+## Đối chiếu PDF — chế độ giải bài (0010)
+
+`document_solutions` giữ row gần nhất/tài liệu, thêm response_type có CHECK
+analysis/hint/explanation/solution/follow_up và hint_step >= 0. Row cũ mặc
+định hint/0. Lịch sử các lượt của phiên giữ trong component để hỏi tiếp;
+không thêm bảng transcript ngoài yêu cầu. Xóa tài liệu vẫn CASCADE.
