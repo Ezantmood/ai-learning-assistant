@@ -2523,3 +2523,14 @@ https://supabase.com/docs/guides/platform/access-control`
   Jest vẫn cảnh báo open handle kế thừa rồi thoát 0. Evidence ở
   `docs/evidence/cn4-grounded-answers-20261021.txt`. Chưa kiểm Expo Go
   hay chính cuốn sách chủ dự án gặp lỗi; ca tay giữ mở ở checklist 27.
+
+**Mốc Git CN4-HF-01 — hoàn tất 2026-10-21**
+
+- Branch: `codex/cn4-grounded-answers`.
+- Commit triển khai: `c4cfef6ff1bce7f7fe9fd1deeebf77ccb7ebe1b2`, đã push ngay.
+- Merge `--no-ff` vào main: `67228a71259dd5d4083f8ca6b3942425ccbffcd9`, đã push.
+- Tag `cn4-grounded-answers-20261021` trỏ merge trên, đã push ngay;
+  không di chuyển tag. Không PR theo quy tắc G4+.
+- Ghi mốc trên branch đã fast-forward tới merge; sau commit nhật ký sẽ
+  fast-forward main, không commit trực tiếp main. Không đưa .env,
+  .DS_Store hay supabase/.temp vào commit.
