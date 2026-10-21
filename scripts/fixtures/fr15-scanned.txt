@@ -1,0 +1,6 @@
+PHIẾU THỰC HÀNH - BẢN CHỤP
+Họ tên: An. Nhóm: 4.
+Bình thứ nhất chứa 350 ml nước.
+Bình thứ hai chứa 125 ml nước.
+Tổng lượng nước trong hai bình là 475 ml.
+Mã kiểm tra ở cuối trang: ANH-682.

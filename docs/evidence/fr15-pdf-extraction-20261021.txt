@@ -1,0 +1,48 @@
+FR15-01 — kiểm 2026-10-21, model gemini-3.5-flash-lite
+Chỉ dùng PDF tự đặt trong scripts/fixtures, không nội dung/tài khoản thật.
+
+1. API model thật, transport production, so từng đoạn với expected .txt.
+PDF chữ 3 trang/18 đoạn: tóm tắt Chương 2, nguồn phải giữ cả Chương 1/3.
+PDF ảnh 1 trang/6 dòng: chỉ có bitmap, không có text layer.
+Đã render/soi đủ 4 trang trước khi gọi API. Chuẩn hóa Unicode NFC/khoảng
+trắng khi so đoạn, không bỏ từ/số/dấu câu để che sai lệch.
+Lệnh: node --env-file=.env.local scripts/ai-smoke.mjs --only=extraction
+
+MODEL gemini-3.5-flash-lite
+TIME fr15-three-pages 3838ms
+{"fixture":"fr15-three-pages","extractedText":"CHƯƠNG 1: HẠT ĐẬU CỦA LINH\n\nLinh gieo một hạt đậu trong chiếc cốc màu xanh lá cây vào sáng thứ Hai.\n\nMỗi sáng, Linh tưới đúng một thìa nước và đặt cốc gần cửa sổ phía đông.\n\nBa ngày đầu, mặt đất vẫn phẳng. Đến sáng ngày thứ tư, một chiếc mầm nhỏ xuất hiện.\n\nLinh ghi vào sổ: Kết quả cần thời gian; kiên trì là tiếp tục chăm sóc dù chưa thấy thành quả.\n\nChi tiết cuối chương 1: nhãn trên chiếc cốc ghi mã VUON-417.\n\nCHƯƠNG 2: THÙNG SÁCH Ở THƯ VIỆN\n\nNam cần mang 12 cuốn sách đến thư viện nhưng không bê nổi cả thùng.\n\nMai đề nghị chia thành hai lượt, mỗi lượt sáu cuốn. Nam đồng ý và hai bạn cùng làm.\n\nCô thủ thư nhận đủ sách lúc 9 giờ 15 phút, rồi tặng hai bạn một dấu sao màu đỏ.\n\nBài học của chương này là hợp tác và chia nhỏ công việc để hoàn thành nhiệm vụ.\n\nChi tiết cuối chương 2: số hiệu chiếc thùng là SACH-826.\n\nCHƯƠNG 3: BÀI THỰC HÀNH ĐIỆN\n\nMột mạch điện có điện áp U = 12 V và điện trở R = 6 ohm.\n\nTheo định luật Ohm: U = I * R, nên I = U / R = 2 A.\n\nBảng ghi chép: lần 1 - 6 ohm - 2 A; lần 2 - 12 ohm - 1 A.\n\nGhi chú an toàn: ngắt nguồn trước khi thay điện trở. Không chạm tay vào dây trần.\n\nDòng cuối tài liệu: mã kết thúc KETTHUC-935.","summaryText":"# CHƯƠNG 2: THÙNG SÁCH Ở THƯ VIỆN\n- Nam cần mang 12 cuốn sách đến thư viện nhưng không bê nổi cả thùng.\n- Mai đề nghị chia thành hai lượt, mỗi lượt sáu cuốn và Nam đã đồng ý cùng làm.\n- Cô thủ thư nhận đủ sách lúc 9 giờ 15 phút và tặng hai bạn một dấu sao màu đỏ.\n- Bài học rút ra là hợp tác và chia nhỏ công việc để hoàn thành nhiệm vụ, với số hiệu chiếc thùng là SACH-826.","truncated":false}
+PASS fr15-three-pages: all 18 source paragraphs
+PASS summary scoped to chapter 2, extraction keeps chapters 1 and 3
+TIME fr15-scanned 4039ms
+{"fixture":"fr15-scanned","extractedText":"PHIẾU THỰC HÀNH - BẢN CHỤP\nHọ tên: An. Nhóm: 4.\nBình thứ nhất chứa 350 ml nước.\nBình thứ hai chứa 125 ml nước.\nTổng lượng nước trong hai bình là 475 ml.\nMã kiểm tra ở cuối trang: ANH-682.","summaryText":"# Tóm tắt phiếu thực hành\n- Họ tên học sinh: An (Nhóm: 4).\n- Lượng nước trong bình thứ nhất: 350 ml.\n- Lượng nước trong bình thứ hai: 125 ml.\n- Tổng lượng nước trong hai bình: 475 ml.\n- Mã kiểm tra: ANH-682.","truncated":false}
+PASS fr15-scanned: all 6 source paragraphs
+TIME qa-from-last-pdf-page 705ms
+{"answer":"Mã kết thúc ở dòng cuối tài liệu là KETTHUC-935."}
+PASS QA uses last page beyond selected summary chapter
+AI_SMOKE 4/4
+
+2. Lưu/đọc lại thực tế qua API feature + Supabase/Storage với JWT user.
+Lệnh: node --env-file=.env --env-file=.env.local scripts/fr15-extraction-proof.mjs
+Source API/transport/schema transpile sang Node; chỉ thay adapter Supabase
+để dùng client authenticated. File loader Expo được kiểm unit/thiết bị riêng.
+Service-role chỉ tạo/dọn tài khoản test theo khuôn fr-audit-proof, không
+tham gia requestSummary và không được đưa vào bundle hoặc log.
+
+PASS authenticated PDF upload/document insert
+PASS production requestSummary -> Gemini -> Supabase
+PASS refetch document: done, all 18 source paragraphs
+PASS production getSummary reopens saved chapter-2 summary
+FR15_PERSISTENCE_PROOF 4/4
+PASS cleanup temporary Storage/user/database rows
+
+3. Web: component SummarySection/theme production trong preview tạm ở /tmp.
+Chỉ query/source được mock; không đăng nhập hoặc sửa dữ liệu thực qua UI.
+390x844 sáng, 320x693 tối: mở/thu gọn, số ký tự/nguồn đủ 3 chương,
+cuộn đọc, chưa xử lý, pending khóa nút, failed cảnh báo nguồn cũ,
+giả lỗi mạng đọc lại vẫn giữ chữ. Browser console error: 0.
+Ảnh: fr15-extraction-light.jpg, fr15-extraction-dark-320.jpg.
+
+4. Cổng: tsc/lint sạch; 45 suites/365 tests, Android bundle 5,5 MB.
+Mẫu nhỏ không chứng minh mọi sách dài/scan mờ đều trích đủ; cờ true do AI
+báo không thay đối chiếu nguồn. Expo Go/picker/quyền/font/bàn phím và chính
+cuốn sách người dùng chưa kiểm tay; giữ mở checklist 28.

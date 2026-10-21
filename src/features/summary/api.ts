@@ -1,6 +1,5 @@
 import { SUMMARY_MODEL } from '../../shared/ai/models';
 import {
-  GeminiEmptyError,
   type SummaryOptions,
   parseExtractionJson,
   summarizeWithGemini,
@@ -154,53 +153,39 @@ export async function requestSummary(input: {
   try {
     const raw = options ? await summarizeWithGemini(parsedSource.data, options) : await summarizeWithGemini(parsedSource.data);
 
-    // PDF: MỘT lần gọi Gemini trả JSON 2 trường (toàn văn + tóm tắt).
+    // PDF: một lần gọi trả văn bản, tóm tắt và cờ đã trích đủ.
     // Ghi CẢ HAI vào DB: insert `document_summaries` + MỘT update
     // `documents` gộp `extracted_text` + `done` (native vision, ≤10MB
     // nên không chunking, không vector DB). TXT giữ hành vi cũ (plain,
     // extracted từ local).
     if (document.file_ext === 'pdf' && parsedSource.data.kind === 'pdf') {
       const extraction = parseExtractionJson(raw);
+      // Không lấy bản thiếu chữ làm nguồn hỏi đáp hoặc ghi đè văn bản cũ.
+      if (extraction.truncated) throw new SummaryTruncatedError();
       const parsedSummary = summaryTextSchema.safeParse(
         extraction.summaryText,
       );
-      // Nhánh (b) rỗng một phần: có extracted nhưng summary rỗng → vẫn
-      // cứu extracted, giữ summary cũ (không insert rỗng).
-      let saved: DocumentSummaryRow | null = null;
-      if (extraction.summaryText) {
-        if (!parsedSummary.success) {
-          throw new SummaryGuardError(
-            parsedSummary.error.issues[0]?.message ??
-              'Bản tóm tắt không hợp lệ.',
-          );
-        }
-        const { data, error } = await supabase
-          .from('document_summaries')
-          .insert(
-            {
-              ...(options ? { summary_level: options.level, summary_scope: options.scope, section_title: options.sectionTitle } : {}),
-              document_id: document.id,
-              model: SUMMARY_MODEL,
-              summary_text: parsedSummary.data,
-              user_id: userId,
-            },
-          )
-          .select()
-          .single();
-        if (error || !data) {
-          throw error ?? new SummaryGuardError('Không lưu được bản tóm tắt.');
-        }
-        saved = data;
+      if (!parsedSummary.success) {
+        throw new SummaryGuardError(parsedSummary.error.issues[0]?.message ?? 'Bản tóm tắt không hợp lệ.');
       }
-      // Gộp extracted_text + done trong CÙNG một lần update.
-      // Không có toàn văn mới thì giữ extracted_text hiện có.
-      const donePayload =
-        extraction.extractedText.trim() !== ''
-          ? {
-              extracted_text: extraction.extractedText,
-              extraction_status: 'done',
-            }
-          : { extraction_status: 'done' };
+      const { data, error } = await supabase
+        .from('document_summaries')
+        .insert({
+          ...(options ? { summary_level: options.level, summary_scope: options.scope, section_title: options.sectionTitle } : {}),
+          document_id: document.id,
+          model: SUMMARY_MODEL,
+          summary_text: parsedSummary.data,
+          user_id: userId,
+        })
+        .select()
+        .single();
+      if (error || !data) {
+        throw error ?? new SummaryGuardError('Không lưu được bản tóm tắt.');
+      }
+      const donePayload = {
+        extracted_text: extraction.extractedText,
+        extraction_status: 'done',
+      };
       const { error: doneError } = await supabase
         .from('documents')
         .update(donePayload)
@@ -208,18 +193,7 @@ export async function requestSummary(input: {
       if (doneError) {
         throw doneError;
       }
-      // Nhánh (a) cắt cụt: đã LƯU phần cứu được (done tái dùng — CHECK
-      // chỉ có pending/processing/done/failed/unsupported, không bịa giá
-      // trị mới, không migration 0006), nhưng CẤM giả vờ thành công.
-      if (extraction.truncated) {
-        throw new SummaryTruncatedError();
-      }
-      if (!saved) {
-        // JSON hợp lệ nhưng summary rỗng và không truncated (không xảy ra
-        // qua parser — phòng thủ): coi như rỗng, không ghi đè cũ.
-        throw new GeminiEmptyError();
-      }
-      return saved;
+      return data;
     }
 
     const text = raw;
@@ -267,11 +241,6 @@ export async function requestSummary(input: {
 
     return data;
   } catch (error) {
-    // Nhánh (a) đã lưu xong với `done` rồi mới báo cắt — KHÔNG lật về
-    // `failed` (lật là mất dấu đã cứu + giả vờ chưa xong).
-    if (error instanceof SummaryTruncatedError) {
-      throw error;
-    }
     // Mọi lỗi khác sau khi đã đặt `processing` đều đưa về `failed` để user
     // thử lại, KHÔNG insert rỗng nên summary cũ được giữ.
     // Giữ lỗi gốc để UI báo đúng (quota/mạng/5xx/rỗng).

@@ -5,10 +5,12 @@ import {
   AI_TIMEOUT_MS,
   GeminiTimeoutError,
   GeminiConfigError,
+  GeminiError,
   GeminiNetworkError,
   GeminiQuotaError,
   GeminiServerError,
   SUMMARY_PROMPT,
+  PDF_EXTRACTION_PROMPT,
   summarizeWithGemini,
 } from '../transport';
 
@@ -41,6 +43,12 @@ beforeEach(() => {
   globalThis.fetch = fetchMock;
 });
 
+it.each(['MAX_TOKENS', 'SAFETY', undefined])('PDF kết thúc %s không được coi là trích đủ dù JSON hợp lệ', async (finishReason) => {
+  mockFetchJson(200, { candidates: [{ finishReason, content: { parts: [{ text: JSON.stringify({ extracted_text: 'Một đoạn', summary_text: 'Tóm tắt', extraction_complete: true }) }] } }] });
+  await expect(summarizeWithGemini({ kind: 'pdf', base64Data: 'PDF' })).rejects.toBeInstanceOf(GeminiError);
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+});
+
 afterEach(() => {
   if (savedKey === undefined) {
     delete process.env.EXPO_PUBLIC_GEMINI_API_KEY;
@@ -59,7 +67,7 @@ describe('SUMMARY_MODEL (hằng số duy nhất)', () => {
 describe('summarizeWithGemini — PDF thành công', () => {
   it('gửi base64 inline + prompt tiếng Việt, trả text đã trim', async () => {
     mockFetchJson(200, {
-      candidates: [{ content: { parts: [{ text: '  Ý chính 1. Ý chính 2. ' }] } }],
+      candidates: [{ finishReason: 'STOP', content: { parts: [{ text: '  Ý chính 1. Ý chính 2. ' }] } }],
     });
 
     const text = await summarizeWithGemini({
@@ -78,12 +86,12 @@ describe('summarizeWithGemini — PDF thành công', () => {
     expect(parts[0]).toEqual({
       inline_data: { data: 'AAAABBBB', mime_type: 'application/pdf' },
     });
-    expect(parts[1]).toEqual({ text: SUMMARY_PROMPT });
+    expect(parts[1]).toEqual({ text: PDF_EXTRACTION_PROMPT + SUMMARY_PROMPT });
   });
 
   it('CẤM temperature/top_p/top_k và CẤM lộ key trong body', async () => {
     mockFetchJson(200, {
-      candidates: [{ content: { parts: [{ text: 'OK' }] } }],
+      candidates: [{ finishReason: 'STOP', content: { parts: [{ text: 'OK' }] } }],
     });
 
     await summarizeWithGemini({ base64Data: 'AAA', kind: 'pdf' });

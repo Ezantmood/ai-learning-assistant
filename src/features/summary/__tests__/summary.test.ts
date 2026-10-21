@@ -98,7 +98,7 @@ describe('requestSummary — PDF thành công', () => {
       }
       return updateOk(updates);
     });
-    transportMock.mockResolvedValue('Bản tóm tắt tiếng Việt.');
+    transportMock.mockResolvedValue(JSON.stringify({ extracted_text: 'Nguyên văn PDF đầy đủ.', summary_text: 'Bản tóm tắt tiếng Việt.', extraction_complete: true }));
 
     const result = await requestSummary({
       document: makeDoc(),
@@ -114,7 +114,7 @@ describe('requestSummary — PDF thành công', () => {
     });
     expect(updates).toEqual([
       { extraction_status: 'processing' },
-      { extraction_status: 'done' },
+      { extracted_text: 'Nguyên văn PDF đầy đủ.', extraction_status: 'done' },
     ]);
     expect(insertPayload).toMatchObject({
       document_id: 'doc-1',
@@ -139,6 +139,29 @@ describe('requestSummary — DOCX không gọi AI', () => {
     ).rejects.toThrow('DOCX');
     expect(transportMock).not.toHaveBeenCalled();
     expect(updates).toEqual([{ extraction_status: 'unsupported' }]);
+  });
+});
+
+describe('FR-15 — chỉ thay nguồn PDF khi kết quả đầy đủ', () => {
+  it.each([
+    JSON.stringify({ extracted_text: 'Một phần mới', summary_text: 'Bản mới', extraction_complete: false }),
+    JSON.stringify({ extracted_text: 'Một phần mới', summary_text: 'Bản mới' }),
+    JSON.stringify({ extracted_text: '', summary_text: 'Bản mới', extraction_complete: true }),
+    JSON.stringify({ extracted_text: 'Nguyên văn', summary_text: '', extraction_complete: true }),
+    '{"extracted_text":"Một đoạn chưa hết',
+    'Chỉ có bản tóm tắt',
+    '',
+  ])('nguồn thiếu/rỗng không ghi đè dữ liệu cũ: %s', async (raw) => {
+    const stored = { extracted_text: 'Nguồn đã lưu trước đó.', extraction_status: 'done' };
+    const insert = jest.fn();
+    mockFrom((table) => table === 'document_summaries' ? { insert } : {
+      update: (payload: Record<string, unknown>) => ({ eq: async () => { Object.assign(stored, payload); return { error: null }; } }),
+    });
+    transportMock.mockResolvedValue(raw);
+    await expect(requestSummary({ document: makeDoc({ extraction_status: 'done' }), source: { kind: 'pdf', base64Data: 'PDF' }, userId: 'user-1' })).rejects.toThrow();
+    expect(stored).toEqual({ extracted_text: 'Nguồn đã lưu trước đó.', extraction_status: 'failed' });
+    expect(insert).not.toHaveBeenCalled();
+    expect(transportMock).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -212,7 +235,7 @@ describe('requestSummary — chặn gọi lặp và thu hồi treo', () => {
       }
       return updateOk(updates);
     });
-    transportMock.mockResolvedValue('Bản tóm tắt tiếng Việt.');
+    transportMock.mockResolvedValue(JSON.stringify({ extracted_text: 'Nguyên văn PDF đầy đủ.', summary_text: 'Bản tóm tắt tiếng Việt.', extraction_complete: true }));
     const stale = new Date(Date.now() - 16 * 60 * 1000).toISOString();
 
     await requestSummary({
@@ -223,7 +246,7 @@ describe('requestSummary — chặn gọi lặp và thu hồi treo', () => {
 
     expect(updates[0]).toEqual({ extraction_status: 'failed' });
     expect(updates).toContainEqual({ extraction_status: 'processing' });
-    expect(updates[updates.length - 1]).toEqual({ extraction_status: 'done' });
+    expect(updates[updates.length - 1]).toEqual({ extracted_text: 'Nguyên văn PDF đầy đủ.', extraction_status: 'done' });
   });
 });
 
@@ -261,7 +284,7 @@ describe('requestSummary — bản quá 20.000 ký tự', () => {
   it('báo rõ, về failed, không cắt im lặng', async () => {
     const updates: Record<string, unknown>[] = [];
     mockFrom(() => updateOk(updates));
-    transportMock.mockResolvedValue('x'.repeat(20001));
+    transportMock.mockResolvedValue(JSON.stringify({ extracted_text: 'Nguồn đầy đủ', summary_text: 'x'.repeat(20001), extraction_complete: true }));
 
     await expect(
       requestSummary({

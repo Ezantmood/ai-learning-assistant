@@ -11,6 +11,7 @@ const onlyPreflight = process.argv.includes('--only=preflight');
 const files = process.argv.slice(2).filter((arg) => !arg.startsWith('--'));
 const onlyPdf = process.argv.includes('--only=pdf');
 const onlyQa = process.argv.includes('--only=qa');
+const onlyExtraction = process.argv.includes('--only=extraction');
 function check(name, pass, elapsed) { checks.push(pass); console.log(`${pass ? 'PASS' : 'FAIL'} ${name}${elapsed ? ` ${elapsed}ms` : ''}`); }
 async function timed(name, fn) { const start = Date.now(); const result = await fn(); console.log(`TIME ${name} ${Date.now() - start}ms`); return result; }
 try {
@@ -24,6 +25,28 @@ try {
   if (onlyPreflight) {
     const result = await timed('preflight', () => ai.answerWithGemini({ contextText: 'Mã kiểm tra kết nối là OK.', question: 'Mã kiểm tra kết nối là gì? Chỉ trả lời OK.' }));
     check('preflight model responds', /\bOK\b/.test(result));
+  }
+  if (onlyExtraction) {
+    const normalize = (value) => value.normalize('NFC').replace(/\s+/g, ' ').trim();
+    let fullText = '';
+    for (const name of ['fr15-three-pages', 'fr15-scanned']) {
+      const base64Data = (await fs.readFile(`scripts/fixtures/${name}.pdf`)).toString('base64');
+      const expected = (await fs.readFile(`scripts/fixtures/${name}.txt`, 'utf8')).split('\n').filter(Boolean);
+      const options = { level: 'short', scope: name === 'fr15-three-pages' ? 'sections' : 'whole', sectionTitle: name === 'fr15-three-pages' ? 'Chương 2' : '' };
+      const raw = await timed(name, () => ai.summarizeWithGemini({ kind: 'pdf', base64Data }, options));
+      const result = ai.parseExtractionJson(raw);
+      console.log(JSON.stringify({ fixture: name, ...result }));
+      const missing = expected.filter((line) => !normalize(result.extractedText).includes(normalize(line)));
+      check(`${name}: all ${expected.length} source paragraphs`, !result.truncated && missing.length === 0);
+      if (missing.length) console.log(JSON.stringify({ missing }));
+      if (name === 'fr15-three-pages') {
+        fullText = result.extractedText;
+        check('summary scoped to chapter 2, extraction keeps chapters 1 and 3', /Nam|Mai|hợp tác/.test(result.summaryText) && !/Linh|Ohm|VUON|KETTHUC/.test(result.summaryText));
+      }
+    }
+    const answer = await timed('qa-from-last-pdf-page', () => ai.answerWithGemini({ contextText: fullText, question: 'Mã kết thúc ở dòng cuối tài liệu là gì?' }));
+    console.log(JSON.stringify({ answer }));
+    check('QA uses last page beyond selected summary chapter', /KETTHUC-935/.test(answer));
   }
   if (onlyQa) {
     // Chỉ dữ liệu tự đặt; in câu trả lời để kiểm tay ý nghĩa bên cạnh regex.
@@ -62,7 +85,7 @@ try {
     await ask('qa-out-of-scope', 'Ngày mai thời tiết ở Thành phố Hồ Chí Minh thế nào?',
       (a) => /tài liệu|phạm vi/.test(a) && !/°|độ C/.test(a));
   }
-  if (!onlyPreflight && !onlyPdf && !onlyQa) {
+  if (!onlyPreflight && !onlyPdf && !onlyQa && !onlyExtraction) {
   const text = 'Chương 1: Tế bào là đơn vị cơ bản của sự sống.\nChương 2: Định luật Ôm: U = I * R. U là điện áp (V), I là dòng điện (A), R là điện trở (ôm).';
   const summary = await timed('summary-sections', () => ai.summarizeWithGemini({ kind: 'txt', textContent: text }, { level: 'short', scope: 'sections', sectionTitle: 'Chương 2' }));
   check('summary correct section', /Ôm|điện/.test(summary) && !/đơn vị cơ bản của sự sống/.test(summary));
@@ -83,12 +106,12 @@ try {
   const answer = await timed('solution-follow-up', () => ai.solveWithGemini({ contextText, kind: 'follow_up', question: 'Vì sao trừ 3 ở cả hai vế?', history: [{ kind: 'solution', text: full.solutionText }] }));
   check('solution follow-up', /hai vế|tương đương|cân bằng/i.test(answer.solutionText));
   }
-  if (files[0] && !onlyPdf && !onlyPreflight && !onlyQa) {
+  if (files[0] && !onlyPdf && !onlyPreflight && !onlyQa && !onlyExtraction) {
     const jpeg = (await fs.readFile(files[0])).toString('base64');
     const ocr = await timed('ocr', () => ai.ocrWithGemini(jpeg));
     check('OCR reads equation', /2\s*x\s*\+\s*3\s*=\s*7/i.test(ocr.extractedText));
   }
-  if (files[1] && !onlyPreflight && !onlyQa) {
+  if (files[1] && !onlyPreflight && !onlyQa && !onlyExtraction) {
     const pdf = (await fs.readFile(files[1])).toString('base64');
     const raw = await timed('pdf-extraction', () => ai.summarizeWithGemini({ kind: 'pdf', base64Data: pdf }, { level: 'short', scope: 'whole', sectionTitle: '' }));
     const parsed = ai.parseExtractionJson(raw);

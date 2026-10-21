@@ -357,7 +357,8 @@ export default function DocumentDetailScreen() {
 
       {doc.file_ext !== 'docx' ? <DocumentStudyTabs key={doc.id}
         initialMode={analyze || doc.file_ext === 'jpg' ? 'solver' : 'summary'} analysisRequest={analyze}
-        summary={<SummarySection doc={doc} userId={userId ?? ''} />}
+        summary={<SummarySection doc={doc} userId={userId ?? ''}
+          onExtracted={() => showNotice('Đã trích xuất văn bản PDF và lưu bản tóm tắt.', 'success')} />}
         chat={<QaSection doc={doc} userId={userId ?? ''} />}
         solver={<View style={styles.content}>
           {doc.file_ext === 'jpg' && doc.extracted_text ? <>

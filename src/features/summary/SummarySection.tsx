@@ -25,7 +25,6 @@ import {
 } from './api';
 import {
   isSummaryQuotaError,
-  isSummaryTruncatedError,
   toSummaryErrorMessage,
 } from './errors';
 import {
@@ -62,9 +61,11 @@ function toSummaryDocument(doc: DocumentWithSubject): SummaryDocument {
 export function SummarySection({
   doc,
   userId,
+  onExtracted,
 }: {
   doc: DocumentWithSubject;
   userId: string;
+  onExtracted?: () => void;
 }) {
   const theme = useTheme<AppTheme>();
   const queryClient = useQueryClient();
@@ -113,21 +114,19 @@ export function SummarySection({
   const isQuotaError =
     requestMutation.error != null &&
     isSummaryQuotaError(requestMutation.error);
-  const isTruncated =
-    requestMutation.error != null &&
-    isSummaryTruncatedError(requestMutation.error);
   const running = busy || doc.extraction_status === 'processing';
-  const stepLabel = loadingFile ? 'Đang tải tệp…' : 'Đang tóm tắt…';
+  const stepLabel = loadingFile ? 'Đang tải tệp…' : doc.file_ext === 'pdf' ? 'Đang đọc PDF và tóm tắt…' : 'Đang tóm tắt…';
+  const extractedText = doc.extracted_text?.trim() ?? '';
 
-  const handleRun = () => {
+  const handleRun = (readPdfAgain = false) => {
     if (running || runLock.current) {
       return;
     }
     runLock.current = true;
     setLoadError(null);
     setLoadingFile(true);
-    (doc.extracted_text?.trim() && doc.extraction_status === 'done'
-      ? Promise.resolve({ kind: 'txt' as const, textContent: doc.extracted_text })
+    (extractedText && doc.extraction_status === 'done' && !readPdfAgain
+      ? Promise.resolve({ kind: 'txt' as const, textContent: extractedText })
       : loadSummarySource({ file_ext: doc.file_ext, id: doc.id, storage_path: doc.storage_path }))
       .then((source) => {
         setLoadingFile(false);
@@ -135,7 +134,8 @@ export function SummarySection({
           document: toSummaryDocument(doc),
           source,
           options,
-        }, { onSuccess: (row) => setSelectedId(row.id), onSettled: () => { runLock.current = false; } });
+        }, { onSuccess: (row) => { setSelectedId(row.id); if (source.kind === 'pdf') onExtracted?.(); },
+          onSettled: () => { runLock.current = false; } });
       })
       .catch((error: unknown) => {
         setLoadingFile(false);
@@ -164,7 +164,7 @@ export function SummarySection({
         {options.scope === 'sections' ? <FormTextInput label="Tên chương/phần (để trống: tất cả)" value={options.sectionTitle}
           maxLength={200} disabled={running} onChangeText={(sectionTitle) => setOptions({ ...options, sectionTitle })} testID="summary-section-title" /> : null}
         </List.Accordion>
-        {loadError || (requestMutation.error && !isTruncated) ? <Text style={{ color: theme.colors.error }}>
+        {loadError || requestMutation.error ? <Text style={{ color: theme.colors.error }} accessibilityLiveRegion="polite">
           {loadError ?? toSummaryErrorMessage(requestMutation.error)}
         </Text> : null}
         {running ? <Text accessibilityLiveRegion="polite">{stepLabel}</Text> : null}
@@ -172,13 +172,6 @@ export function SummarySection({
           <ListSkeleton rows={2} />
         ) : summary ? (
           <View style={styles.content}>
-            {isTruncated ? (
-              <Banner icon={AppIcons.alertCircle} visible>
-                <Text style={{ color: theme.colors.error }}>
-                  {toSummaryErrorMessage(requestMutation.error)}
-                </Text>
-              </Banner>
-            ) : null}
             <Text variant="labelMedium">Đã lưu · {summaryLevelLabels[summary.summary_level] ?? 'Vừa'} · {new Date(summary.created_at).toLocaleString('vi-VN')}</Text>
             <AiResultText text={summary.summary_text} testID="summary-text" />
             <Button contentStyle={styles.touchTarget}
@@ -186,7 +179,7 @@ export function SummarySection({
               disabled={running}
               icon={AppIcons.refresh}
               mode="outlined"
-              onPress={handleRun}
+              onPress={() => handleRun()}
               testID="summary-rerun"
             >
               Tóm tắt lại
@@ -224,7 +217,7 @@ export function SummarySection({
               disabled={running}
               icon={AppIcons.refresh}
               mode="outlined"
-              onPress={handleRun}
+              onPress={() => handleRun()}
               testID="summary-retry"
             >
               Thử lại
@@ -251,13 +244,33 @@ export function SummarySection({
               disabled={running}
               icon={AppIcons.textBoxOutline}
               mode="contained"
-              onPress={handleRun}
+              onPress={() => handleRun()}
               testID="summary-run"
             >
               Tóm tắt bằng AI
             </Button>
           </View>
         )}
+        {doc.file_ext === 'pdf' ? <List.Accordion title="Văn bản đã trích xuất" titleNumberOfLines={2}
+          description={running ? 'Đang xử lý PDF…' : extractedText ? `${extractedText.length.toLocaleString('vi-VN')} ký tự đã lưu` : 'Chưa có văn bản đã lưu'}
+          descriptionNumberOfLines={2} testID="pdf-extracted-toggle"
+          left={(props) => <List.Icon {...props} icon={AppIcons.textBoxOutline} />}>
+          <View style={styles.content}>
+            <Text variant="bodySmall">Văn bản từ PDF được lưu để hỏi đáp và giải bài. Hãy đối chiếu với tệp gốc nếu cần kiểm tra độ đầy đủ.</Text>
+            {doc.extraction_status === 'failed' ? <Text style={{ color: theme.colors.error }} testID="pdf-extracted-warning">
+              Lần xử lý gần nhất chưa hoàn tất. {extractedText ? 'Bên dưới là văn bản đã lưu trước đó.' : 'Chưa có văn bản mới được lưu.'}
+            </Text> : null}
+            {!extractedText && !running ? <Text>Chọn “Tóm tắt bằng AI” để đồng thời trích xuất văn bản PDF.</Text> : null}
+            {extractedText || doc.extraction_status === 'failed' ? <>
+              <Button contentStyle={styles.touchTarget} disabled={running || isQuotaError} loading={running}
+                icon={AppIcons.refresh} mode="outlined" onPress={() => handleRun(true)} testID="pdf-extract-again">
+                Đọc lại PDF
+              </Button>
+              <Text variant="bodySmall">Đọc lại PDF cũng tạo bản tóm tắt mới theo lựa chọn hiện tại. Nếu tệp quá dài hoặc không rõ chữ, hãy dùng tệp ngắn, rõ hơn.</Text>
+            </> : null}
+            {extractedText ? <Text selectable variant="bodyMedium" testID="pdf-extracted-text">{doc.extracted_text}</Text> : null}
+          </View>
+        </List.Accordion> : null}
         <List.Accordion title={`Bản tóm tắt đã lưu (${history.data?.length ?? 0})`}>
           {history.isError ? <Button contentStyle={styles.touchTarget} onPress={() => { void history.refetch(); }}>Thử tải lại lịch sử</Button> : null}
           {(history.data ?? []).map((row) => <List.Item key={row.id} title={new Date(row.created_at).toLocaleString('vi-VN')}

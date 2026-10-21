@@ -2534,3 +2534,45 @@ https://supabase.com/docs/guides/platform/access-control`
 - Ghi mốc trên branch đã fast-forward tới merge; sau commit nhật ký sẽ
   fast-forward main, không commit trực tiếp main. Không đưa .env,
   .DS_Store hay supabase/.temp vào commit.
+
+## 2026-10-21 — FR15-01: trích PDF và xem kết quả ngay trên app
+
+- Chủ dự án yêu cầu hoàn thiện FR-15 để có thể chứng minh trên app, giữ
+  trích xuất cùng thao tác tóm tắt. Một checkbox, branch
+  `codex/fr15-pdf-extraction`, tag `fr15-pdf-extraction-20261021`.
+- Trước sửa: prompt chỉ yêu cầu tóm tắt, schema chưa mô tả toàn văn; parser
+  coi JSON hai chuỗi là đủ, phần dở có thể được lưu dưới done. Mở tài liệu
+  chỉ mở signed URL ngoài app, chưa có vùng xem văn bản PDF đã lưu.
+- PDF_EXTRACTION_PROMPT yêu cầu nguyên văn mọi trang/ngôn ngữ gốc, không
+  để mức/chương tóm tắt thu hẹp extracted_text. Schema thêm cờ BOOLEAN
+  extraction_complete trong phản hồi AI, không thêm cột/bảng/status SQL.
+  Chỉ lưu nguồn khi hai nội dung có chữ, cờ true và finishReason=STOP.
+  JSON dở/rỗng/thiếu/cờ sai hoặc API bị ngắt báo lỗi, trạng thái failed,
+  không ghi đè nguồn hay insert bản tóm tắt thiếu. Cờ là AI tự báo, không
+  thay đối chiếu PDF gốc và không bảo đảm sách dài/ảnh mờ đều đọc đủ.
+- SummarySection có mục thu gọn “Văn bản đã trích xuất”: nguyên văn
+  selectable, số ký tự, trạng thái, hướng dẫn khi chưa có chữ; lỗi vẫn
+  cho xem bản cũ. Mở mục không gọi AI. “Đọc lại PDF” bắt buộc tải file
+  gốc dù đã có text, cùng lựa chọn tóm tắt và khóa lặp/quota; thành công
+  có Snackbar. Tóm tắt lại thông thường tiếp tục dùng văn bản đã lưu.
+- Skill PDF tạo hai fixture tự đặt (PDF chữ ba trang và PDF ảnh một trang),
+  render/soi đủ bốn trang trước kiểm API. Smoke --only=extraction 4/4:
+  18/18 đoạn nguyên văn dù chỉ tóm tắt Chương 2; ảnh đúng 6/6 dòng;
+  hỏi mã cuối trang 3 ngoài chương tóm tắt trả đúng KETTHUC-935.
+- scripts/fr15-extraction-proof.mjs theo khuôn proof hiện có: tài khoản
+  tạm, upload/insert bằng JWT user, chạy requestSummary/getSummary production
+  trong Node với adapter client thử nghiệm. API Gemini và Supabase thật
+  đạt 4/4: refetch nguồn done đủ 18 đoạn, mở lại đúng summary. Đã dọn
+  object/tài khoản/row tạm; service-role chỉ tạo/dọn user, không vào app/log.
+- Kiểm web với SummarySection/theme production, query/source giả: sáng
+  390×844, tối 320×693; mở/thu gọn/cuộn, empty/pending/failed, lỗi mạng
+  giữ chữ, không tràn ngang/chữ cắt; console error 0. Ảnh trong
+  docs/evidence/fr15-extraction-light.jpg và fr15-extraction-dark-320.jpg.
+- Cổng: tsc/lint sạch, 45 suites/365 tests; Android export 5,5 MB. Kiểm
+  parser/finishReason và API giữ dữ liệu, UI nguồn hơn 20.000 ký tự và
+  buộc đọc file gốc. Jest còn cảnh báo open handle kế thừa rồi thoát 0.
+  Evidence đầy đủ: docs/evidence/fr15-pdf-extraction-20261021.txt.
+- Không thêm package/route/migration hoặc đổi model, không prebuild/eject.
+  Expo Go/picker/quyền/font/bàn phím và chính cuốn sách của chủ dự án chưa
+  kiểm; giữ ô mở mục 28. Row cũ từng lưu thiếu dưới done cần đối chiếu
+  rồi bấm Đọc lại PDF; không tự ghi là đã đủ toàn văn.

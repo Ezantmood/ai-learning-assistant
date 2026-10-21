@@ -61,11 +61,20 @@ Intent analyze mới mở mục Giải bài. Thông tin/quản lý tệp và s�
 thu gọn bằng display, không unmount form. DOCX chỉ hiện quản lý và hướng dẫn.
 
 SummarySection chọn mức độ/phạm vi/phần, API đặt processing rồi sinh kết quả.
-PDF gửi inline + JSON extracted_text/summary_text trong một lần gọi; TXT
-đọc bằng File API mới. Khi đã có toàn văn done, tóm tắt lại dùng text để
-tránh tải/gửi lại PDF. Mỗi bản INSERT mới, lịch sử chọn lại trên cùng màn.
-Lưu kết quả tối đa 20.000 ký tự; không ghi đè bản cũ khi lỗi/rỗng. Phần cứu
-được khi JSON cắt cụt phải có cảnh báo; không coi là toàn văn đầy đủ.
+PDF gửi inline trong một lần gọi, trả extracted_text/summary_text và cờ
+extraction_complete. Prompt trích nguyên văn toàn PDF độc lập mức/chương
+tóm tắt. Chỉ lưu nguồn khi hai nội dung không rỗng, cờ true và finishReason
+STOP; thiếu/cắt/rỗng đưa trạng thái failed, giữ nguồn và bản cũ. Không lưu
+phần cứu được từ JSON dở làm nguồn hỏi đáp. Không thêm cột/status SQL.
+TXT đọc bằng File API mới. Khi đã có văn bản done, tóm tắt lại dùng text
+để tránh tải/gửi lại PDF. Mỗi bản INSERT mới, lịch sử chọn lại trên cùng màn.
+Bản tóm tắt tối đa 20.000 ký tự; văn bản trích xuất không áp giới hạn này.
+Mục “Văn bản đã trích xuất” chỉ có ở PDF trong SummarySection: thu gọn,
+hiện nguyên văn selectable/số ký tự/trạng thái, không render Markdown và
+không gọi AI khi mở. “Đọc lại PDF” bắt buộc tải file gốc, tạo bản tóm tắt
+mới cùng lựa chọn; khóa khi đang chạy/quota. Văn bản cũ vẫn xem được khi lỗi.
+Row cũ có thể từng lưu phần dở dưới done; không tự suy ra đầy đủ, cần đối
+chiếu và bấm Đọc lại PDF. Cờ tự báo của model không thay kiểm tra bản gốc.
 Processing treo 15 phút được thu hồi để thử lại bằng tay.
 
 QaSection giữ phiên gồm câu hỏi/câu trả lời theo thời gian; transport gửi
