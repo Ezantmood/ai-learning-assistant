@@ -403,6 +403,10 @@ Dashboard từ source mới (SETUP 5d mục 7) tới khi probe kèm JWT trả 20
 
 ### Giới hạn đã biết — CN3-PDF trích toàn văn một lần gọi (2026-09-21)
 
+> Lịch sử: cách lưu phần dở dưới done đã được thay ở FR15-01 ngày
+> 2026-10-21. Xem mục minh chứng FR-15 ở cuối file; hiện kết quả thiếu
+> không thay nguồn đã lưu và trạng thái lần xử lý là failed.
+
 - CHECK `documents_extraction_status_rules` chỉ có 5 giá trị
   (`pending/processing/done/failed/unsupported`); "cắt cụt" tái dùng `done`
   (đã lưu phần dở + Banner báo cắt, cấm giả vờ thành công) và `failed` (rỗng
@@ -466,3 +470,26 @@ Dashboard từ source mới (SETUP 5d mục 7) tới khi probe kèm JWT trả 20
   3.x bị cấm.
 - Schema 0007 đã được chủ dự án xác nhận `VERIFY_PASS`. Proof RLS remote
   cho bảng mới đạt `11/11`; kiểm tay Expo Go theo checklist mục 18 còn chờ.
+
+### Minh chứng FR-15 — 2026-10-21
+
+- FR-15 là trích chữ từ PDF thành dữ liệu văn bản, không phải nút “Mở tài
+  liệu”. Giữ cùng thao tác tóm tắt; xem kết quả ngay ở mục Tóm tắt →
+  “Văn bản đã trích xuất”. Văn bản này được lưu trong documents.extracted_text
+  để dùng cho hỏi đáp/giải bài, riêng với bản tóm tắt trong document_summaries.
+- Demo: tải `scripts/fixtures/fr15-three-pages.pdf`, chọn Ngắn → Chương/phần
+  → nhập “Chương 2”, bấm Tóm tắt bằng AI. Mở “Văn bản đã trích xuất”: có
+  đủ Chương 1/2/3, mã VUON-417, SACH-826 và KETTHUC-935 ở cuối. Bản tóm
+  tắt chỉ nói về Chương 2. Hỏi mã kết thúc trong Hỏi đáp để chứng minh AI
+  nhận nguồn ngoài chương vừa tóm tắt; mở lại tài liệu để thấy chữ vẫn còn.
+- Demo PDF dạng ảnh với `scripts/fixtures/fr15-scanned.pdf`: chữ tiếng Việt,
+  350/125/475 ml và ANH-682 phải đọc đúng. Hai file chỉ có dữ liệu tự đặt.
+- Nếu bản cũ bị thiếu, bấm “Đọc lại PDF” để tải file gốc, trích lại và tạo
+  bản tóm tắt mới theo lựa chọn. Mở/thu gọn phần chữ không gọi AI.
+- Cách trình bày: “Hệ thống trích văn bản PDF khi xử lý tóm tắt lần đầu,
+  lưu riêng để dùng lại. Đây là văn bản đã trích và đây là PDF gốc để đối
+  chiếu.” Không khẳng định cờ tự báo của model chứng minh mọi sách đều đủ.
+- Kiểm thật: PDF ba trang đủ 18 đoạn; PDF ảnh đủ 6 dòng; hỏi được mã trang
+  cuối; minh chứng lưu/đọc lại bằng API feature + Supabase thật. UI kiểm với
+  component production và backend giả, không coi là kiểm Expo Go. Xem
+  TEST-CHECKLIST mục 28 và evidence/fr15-pdf-extraction-20261021.txt.

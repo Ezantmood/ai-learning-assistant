@@ -89,6 +89,14 @@ FR-16→FR-45 và loại nhầm yêu cầu ra ngoài phạm vi; không dùng ch�
   chương/phần, có thể nhập tên phần. Prompt giữ đúng nội dung, chia tiêu đề
   và ý chính. Mỗi kết quả thành công được lưu riêng; danh sách bản đã tạo
   cho phép xem lại, giữ bản cũ khi yêu cầu mới lỗi.
+  FR-15 chạy cùng lần tóm tắt PDF đầu tiên: chép nguyên văn tất cả trang,
+  giữ ngôn ngữ gốc; mức/chương tóm tắt chỉ áp dụng cho summary_text.
+  Chỉ cập nhật nguồn khi có cả văn bản và tóm tắt, extraction_complete=true
+  và API kết thúc STOP. Thiếu/rỗng/cắt thì báo lỗi, giữ nguồn/bản cũ.
+  Mục thu gọn “Văn bản đã trích xuất” trong Tóm tắt cho xem/chọn chữ đã
+  lưu, số ký tự và đọc lại PDF gốc (đồng thời tạo bản tóm tắt mới).
+  Xem phần này không gọi AI. “Mở tài liệu” chỉ mở tệp gốc ở ứng dụng ngoài.
+  Cờ đầy đủ là tự báo của AI; vẫn cần đối chiếu PDF, không bảo đảm mọi sách.
 - CN4: phiên mới bắt đầu với ngữ cảnh rỗng; gửi các lượt hỏi/đáp của phiên
   hiện tại theo thứ tự. Lấy tài liệu làm căn cứ; cho phép dịch, kể lại,
   giải thích và suy luận hợp lý từ nội dung, không đòi có sẵn câu trả lời

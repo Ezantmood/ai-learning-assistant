@@ -491,3 +491,17 @@ Một checkbox theo yêu cầu chủ dự án; G4+ merge `--no-ff` khi cổng xa
   SPEC/traceability/checklist/DEVLOG; commit/push/merge/tag. FR-23→FR-28.
   (API thật sau sửa 11/11 với nguồn tự đặt; test tay Expo Go bằng cuốn
   sách gặp lỗi còn mở ở checklist 27, không xem API mẫu là nghiệm thu thiết bị.)
+
+# Hoàn thiện và minh chứng FR-15 — 2026-10-21
+
+Branch `codex/fr15-pdf-extraction`, tag `fr15-pdf-extraction-20261021`.
+Một checkbox; giữ trích xuất cùng luồng tóm tắt, không thêm route/bảng/package.
+
+- [x] FR15-01: Yêu cầu trích nguyên văn toàn PDF độc lập mức/chương tóm tắt;
+  không lưu đè nguồn bằng kết quả rỗng/thiếu/cắt hoặc báo hoàn tất giả.
+  Thêm mục thu gọn “Văn bản đã trích xuất” trong chi tiết PDF: xem chữ thật
+  đã lưu, số ký tự, trạng thái và đọc lại PDF khi bản cũ thiếu. Kiểm PDF
+  nhiều trang/PDF ảnh bằng API thật, hồi quy lưu/đọc lại/lỗi/UI; cập nhật
+  SPEC/traceability/checklist/báo cáo/DEVLOG, commit/push/merge/tag. FR-13→FR-17.
+  (API trích xuất 4/4, lưu/đọc lại Supabase thật 4/4, 365 test và web
+  sáng/tối đạt; Expo Go và sách thực tế còn mở ở checklist 28.)

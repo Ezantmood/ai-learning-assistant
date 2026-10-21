@@ -462,3 +462,26 @@ Script in câu hỏi/đáp để đọc đối chiếu, regex chỉ là kiểm s
 
 Bằng chứng: `evidence/cn4-grounded-answers-20261021.txt`. API mẫu không
 chứng minh nội dung trích xuất của mọi sách đầy đủ; chưa kiểm tay điện thoại.
+
+## 28. FR-15: trích PDF và xem văn bản đã lưu — 2026-10-21
+
+Nguồn hiện hành thay hành vi cứu phần dở dưới done của các mục CN3 cũ.
+Không thêm route/schema/package; “Mở tài liệu” vẫn chỉ mở file gốc.
+
+- [x] `node --env-file=.env.local scripts/ai-smoke.mjs --only=extraction`: 4/4; PDF ba trang đủ 18 đoạn khi chỉ tóm tắt Chương 2, PDF ảnh đúng 6 dòng; hỏi đúng mã trang cuối.
+- [x] `node --env-file=.env --env-file=.env.local scripts/fr15-extraction-proof.mjs`: 4/4; upload/insert bằng JWT user, API feature gọi Gemini/lưu nguồn, refetch đủ chữ và mở lại summary; tạo/dọn tài khoản thử thành công.
+- [x] Unit: cờ false/thiếu/sai kiểu, rỗng một/hai trường, JSON dở/plain text không ghi đè nguồn/bản cũ, trạng thái failed; STOP/không có finishReason/MAX_TOKENS/SAFETY được phân biệt, không tự retry.
+- [x] Unit UI: số ký tự, chọn nguyên văn hơn 20.000 ký tự, không parse HTML/Markdown, đóng/mở không gọi AI; Tóm tắt lại dùng text nhưng Đọc lại PDF bắt buộc tải file gốc.
+- [x] Web component production, backend/source giả: 390×844 sáng, 320×693 tối; mở/thu gọn, cuộn nguồn, không tràn ngang/chữ cắt; console không có lỗi.
+- [x] Web: chưa xử lý có hướng dẫn; processing khóa đọc lại; failed cảnh báo đang xem bản cũ; giả lỗi mạng khi đọc lại vẫn giữ chữ.
+- [x] tsc/lint và 45 suites/365 tests; Android export 5,5 MB. Không prebuild/eject.
+- [ ] Expo Go: tải PDF ba trang bằng picker thật → tóm tắt Chương 2 → xem/chọn văn bản đủ 3 chương → rời/mở lại vẫn còn chữ.
+- [ ] Expo Go: hỏi KETTHUC-935 ở trang cuối, kiểm PDF dạng ảnh và cuốn sách thực tế của chủ dự án; chưa coi mẫu nhỏ là mọi sách đều đủ.
+- [ ] Expo Go: bàn phím/font lớn/light-dark, cuộn văn bản dài, đọc lại PDF cũ bị thiếu, mất mạng/quota giữ dữ liệu.
+
+Script proof tạo tài khoản/object thử theo khuôn fr-audit-proof; xử lý bằng
+JWT user và API production, dùng service-role chỉ để tạo/dọn tài khoản thử.
+Không in key/tài khoản, không đưa service-role vào app. Bằng chứng/screenshot:
+`evidence/fr15-pdf-extraction-20261021.txt`, `fr15-extraction-light.jpg`,
+`fr15-extraction-dark-320.jpg`. Cờ extraction_complete là AI tự báo, không
+thay đối chiếu nguồn; bản cũ có thể thiếu và cần bấm Đọc lại PDF.

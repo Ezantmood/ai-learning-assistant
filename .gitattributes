@@ -1,0 +1,2 @@
+# PDF fixtures are binary assets, including image-only PDFs with ASCII streams.
+scripts/fixtures/*.pdf binary

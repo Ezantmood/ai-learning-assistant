@@ -8,7 +8,7 @@ import {
 } from '../transport';
 
 /**
- * Parser JSON trích PDF (CN3-PDF): đủ / dở / RỖNG HOÀN TOÀN.
+ * Parser JSON trích PDF: đủ / thiếu-cắt / rỗng. Chỉ cờ true mới nhận là đủ.
  * Không chạm mạng, không sửa/skip test cũ.
  */
 describe('parseExtractionJson — đủ', () => {
@@ -16,6 +16,7 @@ describe('parseExtractionJson — đủ', () => {
     const raw = JSON.stringify({
       extracted_text: 'Toàn văn chương 1. Nội dung bài học.',
       summary_text: 'Ý chính 1. Ý chính 2.',
+      extraction_complete: true,
     });
 
     expect(parseExtractionJson(raw)).toEqual({
@@ -56,17 +57,18 @@ describe('parseExtractionJson — RỖNG HOÀN TOÀN', () => {
   });
 });
 
-describe('EXTRACTION_GENERATION_CONFIG — một lần gọi, JSON 2 trường', () => {
-  it("responseMimeType application/json + schema đúng 2 trường, cấm suy luận giá", () => {
+describe('EXTRACTION_GENERATION_CONFIG — nội dung và xác nhận đã trích đủ', () => {
+  it('responseMimeType JSON, bắt buộc văn bản/tóm tắt/cờ đầy đủ', () => {
     expect(EXTRACTION_GENERATION_CONFIG.responseMimeType).toBe(
       'application/json',
     );
     const schema = EXTRACTION_GENERATION_CONFIG.responseSchema;
     expect(schema.type).toBe('OBJECT');
-    expect(schema.required).toEqual(['extracted_text', 'summary_text']);
+    expect(schema.required).toEqual(['extracted_text', 'summary_text', 'extraction_complete']);
     expect(Object.keys(schema.properties)).toEqual([
       'extracted_text',
       'summary_text',
+      'extraction_complete',
     ]);
   });
 
@@ -79,10 +81,19 @@ describe('EXTRACTION_GENERATION_CONFIG — một lần gọi, JSON 2 trường',
     expect(raw).not.toContain('thinking_budget');
   });
 
-  it('SUMMARY_PROMPT giữ nguyên để test cũ so parts[1] vẫn xanh', () => {
+  it('SUMMARY_PROMPT vẫn dùng cho bản tóm tắt', () => {
     expect(typeof SUMMARY_PROMPT).toBe('string');
     expect(SUMMARY_PROMPT.length).toBeGreaterThan(0);
   });
+});
+
+it.each([false, undefined, 'true'])('không coi cờ extraction_complete=%s là đã trích đủ', (flag) => {
+  const parsed = parseExtractionJson(JSON.stringify({ extracted_text: 'Một đoạn', summary_text: 'Tóm tắt', extraction_complete: flag }));
+  expect(parsed.truncated).toBe(true);
+});
+
+it('văn bản thường không có nguồn PDF được đánh dấu chưa đủ', () => {
+  expect(parseExtractionJson('Chỉ có tóm tắt')).toEqual({ extractedText: '', summaryText: 'Chỉ có tóm tắt', truncated: true });
 });
 
 
