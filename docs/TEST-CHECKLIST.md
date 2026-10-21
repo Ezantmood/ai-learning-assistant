@@ -444,3 +444,21 @@ billing, không nạp tiền. Trước demo vẫn đọc lại quota và chạy 
 Bằng chứng mẫu: evidence/ai-demo-quota-20261021.txt. Không kiểm tất cả tài
 liệu/đề; latency và khả năng phục vụ phụ thuộc dịch vụ. Không tự retry,
 không fallback provider, không giả lập câu trả lời khi hết quota.
+
+## 27. Hỏi đáp không từ chối quá mức — 2026-10-21
+
+Chạy riêng kiểm CN4 bằng nguồn tự đặt (11 request, không ghi DB):
+`node --env-file=.env.local scripts/ai-smoke.mjs --only=qa`.
+Script in câu hỏi/đáp để đọc đối chiếu, regex chỉ là kiểm sơ bộ.
+
+- [x] Tái hiện qua API trước sửa: “Kể lại câu chuyện vừa nói bằng tiếng Anh.” → “Tài liệu không đề cập đến việc kể lại câu chuyện bằng tiếng Anh.” dù nguồn có chuyện.
+- [x] API sau sửa: tổng quan → tự chọn chuyện kiên trì → “Kể lại câu chuyện đó bằng tiếng Anh.”; toàn bộ phản hồi bằng tiếng Anh, giữ đúng chi tiết.
+- [x] API: hỏi ngày nảy mầm/màu cốc, giải thích vì sao là kiên trì, trả lời phần bài học khi thiếu ngày sinh; không bịa ISBN.
+- [x] API: nguồn chỉ có công thức không có chuyện thì báo thiếu chuyện; nguồn có chỉ dẫn giả không đổi nhiệm vụ; câu hỏi ngoài nguồn được nhắc phạm vi.
+- [x] API: lịch sử có lời từ chối sai vẫn kể lại được bằng tiếng Anh khi tài liệu đủ căn cứ; tổng 11/11 sau sửa cuối.
+- [x] Unit: chỉ dẫn ở systemInstruction, dữ liệu/câu hỏi riêng, lịch sử đúng thứ tự, phiên mới không giữ lượt cũ, một request/mỗi lần hỏi.
+- [ ] Expo Go, dùng chính cuốn sách chủ dự án gặp lỗi: hỏi tổng quan → chọn chuyện minh hoạ → kể bằng tiếng Anh; hỏi tiếp “vì sao?” và đối chiếu với sách.
+- [ ] Expo Go: kiểm thêm một tài liệu khác và phiên đã lưu có lời từ chối cũ; lời đáp mới theo yêu cầu, các lượt lịch sử cũ giữ nguyên.
+
+Bằng chứng: `evidence/cn4-grounded-answers-20261021.txt`. API mẫu không
+chứng minh nội dung trích xuất của mọi sách đầy đủ; chưa kiểm tay điện thoại.

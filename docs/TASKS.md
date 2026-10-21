@@ -477,3 +477,17 @@ phép thay model/nhà cung cấp để giảm nguy cơ hết quota khi demo. Kh�
   OCR/PDF; đổi cấu hình đã kiểm chứng, đọc quota đúng project trong AI Studio
   và ghi giới hạn của số đo. Cập nhật tài liệu, hồi quy,
   Android export, commit/push/merge/tag theo quy tắc. FR-14→45.
+
+# Sửa hỏi đáp từ chối quá mức — 2026-10-21
+
+Branch `codex/cn4-grounded-answers`, tag `cn4-grounded-answers-20261021`.
+Một checkbox theo yêu cầu chủ dự án; G4+ merge `--no-ff` khi cổng xanh.
+
+- [x] CN4-HF-01: Sửa hướng dẫn hỏi đáp để dịch/kể lại theo ngôn ngữ yêu cầu,
+  giải thích/suy luận và chọn câu chuyện có thật trong tài liệu; dùng ngữ
+  cảnh cho câu hỏi tiếp. Chỉ báo thiếu đúng phần chưa có căn cứ, không bịa
+  chi tiết hay trả lời ngoài tài liệu. Tách chỉ dẫn khỏi dữ liệu nguồn;
+  kiểm API thật các ca từ chối sai và thiếu thông tin, hồi quy, cập nhật
+  SPEC/traceability/checklist/DEVLOG; commit/push/merge/tag. FR-23→FR-28.
+  (API thật sau sửa 11/11 với nguồn tự đặt; test tay Expo Go bằng cuốn
+  sách gặp lỗi còn mở ở checklist 27, không xem API mẫu là nghiệm thu thiết bị.)

@@ -69,7 +69,12 @@ Lưu kết quả tối đa 20.000 ký tự; không ghi đè bản cũ khi lỗi/
 Processing treo 15 phút được thu hồi để thử lại bằng tay.
 
 QaSection giữ phiên gồm câu hỏi/câu trả lời theo thời gian; transport gửi
-role user/model. Phiên mới có UUID mới và ngữ cảnh rỗng. Mặc định không ghi
+role user/model. Hướng dẫn CN4 đặt ở `systemInstruction`; tài liệu và yêu
+cầu hiện tại là hai text part riêng. Tài liệu là dữ liệu nguồn, lịch sử
+giúp hiểu câu hỏi tiếp nhưng phải đối chiếu dữ kiện với nguồn, kể cả khi
+lượt trước từ chối sai. Cho phép dịch/kể lại/giải thích dựa trên nguồn,
+theo ngôn ngữ yêu cầu; nói rõ đúng phần thiếu, không bịa hoặc lạc đề.
+Phiên mới có UUID mới và ngữ cảnh rỗng. Mặc định không ghi
 DB; bấm Lưu mới upsert snapshot theo id, nhóm bằng conversation_id.
 Mở lại phiên đã lưu có thể hỏi tiếp/lưu lại không nhân đôi. Row cũ NULL
 conversation_id xem là một phiên riêng. Mỗi lượt hỏi tối đa 500 ký tự;
