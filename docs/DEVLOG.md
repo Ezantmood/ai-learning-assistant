@@ -2576,3 +2576,14 @@ https://supabase.com/docs/guides/platform/access-control`
   Expo Go/picker/quyền/font/bàn phím và chính cuốn sách của chủ dự án chưa
   kiểm; giữ ô mở mục 28. Row cũ từng lưu thiếu dưới done cần đối chiếu
   rồi bấm Đọc lại PDF; không tự ghi là đã đủ toàn văn.
+
+**Mốc Git FR15-01 — hoàn tất 2026-10-21**
+
+- Branch: `codex/fr15-pdf-extraction`.
+- Commit triển khai: `7bcf6aded9f92919cac257ccc1ae10394c45fddd`, đã push ngay.
+- Merge `--no-ff` vào main: `b68be2bcff06c4990dfc8431110d70eb91305a97`, đã push.
+- Tag `fr15-pdf-extraction-20261021` trỏ merge trên, đã push ngay;
+  không di chuyển tag. Không PR theo quy tắc G4+.
+- Nhật ký ghi trên branch sau fast-forward tới merge; main sẽ fast-forward
+  tới commit nhật ký, không commit trực tiếp main. Không đưa .env,
+  .DS_Store, supabase/.temp hoặc mã preview ở /tmp vào commit.
