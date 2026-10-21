@@ -90,7 +90,13 @@ FR-16→FR-45 và loại nhầm yêu cầu ra ngoài phạm vi; không dùng ch�
   và ý chính. Mỗi kết quả thành công được lưu riêng; danh sách bản đã tạo
   cho phép xem lại, giữ bản cũ khi yêu cầu mới lỗi.
 - CN4: phiên mới bắt đầu với ngữ cảnh rỗng; gửi các lượt hỏi/đáp của phiên
-  hiện tại theo thứ tự. Chỉ dựa trên tài liệu, nói rõ khi thiếu dữ kiện.
+  hiện tại theo thứ tự. Lấy tài liệu làm căn cứ; cho phép dịch, kể lại,
+  giải thích và suy luận hợp lý từ nội dung, không đòi có sẵn câu trả lời
+  nguyên văn. Theo ngôn ngữ người dùng yêu cầu (mặc định tiếng Việt), kể
+  cả yêu cầu hỏi tiếp. Khi xin một câu chuyện bất kỳ, tự chọn chuyện có
+  trong phần tài liệu được cung cấp để minh hoạ; không bịa chuyện, nhân
+  vật hay trích dẫn. Trả lời phần có căn cứ và chỉ rõ phần thiếu; không
+  từ chối toàn bộ vì thiếu một chi tiết. Câu hỏi ngoài tài liệu nhắc phạm vi.
   Mặc định phiên chỉ ở bộ nhớ; bấm Lưu hội thoại mới lưu Supabase.
   Mở lại hội thoại đã lưu tiếp tục được; phiên mới không xóa bản đã lưu.
 - CN5: sửa nội dung OCR (không rỗng), lưu vào documents.extracted_text

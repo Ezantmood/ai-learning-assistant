@@ -2493,3 +2493,33 @@ https://supabase.com/docs/guides/platform/access-control`
 - Ghi mốc trên branch đã fast-forward tới merge, rồi fast-forward main
   tới commit nhật ký; không commit trực tiếp main. Không đưa secret,
   ảnh tài khoản Chrome, .env hoặc thư mục tạm vào commit.
+
+## 2026-10-21 — CN4-HF-01: hỏi đáp từ chối dịch/kể lại quá mức
+
+- Yêu cầu chủ dự án: AI hiểu nội dung sách nhưng từ chối kể lại bằng tiếng
+  Anh hoặc lấy câu chuyện minh hoạ, thường báo “tài liệu không đề cập”.
+- Nguyên nhân xác nhận: prompt ép tiếng Việt + “CHỈ dựa trên” và đặt lời
+  từ chối làm nhánh mặc định, không phân biệt diễn đạt lại với thêm dữ kiện.
+  API thật trước sửa trả nguyên câu “Tài liệu không đề cập đến việc kể lại
+  câu chuyện bằng tiếng Anh.” dù nguồn có chuyện Linh trồng đậu. Ca chọn
+  chuyện kiên trì trên mẫu này vốn trả được, không ghi là đã tái hiện mọi lỗi.
+- Sửa `QA_PROMPT_HEADER`: cho dịch/kể lại/giải thích/suy luận hợp lý, theo
+  ngôn ngữ và mức chi tiết yêu cầu; tự chọn chuyện có trong nguồn. Trả lời
+  phần có căn cứ rồi chỉ rõ chi tiết còn thiếu, không bịa nhân vật/ISBN/
+  trích dẫn hoặc trả câu hỏi ngoài nguồn. Lịch sử để hiểu câu hỏi tiếp,
+  đối chiếu lại nguồn kể cả khi lượt trước từ chối sai.
+- Chỉ dẫn CN4 chuyển sang `systemInstruction` theo
+  [Gemini GenerateContent API](https://ai.google.dev/api/generate-content).
+  Tài liệu/yêu cầu là hai text part riêng, nội dung nguồn là dữ liệu.
+  Giữ model, schema, luồng lưu và giới hạn hiện có; không thêm dependency.
+- Mở rộng smoke có `--only=qa`, chỉ dùng văn bản tự đặt, không ghi DB.
+  Lượt giữa 10/11: nội dung đã dịch nhưng lời dẫn vẫn tiếng Việt; sửa để
+  toàn bộ phản hồi theo ngôn ngữ yêu cầu. Lượt cuối 11/11, đã đọc tay đối
+  chiếu từng câu trả lời: tổng quan, chọn chuyện, kể tiếng Anh, chi tiết,
+  giải thích, thiếu một phần, thiếu ISBN/chuyện, sửa từ chối cũ, chỉ dẫn
+  giả trong nguồn và câu hỏi ngoài tài liệu. Fixture cuối ghi “xanh lá cây”
+  để kiểm bản dịch green không mơ hồ như “xanh” ở lần đầu.
+- Cổng: tsc/lint sạch, 44 suites/344 tests PASS; Android export 5,5 MB.
+  Jest vẫn cảnh báo open handle kế thừa rồi thoát 0. Evidence ở
+  `docs/evidence/cn4-grounded-answers-20261021.txt`. Chưa kiểm Expo Go
+  hay chính cuốn sách chủ dự án gặp lỗi; ca tay giữ mở ở checklist 27.

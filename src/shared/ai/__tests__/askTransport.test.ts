@@ -43,7 +43,7 @@ afterEach(() => {
 });
 
 describe('answerWithGemini — hỏi đáp thành công', () => {
-  it('nhồi extracted_text + câu hỏi vào prompt, trả câu trả lời đã trim', async () => {
+  it('tách chỉ dẫn hệ thống khỏi tài liệu/câu hỏi, trả câu trả lời đã trim', async () => {
     mockFetchJson(200, {
       candidates: [{ content: { parts: [{ text: '  Đáp án: chương 1. ' }] } }],
     });
@@ -56,10 +56,16 @@ describe('answerWithGemini — hỏi đáp thành công', () => {
     expect(answer).toBe('Đáp án: chương 1.');
     const url = fetchMock.mock.calls[0]?.[0] as string;
     expect(url).toContain(`${SUMMARY_MODEL}:generateContent`);
-    const raw = lastRawBody();
-    expect(raw).toContain(QA_PROMPT_HEADER);
-    expect(raw).toContain('Nội dung chương 1 của tài liệu.');
-    expect(raw).toContain('Chương 1 nói về gì?');
+    const body = JSON.parse(lastRawBody()) as {
+      systemInstruction: { parts: { text: string }[] };
+      contents: { role: string; parts: { text: string }[] }[];
+    };
+    expect(body.systemInstruction).toEqual({ parts: [{ text: QA_PROMPT_HEADER }] });
+    expect(body.contents).toEqual([{ role: 'user', parts: [
+      { text: expect.stringContaining('Nội dung chương 1 của tài liệu.') },
+      { text: 'YÊU CẦU HIỆN TẠI: Chương 1 nói về gì?' },
+    ] }]);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('CẤM temperature/top_p/top_k và CẤM lộ key trong body', async () => {
@@ -121,5 +127,35 @@ it('FR-27: gửi các lượt trước đúng role và thứ tự', async () => 
   const body = JSON.parse(lastRawBody()) as { contents: { role: string; parts: { text: string }[] }[] };
   expect(body.contents.map((c) => c.role)).toEqual(['user', 'model', 'user']);
   expect(body.contents[1]?.parts[0]?.text).toBe('Đáp án đầu');
-  expect(body.contents[2]?.parts[0]?.text).toContain('Vì sao?');
+  expect(body.contents[2]?.parts[1]?.text).toContain('Vì sao?');
+});
+
+it('gửi nguyên yêu cầu đổi ngôn ngữ sau lời từ chối, không mất nguồn hoặc lượt trước', async () => {
+  mockFetchJson(200, { candidates: [{ content: { parts: [{ text: 'Linh kept watering the seed.' }] } }] });
+  const history = [{ question: 'Kể một chuyện trong sách.', answer: 'Tài liệu không đề cập.' }];
+  const contextText = 'Linh tưới hạt đậu mỗi sáng, đến ngày thứ tư mầm nhú lên.';
+  const question = 'Kể lại bằng tiếng Anh.';
+  const answer = await answerWithGemini({ contextText, question, history });
+  const body = JSON.parse(lastRawBody()) as { contents: { role: string; parts: { text: string }[] }[] };
+  expect(body.contents).toEqual([
+    { role: 'user', parts: [{ text: history[0]?.question }] },
+    { role: 'model', parts: [{ text: history[0]?.answer }] },
+    { role: 'user', parts: [
+      { text: expect.stringContaining(contextText) },
+      { text: `YÊU CẦU HIỆN TẠI: ${question}` },
+    ] },
+  ]);
+  expect(answer).toBe('Linh kept watering the seed.');
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+});
+
+it('phiên mới chỉ gửi nguồn và câu hỏi mới, không mang theo lịch sử phiên trước', async () => {
+  mockFetchJson(200, { candidates: [{ content: { parts: [{ text: 'OK' }] } }] });
+  await answerWithGemini({ contextText: 'Tài liệu A', question: 'Câu trước', history: [{ question: 'Câu cũ', answer: 'Đáp cũ' }] });
+  fetchMock.mockClear();
+  await answerWithGemini({ contextText: 'Tài liệu B', question: 'Câu mới', history: [] });
+  const body = JSON.parse(lastRawBody()) as { contents: { role: string; parts: { text: string }[] }[] };
+  expect(body.contents).toHaveLength(1);
+  expect(lastRawBody()).not.toContain('Tài liệu A');
+  expect(lastRawBody()).not.toContain('Đáp cũ');
 });

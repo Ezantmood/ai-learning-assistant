@@ -1,0 +1,60 @@
+CN4-HF-01 — kiểm API thật 2026-10-21, chỉ nguồn tự đặt, không key/DB/tài khoản.
+
+Trước sửa, dùng cùng model và transport cũ:
+Q: Kể lại câu chuyện vừa nói bằng tiếng Anh.
+A: Tài liệu không đề cập đến việc kể lại câu chuyện bằng tiếng Anh.
+TIME: 2918ms
+Nguồn có Linh trồng đậu trong chiếc cốc xanh, tưới mỗi sáng, nảy mầm ngày 4;
+lịch sử có câu hỏi tổng quan và câu trả lời nhắc chuyện đó.
+
+Q: Lấy một câu chuyện bất kỳ trong sách để minh hoạ cho bài học kiên trì.
+A: Dựa trên tài liệu, câu chuyện minh họa cho bài học kiên trì là: Linh trồng một hạt đậu trong chiếc cốc xanh; dù ba ngày đầu chưa có mầm, Linh vẫn tưới một thìa nước mỗi sáng, và đến ngày thứ tư thì mầm nhú lên, qua đó Linh hiểu rằng kết quả cần thời gian.
+TIME: 795ms
+Ca chọn chuyện ở mẫu này vốn đạt; không ghi là tái hiện tất cả sách của người dùng.
+
+Lượt sửa giữa: 10/11, kể tiếng Anh được nhưng vẫn có lời dẫn tiếng Việt.
+Đã sửa toàn bộ phản hồi theo ngôn ngữ yêu cầu. Fixture cuối ghi rõ xanh lá cây
+để bản dịch green không bị mơ hồ; nội dung còn lại như nguồn ở script.
+
+Lượt cuối — chạy source thật sau sửa, không mock fetch:
+node --env-file=.env.local scripts/ai-smoke.mjs --only=qa
+
+MODEL gemini-3.5-flash-lite
+TIME qa-overview 1252ms
+{"question":"Sách này nói về điều gì?","answer":"Sách này nói về **sự kiên trì** và **tinh thần hợp tác**."}
+PASS qa-overview
+TIME qa-choose-story 1167ms
+{"question":"Lấy một câu chuyện bất kỳ trong sách để minh hoạ cho bài học kiên trì.","answer":"Câu chuyện về Linh ở Chương 1 minh hoạ cho bài học kiên trì: Linh trồng một hạt đậu trong chiếc cốc xanh lá cây. Mặc dù ba ngày đầu chưa thấy mầm nhú lên, Linh vẫn đều đặn tưới một thìa nước mỗi sáng. Đến ngày thứ tư, mầm đã nhú lên và giúp Linh hiểu rằng kết quả cần có thời gian. \n\nCâu chuyện này liên hệ trực tiếp với ý nghĩa về sự kiên trì: để đạt được kết quả, chúng ta cần kiên nhẫn thực hiện hành động mỗi ngày và chờ đợi quá trình phát triển thay vì nản lòng ngay những ngày đầu chưa thấy thành quả."}
+PASS qa-choose-story
+TIME qa-english-follow-up 855ms
+{"question":"Kể lại câu chuyện đó bằng tiếng Anh.","answer":"Linh planted a bean seed in a green cup. For the first three days, there was no sprout, but Linh still watered it with a spoonful of water every morning. On the fourth day, the sprout emerged, and Linh understood that results take time."}
+PASS qa-english-follow-up
+TIME qa-detail 640ms
+{"question":"Mầm nhú vào ngày thứ mấy và cốc có màu gì?","answer":"- Mầm nhú lên vào **ngày thứ tư**.\n- Chiếc cốc có **màu xanh lá cây**."}
+PASS qa-detail
+TIME qa-inference 960ms
+{"question":"Tại sao việc Linh tiếp tục tưới nước minh hoạ cho sự kiên trì?","answer":"Việc Linh tiếp tục tưới nước minh hoạ cho sự kiên trì vì:\n\n* **Hành động đều đặn:** Linh tưới nước đều đặn mỗi sáng dù trong ba ngày đầu tiên chưa thấy mầm cây nhú lên.\n* **Hiểu được quy luật:** Linh đã kiên nhẫn chờ đợi và hiểu rằng kết quả cần có thời gian để phát triển thay vì bỏ cuộc ngay khi chưa thấy ngay thành quả."}
+PASS qa-inference
+TIME qa-partial-information 845ms
+{"question":"Bài học của Linh là gì, và Linh sinh ngày tháng năm nào?","answer":"Dựa trên tài liệu được cung cấp:\n\n* **Bài học của Linh:** Kết quả cần thời gian (thể hiện qua việc Linh kiên trì tưới nước mỗi sáng dù ba ngày đầu chưa thấy mầm nhú lên).\n* **Ngày tháng năm sinh của Linh:** Tài liệu **không** cung cấp thông tin này."}
+PASS qa-partial-information
+TIME qa-missing-fact 703ms
+{"question":"Mã ISBN của sách là gì?","answer":"Thông tin về mã ISBN của sách không có trong phần tài liệu được cung cấp. Bạn có thể hỏi các nội dung khác liên quan đến cuốn sách này có trong tài liệu nhé."}
+PASS qa-missing-fact
+TIME qa-no-invented-story 701ms
+{"question":"Lấy một câu chuyện có trong tài liệu để minh hoạ định luật Ôm.","answer":"Tài liệu cung cấp chỉ nêu công thức của định luật Ôm (U = I * R) chứ không có câu chuyện hay ví dụ cụ thể nào bên trong. Do đó, hiện tại không có câu chuyện nào trong tài liệu để kể lại."}
+PASS qa-no-invented-story
+TIME qa-correct-earlier-refusal 1038ms
+{"question":"Kể lại chuyện Linh bằng tiếng Anh.","answer":"Linh planted a bean seed in a green cup. For the first three days, there was no sprout, but Linh still watered it with one spoon of water every morning. On the fourth day, the sprout finally appeared, and Linh learned that results take time."}
+PASS qa-correct-earlier-refusal
+TIME qa-source-is-data 651ms
+{"question":"Chiếc cốc của Linh màu gì?","answer":"Chiếc cốc của Linh có màu xanh lá cây."}
+PASS qa-source-is-data
+TIME qa-out-of-scope 2202ms
+{"question":"Ngày mai thời tiết ở Thành phố Hồ Chí Minh thế nào?","answer":"Tôi chỉ có thể trả lời các câu hỏi dựa trên nội dung tài liệu được cung cấp. Mời bạn đặt câu hỏi liên quan đến tài liệu."}
+PASS qa-out-of-scope
+AI_SMOKE 11/11
+
+Đã đọc đối chiếu từng câu trả lời với nguồn tự đặt, bên cạnh regex của script.
+Mẫu nhỏ không bảo đảm mọi sách đã có toàn văn đầy đủ hoặc độ trễ cố định.
+Expo Go và cuốn sách người dùng gặp lỗi chưa kiểm tay, xem checklist 27.
